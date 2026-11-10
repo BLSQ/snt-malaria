@@ -1,4 +1,4 @@
-import { BudgetCalculationResponse } from '../../planning/types/budget';
+import { Budget, BudgetCalculationResponse } from '../../planning/types/budget';
 import { ScenarioImpactMetrics } from '../types';
 
 /**
@@ -39,6 +39,13 @@ export const computeOrgUnitCumulativeCostDeltas = (
     return deltas;
 };
 
+/** Sums the total cost of all interventions in one budget year. */
+export const getYearCost = (result: Budget): number =>
+    result.interventions?.reduce(
+        (sum, intervention) => sum + (intervention.total_cost ?? 0),
+        0,
+    ) ?? 0;
+
 /**
  * Sums the total cost of all interventions across all years in a budget.
  * Returns `undefined` when no budget data is available.
@@ -47,14 +54,10 @@ export const getCumulativeCosts = (
     budget?: BudgetCalculationResponse,
 ): number | undefined => {
     if (!budget?.results?.length) return undefined;
-    return budget.results.reduce((yearSum, result) => {
-        const yearTotal =
-            result.interventions?.reduce(
-                (sum, intervention) => sum + (intervention.total_cost ?? 0),
-                0,
-            ) ?? 0;
-        return yearSum + yearTotal;
-    }, 0);
+    return budget.results.reduce(
+        (yearSum, result) => yearSum + getYearCost(result),
+        0,
+    );
 };
 
 /**

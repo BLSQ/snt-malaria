@@ -1,48 +1,85 @@
 import { BudgetCalculationResponse } from '../../planning/types/budget';
-import { ScenarioImpactMetrics, ScenarioDisplay } from '../types';
-import { getCumulativeCosts } from './impactCalculations';
+import {
+    ImpactMetricKey,
+    ImpactMetricWithConfidenceInterval,
+    MetricKey,
+    ScenarioImpactMetrics,
+    ScenarioDisplay,
+} from '../types';
+import { getCumulativeCosts, getYearCost } from './impactCalculations';
 
-// --- Yearly prevalence chart ---
+// --- Yearly metric chart ---
 
-export type PrevalenceDataPoint = {
+export type YearlyMetricDataPoint = {
     year: number;
     [key: string]: number | [number, number] | undefined;
 };
 
+type YearlyMetricValues = Map<number, ImpactMetricWithConfidenceInterval>;
+
+const getYearlyCosts = (
+    budget: BudgetCalculationResponse | undefined,
+): YearlyMetricValues =>
+    new Map(
+        (budget?.results ?? []).map(result => [
+            result.year,
+            {
+                value: getYearCost(result),
+                lower: null,
+                upper: null,
+            },
+        ]),
+    );
+
+const getYearlyImpactValues = (
+    impact: ScenarioImpactMetrics | undefined,
+    metric: ImpactMetricKey,
+): YearlyMetricValues =>
+    new Map((impact?.by_year ?? []).map(yr => [yr.year, yr[metric]]));
+
 /**
  * Builds a flat array of data points for a Recharts line chart.
- * Each point contains the year plus one key per scenario (the prevalence value)
+ * Each point contains the year plus one key per scenario (the metric value)
  * and an optional `_ci` key with the confidence interval error bars.
  */
-export const buildPrevalenceChartData = (
+export const buildYearlyMetricChartData = (
     scenarios: ScenarioDisplay[],
+    metric: MetricKey,
     impactMetricsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>,
-): PrevalenceDataPoint[] => {
-    const yearSet = new Set<number>();
-    scenarios.forEach(scenario => {
-        const impact = impactMetricsByScenarioId.get(scenario.id);
-        impact?.by_year?.forEach(yr => yearSet.add(yr.year));
-    });
+    budgetsByScenarioId?: Map<number, BudgetCalculationResponse | undefined>,
+): YearlyMetricDataPoint[] => {
+    const valuesByScenarioId = new Map<number, YearlyMetricValues>(
+        scenarios.map(scenario => [
+            scenario.id,
+            metric === MetricKey.OrgUnitTotalCost
+                ? getYearlyCosts(budgetsByScenarioId?.get(scenario.id))
+                : getYearlyImpactValues(
+                      impactMetricsByScenarioId.get(scenario.id),
+                      metric,
+                  ),
+        ]),
+    );
 
+    const yearSet = new Set<number>();
+    valuesByScenarioId.forEach(values =>
+        values.forEach((_, year) => yearSet.add(year)),
+    );
     const years = Array.from(yearSet).sort((a, b) => a - b);
-    if (years.length === 0) return [];
 
     return years.map(year => {
-        const point: PrevalenceDataPoint = { year };
+        const point: YearlyMetricDataPoint = { year };
         scenarios.forEach(scenario => {
-            const impact = impactMetricsByScenarioId.get(scenario.id);
-            const yearData = impact?.by_year?.find(yr => yr.year === year);
-            const metric = yearData?.prevalence_rate;
-            point[scenario.label] = metric?.value ?? undefined;
+            const value = valuesByScenarioId.get(scenario.id)?.get(year);
+            point[scenario.label] = value?.value ?? undefined;
 
             if (
-                metric?.value != null &&
-                metric?.lower != null &&
-                metric?.upper != null
+                value?.value != null &&
+                value?.lower != null &&
+                value?.upper != null
             ) {
                 point[`${scenario.label}_ci`] = [
-                    metric.value - metric.lower,
-                    metric.upper - metric.value,
+                    value.value - value.lower,
+                    value.upper - value.value,
                 ];
             }
         });
@@ -51,11 +88,11 @@ export const buildPrevalenceChartData = (
 };
 
 /**
- * Largest prevalence value (including the upper confidence bound) across the
- * given series. Used to size the value axis to its widest formatted tick.
+ * Largest value (including the upper confidence bound) across the given
+ * series. Used to size the value axis to its widest formatted tick.
  */
-export const getPrevalenceMaxValue = (
-    data: PrevalenceDataPoint[],
+export const getYearlyMetricMaxValue = (
+    data: YearlyMetricDataPoint[],
     seriesKeys: string[],
 ): number => {
     let max = 0;
