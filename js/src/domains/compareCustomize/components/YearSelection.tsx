@@ -1,11 +1,4 @@
-import React, {
-    FC,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import {
@@ -18,6 +11,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ToggleButtonLabel } from '../../../components/ToggleButtonLabel';
+import { useElementSize } from '../../../hooks/useElementSize';
 import { MESSAGES } from '../../messages';
 import { YearMode } from '../types';
 import {
@@ -85,19 +79,10 @@ export const YearSelection: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     const isSingleYear = yearMode === 'single';
 
-    const sliderContainerRef = useRef<HTMLDivElement | null>(null);
-    const [sliderWidth, setSliderWidth] = useState(0);
+    const { ref: sliderRef, size: sliderSize } =
+        useElementSize<HTMLSpanElement>();
+    const sliderWidth = sliderSize?.width ?? 0;
     const [isYearLabelClick, setIsYearLabelClick] = useState(false);
-
-    useEffect(() => {
-        const container = sliderContainerRef.current;
-        if (!container) return undefined;
-        const observer = new ResizeObserver(([entry]) =>
-            setSliderWidth(entry.contentRect.width),
-        );
-        observer.observe(container);
-        return () => observer.disconnect();
-    }, []);
 
     const marks = useMemo(() => {
         const stride = labelStride(
@@ -192,11 +177,11 @@ export const YearSelection: FC<Props> = ({
                 )}
             </Typography>
             <Box
-                ref={sliderContainerRef}
                 sx={styles.sliderContainer}
                 onPointerDownCapture={handleSliderPointerDown}
             >
                 <Slider
+                    ref={sliderRef}
                     value={
                         isSingleYear ? selectedSingleYear : selectedYearRange
                     }
