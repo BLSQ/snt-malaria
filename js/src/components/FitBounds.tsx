@@ -15,9 +15,13 @@ export const FitBounds: FC<{
     const map = useMap();
 
     useEffect(() => {
-        if (bounds && map) {
-            map.fitBounds(bounds, boundsOptions);
-        }
+        if (!bounds) return undefined;
+        let frame = requestAnimationFrame(() => {
+            frame = requestAnimationFrame(() =>
+                map.fitBounds(bounds, boundsOptions),
+            );
+        });
+        return () => cancelAnimationFrame(frame);
     }, [bounds, boundsOptions, map]);
 
     return null;

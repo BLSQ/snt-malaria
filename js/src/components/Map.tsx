@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import L from 'leaflet';
@@ -175,14 +175,9 @@ export const Map: FC<Props> = ({
         return shape.getBounds();
     }, [leafOrgUnits]);
 
-    const [pristineOrgUnits, setPristineOrgUnits] = useState<OrgUnit[]>([]);
-    const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
-
-    useEffect(() => {
+    const { pristineOrgUnits, selectedOrgUnits } = useMemo(() => {
         if (!selectedOrgUnitIds) {
-            setPristineOrgUnits(leafOrgUnits);
-            setSelectedOrgUnits([]);
-            return;
+            return { pristineOrgUnits: leafOrgUnits, selectedOrgUnits: [] };
         }
 
         const orgUnitsToSelect: OrgUnit[] = [];
@@ -195,8 +190,10 @@ export const Map: FC<Props> = ({
             }
         });
 
-        setPristineOrgUnits(unselectedOrgUnits);
-        setSelectedOrgUnits(orgUnitsToSelect);
+        return {
+            pristineOrgUnits: unselectedOrgUnits,
+            selectedOrgUnits: orgUnitsToSelect,
+        };
     }, [leafOrgUnits, selectedOrgUnitIds]);
 
     return (
