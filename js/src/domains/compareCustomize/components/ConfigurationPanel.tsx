@@ -1,8 +1,9 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC, ReactNode, useMemo, useState } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RemoveOutlinedIcon from '@mui/icons-material/RemoveOutlined';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Theme, Typography } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
+import { SystemStyleObject } from '@mui/system';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
@@ -11,6 +12,7 @@ import { ColorDot } from '../../../components/ColorDot';
 import { MESSAGES } from '../../messages';
 import { ScenarioId, YearMode } from '../types';
 import { getScenarioColor } from '../utils/colors';
+import { ConfigurationPanelLayoutContext } from './ConfigurationPanelLayoutContext';
 import { YearSelection } from './YearSelection';
 
 type Props = {
@@ -38,6 +40,8 @@ type Props = {
     orgUnitSelector?: ReactNode;
     children?: ReactNode;
 };
+
+const CARD_PADDING = 2;
 
 const styles = {
     scenarioRow: {
@@ -93,10 +97,12 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        p: 2,
+        position: 'relative',
+        py: CARD_PADDING,
         gap: 2,
     },
     cardHeader: {
+        px: CARD_PADDING,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -117,8 +123,23 @@ const styles = {
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
+        px: CARD_PADDING,
+        overflowX: 'hidden',
+        overflowY: 'auto',
+    },
+    pinnedLayer: {
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 1,
     },
 } satisfies SxStyles;
+
+const getContentAbovePinnedStyles = (
+    pinnedBottomHeight: string | undefined,
+): SystemStyleObject<Theme> => ({
+    '& > *': { scrollMarginBottom: pinnedBottomHeight },
+});
 
 export const ConfigurationPanel: FC<Props> = ({
     baselineScenarioId,
@@ -144,6 +165,14 @@ export const ConfigurationPanel: FC<Props> = ({
     children,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const [scrollContainer, setScrollContainer] =
+        useState<HTMLDivElement | null>(null);
+    const [pinnedLayer, setPinnedLayer] = useState<HTMLDivElement | null>(null);
+    const [pinnedBottomHeight, setPinnedBottomHeight] = useState<string>();
+    const layout = useMemo(
+        () => ({ scrollContainer, pinnedLayer, setPinnedBottomHeight }),
+        [scrollContainer, pinnedLayer],
+    );
 
     const hasDisplayOptions =
         (yearRange && selectedYearRange && onYearRangeChange) ||
@@ -167,7 +196,7 @@ export const ConfigurationPanel: FC<Props> = ({
                     <AddOutlinedIcon fontSize="medium" />
                 </IconButton>
             </Box>
-            <Box sx={styles.cardBody}>
+            <Box ref={setScrollContainer} sx={styles.cardBody}>
                 <Box sx={styles.scenarioRow}>
                     <ColorDot color={getScenarioColor(0)} size={14} />
                     <Box sx={styles.scenarioSelectWrap}>
@@ -290,15 +319,23 @@ export const ConfigurationPanel: FC<Props> = ({
                     </Box>
                 )}
                 {orgUnitSelector && (
-                    <Box sx={styles.section}>
+                    <Box
+                        sx={[
+                            styles.section,
+                            getContentAbovePinnedStyles(pinnedBottomHeight),
+                        ]}
+                    >
                         <Typography sx={styles.sectionTitle}>
                             {formatMessage(MESSAGES.areaTitle)}
                         </Typography>
                         {orgUnitSelector}
                     </Box>
                 )}
-                {children}
+                <ConfigurationPanelLayoutContext.Provider value={layout}>
+                    {children}
+                </ConfigurationPanelLayoutContext.Provider>
             </Box>
+            <Box ref={setPinnedLayer} sx={styles.pinnedLayer} />
         </Box>
     );
 };

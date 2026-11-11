@@ -1,4 +1,4 @@
-import React, { FC, MouseEvent, ReactNode, useCallback } from 'react';
+import React, { FC, MouseEvent, ReactNode, Ref, useCallback } from 'react';
 import { Check, Close, ExpandMore, Remove } from '@mui/icons-material';
 import { Box, Tooltip, useTheme } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
@@ -29,6 +29,7 @@ type Props = {
     rowBackgroundColor?: string;
     isLabelStruckThrough?: boolean;
     branchMeta?: ReactNode;
+    rowRef?: Ref<HTMLDivElement>;
     onToggleOpen: () => void;
     onToggleSelection: () => void;
 };
@@ -43,6 +44,7 @@ export const OrgUnitTreeRow: FC<Props> = ({
     rowBackgroundColor = 'transparent',
     isLabelStruckThrough = false,
     branchMeta,
+    rowRef,
     onToggleOpen,
     onToggleSelection,
 }) => {
@@ -112,6 +114,7 @@ export const OrgUnitTreeRow: FC<Props> = ({
 
     return (
         <Box
+            ref={rowRef}
             sx={rowStyles.row}
             onClick={hasChildren ? onToggleOpen : undefined}
         >

@@ -1,7 +1,10 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Theme, Typography, useTheme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useSafeIntl } from 'bluesquare-components';
+import { createPortal } from 'react-dom';
 import { Link as RouterLink } from 'react-router-dom';
 import { userHasPermission } from 'Iaso/domains/users/utils';
 import { SxStyles } from 'Iaso/types/general';
@@ -11,34 +14,77 @@ import { WarningGroup } from '../../../components/WarningGroup';
 import { SETTINGS_READ } from '../../../constants/permissions';
 import { baseUrls } from '../../../constants/urls';
 import { MESSAGES } from '../../messages';
+import { useStickyBottomTitle } from '../hooks/useStickyBottomTitle';
 import {
     ImpactProviderMeta,
     MatchWarningGroup,
     MatchWarningOrgUnit,
     ScenarioYearRange,
 } from '../types';
+import { useConfigurationPanelLayout } from './ConfigurationPanelLayoutContext';
 import { InterventionWarningGroup } from './InterventionWarningGroup';
 import { YearRangeMismatchDetails } from './YearRangeMismatchDetails';
 
+const TITLE_HEIGHT = 7;
+const TITLE_PADDING = 2;
+const PINNED_TITLE_VISIBLE_HEIGHT = TITLE_HEIGHT - TITLE_PADDING;
+
 const styles = {
     title: {
+        position: 'sticky',
+        bottom: theme => theme.spacing(-TITLE_PADDING),
+        zIndex: 2,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        flexShrink: 0,
+        boxSizing: 'border-box',
+        height: theme => theme.spacing(TITLE_HEIGHT),
+        mx: -2,
+        px: 2,
+        py: TITLE_PADDING,
         typography: 'body1',
         fontWeight: 'medium',
-        mt: 2,
+    },
+    cutListTitle: {
+        cursor: 'pointer',
+    },
+    cutListIndicator: {
+        ml: 'auto',
+        color: 'text.secondary',
+    },
+    count: {
+        px: 0.75,
+        borderRadius: 1,
+        typography: 'caption',
+        fontWeight: 'medium',
+    },
+    errorCount: {
+        color: 'error.dark',
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.error.main, 0.08),
+    },
+    warningCount: {
+        color: 'warning.dark',
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.warning.main, 0.08),
     },
     list: {
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        mt: 2,
-        flex: 1,
-        minHeight: 0,
-        overflowY: 'auto',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-        '&::-webkit-scrollbar': {
-            width: 0,
-            height: 0,
+    },
+    pinnedTitleBackdrop: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderTop: 1,
+        borderColor: 'warning.light',
+        backgroundColor: 'common.white',
+        backgroundImage: (theme: Theme) => {
+            const tint = alpha(theme.palette.warning.main, 0.08);
+            return `linear-gradient(${tint}, ${tint})`;
         },
     },
 } satisfies SxStyles;
@@ -66,11 +112,33 @@ export const ImpactWarnings: FC<Props> = ({
     const currentUser = useCurrentUser();
     const canOpenInterventions = userHasPermission(SETTINGS_READ, currentUser);
 
-    const hasWarnings =
-        showYearRangeError ||
-        orgUnitsNotFound.length > 0 ||
-        unmatchedInterventionMixes.length > 0 ||
-        interventionsWithoutImpactRef.length > 0;
+    const warningCount = [
+        showYearRangeError,
+        orgUnitsNotFound.length > 0,
+        unmatchedInterventionMixes.length > 0,
+        interventionsWithoutImpactRef.length > 0,
+    ].filter(Boolean).length;
+    const hasWarnings = warningCount > 0;
+
+    const theme = useTheme();
+    const { scrollContainer, pinnedLayer, setPinnedBottomHeight } =
+        useConfigurationPanelLayout();
+    const {
+        titleRef,
+        titleEndRef,
+        contentEndRef,
+        backdropRef,
+        isTitlePinned,
+        isContentCut,
+        scrollToTitle,
+    } = useStickyBottomTitle(scrollContainer, hasWarnings);
+
+    useEffect(() => {
+        if (!hasWarnings) return undefined;
+        setPinnedBottomHeight(theme.spacing(PINNED_TITLE_VISIBLE_HEIGHT));
+        return () => setPinnedBottomHeight(undefined);
+    }, [hasWarnings, setPinnedBottomHeight, theme]);
+
     const isFakeProvider = providerMeta?.provider_key === 'fake';
     const unmatchedDistrictCount = useMemo(
         () =>
@@ -82,10 +150,31 @@ export const ImpactWarnings: FC<Props> = ({
     return (
         <>
             {hasWarnings && (
-                <Typography sx={styles.title}>
+                <Typography
+                    ref={titleRef}
+                    sx={[styles.title, isContentCut && styles.cutListTitle]}
+                    onClick={isContentCut ? scrollToTitle : undefined}
+                >
                     {formatMessage(MESSAGES.warningsTitle)}
+                    {isContentCut && (
+                        <Box
+                            component="span"
+                            sx={[
+                                styles.count,
+                                showYearRangeError
+                                    ? styles.errorCount
+                                    : styles.warningCount,
+                            ]}
+                        >
+                            {warningCount}
+                        </Box>
+                    )}
+                    {isContentCut && (
+                        <KeyboardArrowDownIcon sx={styles.cutListIndicator} />
+                    )}
                 </Typography>
             )}
+            {hasWarnings && <Box ref={titleEndRef} />}
             <Box sx={styles.list}>
                 {showYearRangeError && (
                     <WarningBox
@@ -183,6 +272,13 @@ export const ImpactWarnings: FC<Props> = ({
                     />
                 )}
             </Box>
+            {hasWarnings && <Box ref={contentEndRef} />}
+            {isTitlePinned &&
+                pinnedLayer &&
+                createPortal(
+                    <Box ref={backdropRef} sx={styles.pinnedTitleBackdrop} />,
+                    pinnedLayer,
+                )}
         </>
     );
 };
