@@ -1,10 +1,11 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Box, Link, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
 import { ColorDot } from './ColorDot';
 import { WarningBlock } from './WarningBlock';
+import { useRevealWarningBox } from './WarningBoxRevealContext';
 
 const styles = {
     block: {
@@ -82,8 +83,15 @@ export const WarningGroup: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const [showItems, setShowItems] = useState(false);
+    const revealWarningBox = useRevealWarningBox();
 
     const toggleShowItems = useCallback(() => setShowItems(prev => !prev), []);
+
+    useEffect(() => {
+        if (showItems) {
+            revealWarningBox();
+        }
+    }, [showItems, revealWarningBox]);
 
     return (
         <WarningBlock sx={styles.block}>
