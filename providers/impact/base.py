@@ -25,7 +25,7 @@ class ImpactRefOption:
 
 @dataclass(frozen=True)
 class ImpactProviderMeta:
-    """Descriptor for an impact provider, attached to every impact response."""
+    """Descriptor for an impact provider, served by the impact provider meta endpoint."""
 
     provider_key: str
     metric_annotations: dict[str, str] = field(default_factory=dict)
@@ -163,7 +163,7 @@ class ImpactProvider(ABC):
         self.secret = secret
 
     def get_meta(self) -> ImpactProviderMeta:
-        """Provider metadata attached to every impact response."""
+        """Provider metadata served by the impact provider meta endpoint."""
         return self.meta
 
     @staticmethod
