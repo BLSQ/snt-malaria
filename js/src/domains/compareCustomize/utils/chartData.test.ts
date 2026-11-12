@@ -29,6 +29,7 @@ const makeYear = (
     year,
     direct_deaths: metric(null),
     number_cases: metric(null),
+    number_uncomplicated_cases: metric(null),
     number_severe_cases: metric(null),
     prevalence_rate: metric(null),
     org_units: [],
@@ -90,6 +91,28 @@ describe('buildYearlyMetricChartData', () => {
                 'Plan B': undefined,
             },
         ]);
+    });
+
+    it('reads uncomplicated cases separately from cases', () => {
+        const impacts = new Map([
+            [
+                1,
+                makeImpact([
+                    makeYear(2025, {
+                        number_cases: metric(150),
+                        number_uncomplicated_cases: metric(100),
+                    }),
+                ]),
+            ],
+        ]);
+
+        expect(
+            buildYearlyMetricChartData(
+                scenarios,
+                MetricKey.UncomplicatedCases,
+                impacts,
+            ),
+        ).toEqual([{ year: 2025, Baseline: 100, 'Plan B': undefined }]);
     });
 
     it('sums intervention costs per budget year without confidence intervals', () => {

@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta, OrgUnitRef
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, OrgUnitRef
 from plugins.snt_malaria.services.impact import (
     InterventionRef,
     InterventionWithoutImpactRef,
@@ -148,6 +148,7 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
             number_severe_cases=_metric(10.0, 8.0, 12.0),
             prevalence_rate=_metric(0.05, 0.04, 0.06),
             direct_deaths=_metric(2.0, 1.5, 2.5),
+            number_uncomplicated_cases=_metric(80.0, 70.0, 90.0),
             by_year=[
                 YearImpactMetrics(
                     year=2025,
@@ -177,17 +178,16 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
                     direct_deaths=_metric(2.0, 1.5, 2.5),
                 ),
             ],
-            provider_meta=ImpactProviderMeta(provider_key="fake"),
         )
         data = ScenarioImpactSerializer(metrics).data
 
         self.assertEqual(data["scenario_id"], 42)
-        self.assertEqual(data["provider_meta"], {"provider_key": "fake"})
 
         self._assert_metric(data["number_cases"], 100.0, 90.0, 110.0)
         self._assert_metric(data["number_severe_cases"], 10.0, 8.0, 12.0)
         self._assert_metric(data["prevalence_rate"], 0.05, 0.04, 0.06)
         self._assert_metric(data["direct_deaths"], 2.0, 1.5, 2.5)
+        self._assert_metric(data["number_uncomplicated_cases"], 80.0, 70.0, 90.0)
 
         self.assertEqual(len(data["by_year"]), 1)
         year = data["by_year"][0]

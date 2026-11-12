@@ -45,6 +45,7 @@ class ImpactMetricsSerializer(serializers.Serializer):
     number_severe_cases = MetricWithCISerializer()
     prevalence_rate = MetricWithCISerializer()
     direct_deaths = MetricWithCISerializer()
+    number_uncomplicated_cases = MetricWithCISerializer()
 
 
 class OrgUnitMetricsSerializer(ImpactMetricsSerializer):
@@ -79,6 +80,7 @@ class UnmatchedInterventionMixSerializer(serializers.Serializer):
 
 class ImpactProviderMetaSerializer(serializers.Serializer):
     provider_key = serializers.CharField()
+    metric_annotations = serializers.DictField(child=serializers.CharField())
 
 
 class ScenarioImpactSerializer(ImpactMetricsSerializer):
@@ -88,4 +90,3 @@ class ScenarioImpactSerializer(ImpactMetricsSerializer):
     org_units_not_found = OrgUnitRefSerializer(many=True, default=[])
     unmatched_intervention_mixes = UnmatchedInterventionMixSerializer(many=True, default=[])
     interventions_without_impact_ref = InterventionWithoutImpactRefSerializer(many=True, default=[])
-    provider_meta = ImpactProviderMetaSerializer()

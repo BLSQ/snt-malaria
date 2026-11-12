@@ -29,7 +29,7 @@ from plugins.snt_malaria.models import ImpactProviderConfig, Scenario
 
 _KEY_PREFIX = "snt_impact"
 # Bump whenever the serialized response shape changes, so entries cached in the old shape are never served.
-_RESPONSE_VERSION = 2
+_RESPONSE_VERSION = 3
 
 
 def get_ttl(account) -> int:

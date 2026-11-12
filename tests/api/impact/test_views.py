@@ -3,13 +3,15 @@ from unittest.mock import MagicMock, patch
 from rest_framework import status
 
 from plugins.snt_malaria.models.impact_provider_config import ImpactProviderConfig
-from plugins.snt_malaria.providers.impact.base import ImpactRefOption
+from plugins.snt_malaria.providers.impact.base import ImpactProviderMeta, ImpactRefOption
+from plugins.snt_malaria.providers.impact.swisstph import SwissTPHImpactProvider
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 YEAR_RANGE_URL = "/api/snt_malaria/impact_year_range/"
 AGE_GROUPS_URL = "/api/snt_malaria/impact_age_groups/"
 IMPACT_REFS_URL = "/api/snt_malaria/impact_refs/"
+PROVIDER_META_URL = "/api/snt_malaria/impact_provider_meta/"
 IMPACT_URL = "/api/snt_malaria/impact/"
 
 
@@ -108,6 +110,54 @@ class ImpactRefsViewTests(ImpactViewsBaseTestCase):
 
         self.client.force_authenticate(user=self.user)
         self.assertJSONResponse(self.client.get(IMPACT_REFS_URL), status.HTTP_404_NOT_FOUND)
+
+
+class ImpactProviderMetaViewTests(ImpactViewsBaseTestCase):
+    def test_unauthenticated_request_is_rejected(self):
+        response = self.client.get(PROVIDER_META_URL)
+        self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_returns_the_provider_key_and_metric_annotations(self, mock_get_provider):
+        mock_provider = MagicMock()
+        mock_provider.get_meta.return_value = ImpactProviderMeta(
+            provider_key="swisstph",
+            metric_annotations={"number_cases": "Treated cases"},
+        )
+        mock_get_provider.return_value = mock_provider
+
+        self.client.force_authenticate(user=self.user)
+        result = self.assertJSONResponse(self.client.get(PROVIDER_META_URL), status.HTTP_200_OK)
+        self.assertEqual(
+            result,
+            {"provider_key": "swisstph", "metric_annotations": {"number_cases": "Treated cases"}},
+        )
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_metric_annotations_follow_the_request_language(self, mock_get_provider):
+        """The SwissTPH annotation is translated per request."""
+        mock_provider = MagicMock()
+        mock_provider.get_meta.return_value = SwissTPHImpactProvider.meta
+        mock_get_provider.return_value = mock_provider
+
+        self.client.force_authenticate(user=self.user)
+        english = self.assertJSONResponse(
+            self.client.get(PROVIDER_META_URL, HTTP_ACCEPT_LANGUAGE="en"), status.HTTP_200_OK
+        )
+        french = self.assertJSONResponse(
+            self.client.get(PROVIDER_META_URL, HTTP_ACCEPT_LANGUAGE="fr"), status.HTTP_200_OK
+        )
+        self.assertNotEqual(
+            english["metric_annotations"]["number_cases"],
+            french["metric_annotations"]["number_cases"],
+        )
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_returns_not_found_when_no_provider_is_configured(self, mock_get_provider):
+        mock_get_provider.return_value = None
+
+        self.client.force_authenticate(user=self.user)
+        self.assertJSONResponse(self.client.get(PROVIDER_META_URL), status.HTTP_404_NOT_FOUND)
 
 
 class ImpactViewTests(ImpactViewsBaseTestCase):

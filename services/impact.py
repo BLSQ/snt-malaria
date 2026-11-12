@@ -8,7 +8,6 @@ from plugins.snt_malaria.models import Intervention, InterventionAssignment, Sce
 from plugins.snt_malaria.providers.impact.base import (
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
-    ImpactProviderMeta,
     ImpactResult,
     MatchWarnings,
     OrgUnitRef,
@@ -23,6 +22,9 @@ class ImpactMetrics:
     number_severe_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
     prevalence_rate: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
     direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    number_uncomplicated_cases: ImpactMetricWithConfidenceInterval = field(
+        default_factory=ImpactMetricWithConfidenceInterval
+    )
 
 
 @dataclass
@@ -45,6 +47,7 @@ class OrgUnitImpactMetrics(ImpactMetrics):
             number_severe_cases=result.number_severe_cases,
             prevalence_rate=result.prevalence_rate,
             direct_deaths=result.direct_deaths,
+            number_uncomplicated_cases=result.number_uncomplicated_cases,
         )
 
 
@@ -94,15 +97,15 @@ class ScenarioImpactMetrics(ImpactMetrics):
     org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
     unmatched_intervention_mixes: list[UnmatchedInterventionMix] = field(default_factory=list)
     interventions_without_impact_ref: list[InterventionWithoutImpactRef] = field(default_factory=list)
-    provider_meta: ImpactProviderMeta = field(default_factory=lambda: ImpactProviderMeta(provider_key=""))
 
 
 def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
     """Aggregate a list of ImpactMetrics.
 
-    Sums cases, severe cases, and direct deaths. Averages prevalence.
+    Sums cases, uncomplicated cases, severe cases, and direct deaths. Averages prevalence.
     """
     sum_cases = ImpactMetricWithConfidenceInterval()
+    sum_uncomplicated = ImpactMetricWithConfidenceInterval()
     sum_severe = ImpactMetricWithConfidenceInterval()
     sum_deaths = ImpactMetricWithConfidenceInterval()
     sum_prevalence = ImpactMetricWithConfidenceInterval()
@@ -110,6 +113,7 @@ def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
 
     for m in metrics:
         sum_cases = sum_cases + m.number_cases
+        sum_uncomplicated = sum_uncomplicated + m.number_uncomplicated_cases
         sum_severe = sum_severe + m.number_severe_cases
         sum_deaths = sum_deaths + m.direct_deaths
         if m.prevalence_rate.value is not None:
@@ -123,6 +127,7 @@ def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
         number_severe_cases=sum_severe,
         prevalence_rate=avg_prevalence,
         direct_deaths=sum_deaths,
+        number_uncomplicated_cases=sum_uncomplicated,
     )
 
 
@@ -352,6 +357,5 @@ class ImpactService:
             org_units_not_found=self._deduplicate_org_units(org_units_not_found),
             unmatched_intervention_mixes=self._sort_unmatched_mixes(unmatched_mixes),
             interventions_without_impact_ref=interventions_without_impact_ref,
-            provider_meta=self._provider.get_meta(),
             **{f.name: getattr(overall, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
         )

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 14:17+0000\n"
+"POT-Creation-Date: 2026-11-12 14:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -213,6 +213,30 @@ msgstr "Configuration - Lecture"
 #: plugins/snt_malaria/permissions.py
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "All malaria cases (uncomplicated + severe)"
+msgstr "Tous les cas de paludisme (simples + graves)"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "All uncomplicated malaria cases"
+msgstr "Tous les cas de paludisme simples"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "All severe malaria cases"
+msgstr "Tous les cas de paludisme graves"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "Cases treated by the health system (uncomplicated + severe)"
+msgstr "Cas traités par le système de santé (simples + graves)"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "Uncomplicated cases treated by the health system"
+msgstr "Cas simples traités par le système de santé"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "Severe cases treated by the health system"
+msgstr "Cas graves traités par le système de santé"
 
 #: plugins/snt_malaria/providers/openhexa_data_layers.py
 #, python-brace-format

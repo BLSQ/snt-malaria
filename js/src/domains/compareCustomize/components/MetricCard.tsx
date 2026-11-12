@@ -24,6 +24,7 @@ type Props<TKey extends string | number = number> = {
     entries: MetricEntry<TKey>[];
     keyPrefix: string;
     subtext?: ReactNode;
+    tooltip?: string;
 };
 
 const styles = {
@@ -86,9 +87,15 @@ export const MetricCard = <TKey extends string | number = number>({
     entries,
     keyPrefix,
     subtext,
+    tooltip,
 }: Props<TKey>) => (
     <Grid item xs={12} md={3}>
-        <WidgetCard title={title} icon={icon} isLoading={isLoading}>
+        <WidgetCard
+            title={title}
+            icon={icon}
+            isLoading={isLoading}
+            tooltip={tooltip}
+        >
             <Box sx={styles.valuesList}>
                 {entries.map(entry => (
                     <Typography

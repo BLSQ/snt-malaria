@@ -5,7 +5,6 @@ from iaso.models import OrgUnit, OrgUnitType
 from plugins.snt_malaria.providers.impact.base import (
     BulkMatchResult,
     ImpactMetricWithConfidenceInterval,
-    ImpactProviderMeta,
     ImpactResult,
     MatchResult,
     MatchWarnings,
@@ -50,6 +49,22 @@ class AggregateMetricsTestCase(SNTMalariaTestCase):
         self.assertEqual(result.number_cases.value, 150.0)
         self.assertEqual(result.number_severe_cases.value, 15.0)
         self.assertEqual(result.direct_deaths.value, 3.0)
+
+    def test_sums_number_uncomplicated_cases_and_keeps_missing_values_empty(self):
+        """Uncomplicated cases are summed; entries from providers without the metric don't contribute."""
+        metrics = [
+            OrgUnitImpactMetrics(org_unit_id=1, number_uncomplicated_cases=_metric(80.0, 70.0, 90.0)),
+            OrgUnitImpactMetrics(org_unit_id=2, number_uncomplicated_cases=_metric(20.0, 15.0, 25.0)),
+            OrgUnitImpactMetrics(org_unit_id=3),
+        ]
+        result = _aggregate_metrics(metrics)
+        self.assertEqual(result.number_uncomplicated_cases.value, 100.0)
+        self.assertEqual(result.number_uncomplicated_cases.lower, 85.0)
+        self.assertEqual(result.number_uncomplicated_cases.upper, 115.0)
+
+    def test_number_uncomplicated_cases_stays_empty_when_no_entry_provides_it(self):
+        metrics = [OrgUnitImpactMetrics(org_unit_id=1, number_cases=_metric(100.0))]
+        self.assertIsNone(_aggregate_metrics(metrics).number_uncomplicated_cases.value)
 
     def test_averages_prevalence_rate(self):
         metrics = [
@@ -200,13 +215,12 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
             ],
         }
 
-    def _make_provider_mock(self, supports_bulk, warnings=None, meta=None):
+    def _make_provider_mock(self, supports_bulk, warnings=None):
         """Build a mock provider wired with realistic per-org-unit results."""
         results_by_ou = self._make_impact_results()
         mock_provider = Mock()
         mock_provider.supports_bulk = supports_bulk
         mock_provider.is_known_impact_ref.side_effect = lambda impact_ref: impact_ref in {"smc", "iptp"}
-        mock_provider.get_meta.return_value = meta if meta is not None else ImpactProviderMeta(provider_key="test")
 
         w = warnings or MatchWarnings()
 
@@ -470,18 +484,6 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
 
         not_found_ids = {ou.id for ou in result.org_units_not_found}
         self.assertIn(self.district3.id, not_found_ids)
-
-    def test_provider_meta_propagates_to_result(self):
-        """ImpactService should copy the provider's get_meta() onto ScenarioImpactMetrics."""
-        mock_provider = self._make_provider_mock(
-            supports_bulk=True,
-            meta=ImpactProviderMeta(provider_key="fake"),
-        )
-
-        service = ImpactService(provider=mock_provider)
-        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
-
-        self.assertEqual(result.provider_meta, ImpactProviderMeta(provider_key="fake"))
 
     def test_interventions_without_usable_impact_ref_are_left_out_of_the_mix(self):
         """Interventions with an empty or unknown impact_ref are not sent to the provider and are reported."""

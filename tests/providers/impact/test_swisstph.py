@@ -210,6 +210,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             eir_ci="EIR_mean",
             n_uncomp=100.0,
             n_severe=10.0,
+            t_uncomp=60.0,
+            t_severe=6.0,
             prevalence_rate=0.05,
             expected_direct_deaths=1.0,
             **base,
@@ -220,6 +222,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             eir_ci="EIR_lci",
             n_uncomp=80.0,
             n_severe=8.0,
+            t_uncomp=50.0,
+            t_severe=5.0,
             prevalence_rate=0.04,
             expected_direct_deaths=0.8,
             **base,
@@ -230,6 +234,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             eir_ci="EIR_uci",
             n_uncomp=120.0,
             n_severe=12.0,
+            t_uncomp=70.0,
+            t_severe=7.0,
             prevalence_rate=0.06,
             expected_direct_deaths=1.2,
             **base,
@@ -241,6 +247,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             eir_ci="EIR_mean",
             n_uncomp=110.0,
             n_severe=12.0,
+            t_uncomp=70.0,
+            t_severe=8.0,
             prevalence_rate=0.06,
             expected_direct_deaths=1.5,
             **base,
@@ -251,6 +259,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             eir_ci="EIR_lci",
             n_uncomp=90.0,
             n_severe=9.0,
+            t_uncomp=60.0,
+            t_severe=6.0,
             prevalence_rate=0.045,
             expected_direct_deaths=1.0,
             **base,
@@ -261,6 +271,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             eir_ci="EIR_uci",
             n_uncomp=130.0,
             n_severe=14.0,
+            t_uncomp=80.0,
+            t_severe=9.0,
             prevalence_rate=0.07,
             expected_direct_deaths=2.0,
             **base,
@@ -356,24 +368,74 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         result = bulk.results[1][0]
 
         # value = avg of EIR_mean seeds: (100+110)/2, (10+12)/2, ...
-        self.assertAlmostEqual(result.number_cases.value, 105.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.value, 105.0)
         self.assertAlmostEqual(result.number_severe_cases.value, 11.0)
         self.assertAlmostEqual(result.prevalence_rate.value, 0.055)
         self.assertAlmostEqual(result.direct_deaths.value, 1.25)
 
         # lower = avg of EIR_lci seeds: (80+90)/2, (8+9)/2, ...
-        self.assertAlmostEqual(result.number_cases.lower, 85.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.lower, 85.0)
         self.assertAlmostEqual(result.number_severe_cases.lower, 8.5)
         self.assertAlmostEqual(result.prevalence_rate.lower, 0.0425)
         self.assertAlmostEqual(result.direct_deaths.lower, 0.9)
 
         # upper = avg of EIR_uci seeds: (120+130)/2, (12+14)/2, ...
-        self.assertAlmostEqual(result.number_cases.upper, 125.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.upper, 125.0)
         self.assertAlmostEqual(result.number_severe_cases.upper, 13.0)
         self.assertAlmostEqual(result.prevalence_rate.upper, 0.065)
         self.assertAlmostEqual(result.direct_deaths.upper, 1.6)
 
         self.assertAlmostEqual(result.population, 50000.0)
+
+    def _match_bern(self, provider):
+        bulk = provider.match_impact_bulk(
+            [MockOrgUnit(id=1, name="Bern")],
+            interventions=[MockIntervention(impact_ref="deployed_int_smc")],
+            age_group="allAges",
+        )
+        return bulk.results[1][0]
+
+    def _treated_cases_provider(self):
+        with patch(
+            "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection",
+            return_value="default",
+        ):
+            return SwissTPHImpactProvider(**{**_PROVIDER_KWARGS, "config": {"use_treated_cases": True}})
+
+    def test_number_cases_sums_all_uncomplicated_and_severe_episodes_by_default(self):
+        result = self._match_bern(self.provider)
+
+        self.assertAlmostEqual(result.number_cases.value, (100 + 110) / 2 + (10 + 12) / 2)
+        self.assertAlmostEqual(result.number_cases.lower, (80 + 90) / 2 + (8 + 9) / 2)
+        self.assertAlmostEqual(result.number_cases.upper, (120 + 130) / 2 + (12 + 14) / 2)
+
+    def test_use_treated_cases_counts_treated_episodes_for_case_metrics(self):
+        """Uncomplicated, severe and total cases switch to tUncomp/tSevere; other metrics are unchanged."""
+        default_result = self._match_bern(self.provider)
+        result = self._match_bern(self._treated_cases_provider())
+
+        self.assertAlmostEqual(result.number_uncomplicated_cases.value, (60 + 70) / 2)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.lower, (50 + 60) / 2)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.upper, (70 + 80) / 2)
+        self.assertAlmostEqual(result.number_severe_cases.value, (6 + 8) / 2)
+        self.assertAlmostEqual(result.number_severe_cases.lower, (5 + 6) / 2)
+        self.assertAlmostEqual(result.number_severe_cases.upper, (7 + 9) / 2)
+        self.assertAlmostEqual(result.number_cases.value, (60 + 70) / 2 + (6 + 8) / 2)
+        self.assertAlmostEqual(result.number_cases.lower, (50 + 60) / 2 + (5 + 6) / 2)
+        self.assertAlmostEqual(result.number_cases.upper, (70 + 80) / 2 + (7 + 9) / 2)
+        self.assertEqual(result.prevalence_rate, default_result.prevalence_rate)
+        self.assertEqual(result.direct_deaths, default_result.direct_deaths)
+
+    def test_meta_annotates_case_metrics_for_the_configured_case_counting(self):
+        case_metrics = {"number_cases", "number_uncomplicated_cases", "number_severe_cases"}
+        default_meta = self.provider.get_meta()
+        treated_meta = self._treated_cases_provider().get_meta()
+
+        self.assertEqual(default_meta, SwissTPHImpactProvider.meta)
+        self.assertEqual(treated_meta, SwissTPHImpactProvider.treated_cases_meta)
+        self.assertEqual(set(default_meta.metric_annotations), case_metrics)
+        self.assertEqual(set(treated_meta.metric_annotations), case_metrics)
+        self.assertEqual(treated_meta.provider_key, "swisstph")
 
     def test_duplicate_rows_are_averaged_transparently(self):
         """Identical duplicate rows (e.g. from different scenario_names) are absorbed by Avg."""
@@ -413,7 +475,7 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         )
 
         result = bulk.results[1][0]
-        self.assertAlmostEqual(result.number_cases.value, 100.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.value, 100.0)
         self.assertAlmostEqual(result.number_severe_cases.value, 10.0)
 
     def test_missing_eir_ci_categories_yield_none_bounds(self):
@@ -442,9 +504,9 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         )
 
         result = bulk.results[1][0]
-        self.assertAlmostEqual(result.number_cases.value, 100.0)
-        self.assertIsNone(result.number_cases.lower)
-        self.assertIsNone(result.number_cases.upper)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.value, 100.0)
+        self.assertIsNone(result.number_uncomplicated_cases.lower)
+        self.assertIsNone(result.number_uncomplicated_cases.upper)
         self.assertAlmostEqual(result.number_severe_cases.value, 10.0)
         self.assertIsNone(result.number_severe_cases.lower)
         self.assertIsNone(result.number_severe_cases.upper)
@@ -485,9 +547,9 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         )
 
         result = bulk.results[1][0]
-        self.assertAlmostEqual(result.number_cases.value, 100.0)
-        self.assertIsNone(result.number_cases.lower)
-        self.assertIsNone(result.number_cases.upper)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.value, 100.0)
+        self.assertIsNone(result.number_uncomplicated_cases.lower)
+        self.assertIsNone(result.number_uncomplicated_cases.upper)
 
 
 class SwissTPHCustomConfigTests(TestCase):
@@ -564,9 +626,9 @@ class SwissTPHCustomConfigTests(TestCase):
 
         self.assertIn(1, bulk.results)
         result = bulk.results[1][0]
-        self.assertAlmostEqual(result.number_cases.value, 200.0)
-        self.assertAlmostEqual(result.number_cases.lower, 160.0)
-        self.assertAlmostEqual(result.number_cases.upper, 240.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.value, 200.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.lower, 160.0)
+        self.assertAlmostEqual(result.number_uncomplicated_cases.upper, 240.0)
         self.assertAlmostEqual(result.population, 40000.0)
 
     def test_default_eir_ci_values_are_original_swisstph(self):

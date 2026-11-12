@@ -34,7 +34,9 @@ export const MetricsSummary: FC = () => {
         isImpactLoading,
         targetYear,
         isSingleYear,
+        providerMeta,
     } = useComparisonDataContext();
+    const metricAnnotations = providerMeta?.metric_annotations;
     const { formatMessage } = useSafeIntl();
 
     const baselineId = scenarios[0]?.id;
@@ -149,6 +151,7 @@ export const MetricsSummary: FC = () => {
                 isLoading={isImpactLoading}
                 entries={casesEntries}
                 keyPrefix="cases"
+                tooltip={metricAnnotations?.number_cases}
                 subtext={targetYearSubtext('number_cases', formatBigNumber)}
             />
             <MetricCard
@@ -157,6 +160,7 @@ export const MetricsSummary: FC = () => {
                 isLoading={isImpactLoading}
                 entries={severeCasesEntries}
                 keyPrefix="severe"
+                tooltip={metricAnnotations?.number_severe_cases}
                 subtext={targetYearSubtext(
                     'number_severe_cases',
                     formatBigNumber,
@@ -169,6 +173,7 @@ export const MetricsSummary: FC = () => {
                     isLoading={isImpactLoading}
                     entries={prevalenceEntries}
                     keyPrefix="prevalence"
+                    tooltip={metricAnnotations?.prevalence_rate}
                 />
             ) : (
                 <MetricCard
@@ -177,6 +182,7 @@ export const MetricsSummary: FC = () => {
                     isLoading={isImpactLoading}
                     entries={pfprEntries}
                     keyPrefix="pfpr"
+                    tooltip={metricAnnotations?.prevalence_rate}
                     subtext={targetYearSubtext(
                         'prevalence_rate',
                         formatPercentValue,

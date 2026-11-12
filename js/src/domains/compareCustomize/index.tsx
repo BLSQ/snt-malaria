@@ -23,13 +23,13 @@ import { InterventionMaps } from './components/InterventionMaps';
 import { MetricsSummary } from './components/MetricsSummary';
 import { useComparisonData } from './hooks/useComparisonData';
 import { useGetImpactAgeGroups } from './hooks/useGetImpactAgeGroups';
+import { useGetImpactProviderMeta } from './hooks/useGetImpactProviderMeta';
 import { useGetImpactYearRange } from './hooks/useGetImpactYearRange';
 import { useMatchWarnings } from './hooks/useMatchWarnings';
 import { usePrefetchYearsImpact } from './hooks/usePrefetchYearsImpact';
 import { useScenarioInterventions } from './hooks/useScenarioInterventions';
 import { useScenarioSelections } from './hooks/useScenarioSelections';
 import {
-    ImpactProviderMeta,
     ScenarioDisplay,
     ScenarioYearRange,
     toNumericId,
@@ -266,14 +266,7 @@ export const CompareCustomize: FC = () => {
         displayScenarios,
     });
 
-    const providerMeta: ImpactProviderMeta | undefined = useMemo(() => {
-        for (const impact of impactsByScenarioId.values()) {
-            if (impact?.provider_meta) {
-                return impact.provider_meta;
-            }
-        }
-        return undefined;
-    }, [impactsByScenarioId]);
+    const { data: providerMeta } = useGetImpactProviderMeta();
 
     return (
         <>
@@ -293,6 +286,7 @@ export const CompareCustomize: FC = () => {
                 yearFrom={yearFrom}
                 isSingleYear={isSingleYear}
                 selectedOrgUnitIds={selectedOrgUnitIds}
+                providerMeta={providerMeta}
             >
                 <PageContainer sx={styles.pageContainer}>
                     <SidebarLayout>
