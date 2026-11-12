@@ -1,4 +1,11 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { CloudOff } from '@mui/icons-material';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -7,7 +14,11 @@ import { MESSAGES } from '../../domains/messages';
 import { useGetAccountSettings } from '../../domains/planning/hooks/useGetAccountSettings';
 import { InlineSearchInput } from '../InlineSearchInput';
 import { OrgUnitTreeRow } from './OrgUnitTreeRow';
-import { buildVisibleRows, computeKeepForQuery } from './orgUnitTreeUtils';
+import {
+    buildVisibleRows,
+    computeKeepForQuery,
+    getLastVisibleDescendantId,
+} from './orgUnitTreeUtils';
 import { TreeCheckState } from './types';
 import { useOrgUnitTree } from './useOrgUnitTree';
 
@@ -79,6 +90,24 @@ type Props = {
     onChange: (ids: number[] | undefined) => void;
 };
 
+const scrollRowRangeIntoView = (
+    treeScroll: HTMLElement,
+    firstRow: HTMLElement,
+    lastRow: HTMLElement,
+): void => {
+    const scrollAreaTop = treeScroll.getBoundingClientRect().top;
+    const toScrollOffset = (viewportY: number) =>
+        viewportY - scrollAreaTop + treeScroll.scrollTop;
+    const rangeTop = toScrollOffset(firstRow.getBoundingClientRect().top);
+    const rangeBottom = toScrollOffset(lastRow.getBoundingClientRect().bottom);
+    const visibleBottom = treeScroll.scrollTop + treeScroll.clientHeight;
+    if (rangeBottom <= visibleBottom) return;
+    treeScroll.scrollTo({
+        top: Math.min(rangeBottom - treeScroll.clientHeight, rangeTop),
+        behavior: 'smooth',
+    });
+};
+
 export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
     const theme = useTheme();
     const { formatMessage } = useSafeIntl();
@@ -111,17 +140,57 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
         [tree, expanded, keep],
     );
 
-    const handleToggleOpen = useCallback((nodeId: number) => {
-        setExpanded(prev => {
-            const next = new Set(prev);
-            if (next.has(nodeId)) {
-                next.delete(nodeId);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const treeScrollRef = useRef<HTMLDivElement>(null);
+    const rowElementsRef = useRef(new Map<number, HTMLDivElement>());
+    const nodeToRevealRef = useRef<number | null>(null);
+
+    const setRowElement = useCallback(
+        (nodeId: number) => (element: HTMLDivElement | null) => {
+            if (element) {
+                rowElementsRef.current.set(nodeId, element);
             } else {
-                next.add(nodeId);
+                rowElementsRef.current.delete(nodeId);
             }
-            return next;
+        },
+        [],
+    );
+
+    useEffect(() => {
+        const nodeId = nodeToRevealRef.current;
+        nodeToRevealRef.current = null;
+        const treeScroll = treeScrollRef.current;
+        if (nodeId === null || !treeScroll) return;
+        const lastDescendantId = getLastVisibleDescendantId(rows, nodeId);
+        const expandedRow = rowElementsRef.current.get(nodeId);
+        const lastDescendantRow =
+            lastDescendantId !== undefined
+                ? rowElementsRef.current.get(lastDescendantId)
+                : undefined;
+        if (expandedRow && lastDescendantRow) {
+            scrollRowRangeIntoView(treeScroll, expandedRow, lastDescendantRow);
+        }
+        rootRef.current?.scrollIntoView({
+            block: 'nearest',
+            behavior: 'smooth',
         });
-    }, []);
+    }, [rows]);
+
+    const handleToggleOpen = useCallback(
+        (nodeId: number) => {
+            nodeToRevealRef.current = expanded.has(nodeId) ? null : nodeId;
+            setExpanded(prev => {
+                const next = new Set(prev);
+                if (next.has(nodeId)) {
+                    next.delete(nodeId);
+                } else {
+                    next.add(nodeId);
+                }
+                return next;
+            });
+        },
+        [expanded],
+    );
 
     const handleToggleSelection = useCallback(
         (nodeId: number) => {
@@ -174,7 +243,7 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
     }
 
     return (
-        <Box sx={styles.box}>
+        <Box ref={rootRef} sx={styles.box}>
             <Box sx={styles.searchRow}>
                 <InlineSearchInput
                     value={query}
@@ -190,7 +259,7 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
                 )}
             </Box>
 
-            <Box sx={styles.treeScroll}>
+            <Box ref={treeScrollRef} sx={styles.treeScroll}>
                 {isLoading && (
                     <Box sx={styles.centeredMessage}>
                         <Typography variant="caption" color="text.secondary">
@@ -252,6 +321,7 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
                                         </span>
                                     )
                                 }
+                                rowRef={setRowElement(node.id)}
                                 onToggleOpen={() => handleToggleOpen(node.id)}
                                 onToggleSelection={() =>
                                     handleToggleSelection(node.id)

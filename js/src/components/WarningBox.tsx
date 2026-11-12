@@ -7,6 +7,8 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { Box, ButtonBase, Collapse, Theme, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { SxStyles } from 'Iaso/types/general';
+import { useKeepInViewWhileAnimating } from '../hooks/useKeepInViewWhileAnimating';
+import { WarningBoxRevealContext } from './WarningBoxRevealContext';
 
 export type WarningSeverity = 'error' | 'warning' | 'info';
 
@@ -111,10 +113,24 @@ export const WarningBox: FC<Props> = ({
     const Icon = severityIcons[severity];
     const severityStyle = severityStyles[severity];
 
+    const { ref: rootRef, ...keepInViewWhileExpanding } =
+        useKeepInViewWhileAnimating<HTMLDivElement>();
+
     const toggleExpanded = useCallback(() => setExpanded(prev => !prev), []);
+    const revealWarningBox = useCallback(
+        () =>
+            rootRef.current?.scrollIntoView({
+                block: 'nearest',
+                behavior: 'smooth',
+            }),
+        [rootRef],
+    );
 
     return (
-        <Box sx={[styles.root, { borderColor: severityStyle.borderColor }]}>
+        <Box
+            ref={rootRef}
+            sx={[styles.root, { borderColor: severityStyle.borderColor }]}
+        >
             <Box
                 component={isToggleable ? ButtonBase : 'div'}
                 onClick={isToggleable ? toggleExpanded : undefined}
@@ -133,16 +149,23 @@ export const WarningBox: FC<Props> = ({
                     ))}
             </Box>
             {hasBody && (
-                <Collapse in={isExpanded}>
-                    <Box sx={styles.body}>
-                        {description && (
-                            <Typography variant="body2" sx={styles.description}>
-                                {description}
-                            </Typography>
-                        )}
-                        {children && <Box sx={styles.details}>{children}</Box>}
-                        {action && <Box sx={styles.action}>{action}</Box>}
-                    </Box>
+                <Collapse in={isExpanded} {...keepInViewWhileExpanding}>
+                    <WarningBoxRevealContext.Provider value={revealWarningBox}>
+                        <Box sx={styles.body}>
+                            {description && (
+                                <Typography
+                                    variant="body2"
+                                    sx={styles.description}
+                                >
+                                    {description}
+                                </Typography>
+                            )}
+                            {children && (
+                                <Box sx={styles.details}>{children}</Box>
+                            )}
+                            {action && <Box sx={styles.action}>{action}</Box>}
+                        </Box>
+                    </WarningBoxRevealContext.Provider>
                 </Collapse>
             )}
         </Box>

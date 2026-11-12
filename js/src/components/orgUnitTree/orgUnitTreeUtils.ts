@@ -146,3 +146,19 @@ export const buildVisibleRows = (
     tree.rootIds.forEach(id => visit(id, 0));
     return rows;
 };
+
+export const getLastVisibleDescendantId = (
+    rows: VisibleTreeRow[],
+    nodeId: number,
+): number | undefined => {
+    const index = rows.findIndex(row => row.id === nodeId);
+    if (index < 0) return undefined;
+    let lastIndex = index;
+    while (
+        rows[lastIndex + 1] &&
+        rows[lastIndex + 1].depth > rows[index].depth
+    ) {
+        lastIndex += 1;
+    }
+    return rows[lastIndex].id;
+};
