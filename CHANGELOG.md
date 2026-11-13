@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.24.0](https://github.com/BLSQ/snt-malaria/compare/2.23.0...2.24.0) (2026-11-13)
+
+
+### Features
+
+* **Impact:** add admin action to invalidate an account's impact cache ([dc2fa8a](https://github.com/BLSQ/snt-malaria/commit/dc2fa8aecd37996c574f5fd89a363894135921a7))
+* **Impact:** Comparison page polish ([5ce39c7](https://github.com/BLSQ/snt-malaria/commit/5ce39c77df3833a3df704f44c2fa0896dcb37fe3))
+* **Impact:** configurable SwissTPH case counts with metric annotations ([0dac309](https://github.com/BLSQ/snt-malaria/commit/0dac309222873dac2fb7e11f374fd25695ff9590))
+* **Impact:** Count cases as (uncomp + severe) for SwissTPH ([0dac309](https://github.com/BLSQ/snt-malaria/commit/0dac309222873dac2fb7e11f374fd25695ff9590))
+* **Impact:** range / single-year toggle on the comparison page ([4623d7e](https://github.com/BLSQ/snt-malaria/commit/4623d7e5b8651c89350757128a07a889c3ace429))
+* **Impact:** Select metric for line plot in comparison page ([a40ef7c](https://github.com/BLSQ/snt-malaria/commit/a40ef7cdb4729b85ec6a33047827bf6847966185))
+* **interventions:** Allow deleting interventions still linked to rules ([d511e5c](https://github.com/BLSQ/snt-malaria/commit/d511e5c45b9ead5a53bf83d439a6ce814f136eff))
+
 ## [2.23.0](https://github.com/BLSQ/snt-malaria/compare/2.22.0...2.23.0) (2026-11-09)
 
 
