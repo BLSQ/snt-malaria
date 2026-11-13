@@ -196,6 +196,60 @@ class BuildInterventionGroupsTestCase(SNTMalariaTestCase):
         groups = _build_intervention_groups(df, self._interventions_qs())
         self.assertEqual(len(groups), 0)
 
+    def test_intervention_shared_across_mixes_gets_a_single_group(self):
+        iv_c = self.create_snt_intervention(
+            intervention_category=self.category, created_by=self.user, name="C", code="c"
+        )
+        col_a = get_intervention_column("A", "a")
+        col_b = get_intervention_column("B", "b")
+        col_c = get_intervention_column("C", "c")
+        df = self._make_df(
+            [
+                {"org_unit_id": 1, col_a: 1, col_b: 1, col_c: 0},
+                {"org_unit_id": 2, col_a: 1, col_b: 0, col_c: 1},
+                {"org_unit_id": 3, col_a: 1, col_b: 0, col_c: 0},
+            ]
+        )
+        groups = _build_intervention_groups(df, self._interventions_qs())
+        self.assertEqual(
+            [(g["intervention_ids"], g["org_unit_ids"]) for g in groups],
+            [
+                (frozenset([self.iv_a.id]), [1, 2, 3]),
+                (frozenset([self.iv_b.id]), [1]),
+                (frozenset([iv_c.id]), [2]),
+            ],
+        )
+
+    def test_interventions_with_identical_footprint_are_merged(self):
+        col_a = get_intervention_column("A", "a")
+        col_b = get_intervention_column("B", "b")
+        df = self._make_df(
+            [
+                {"org_unit_id": 1, col_a: 1, col_b: 1},
+                {"org_unit_id": 2, col_a: 0, col_b: 0},
+                {"org_unit_id": 3, col_a: 1, col_b: 1},
+            ]
+        )
+        groups = _build_intervention_groups(df, self._interventions_qs())
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0]["intervention_ids"], frozenset([self.iv_a.id, self.iv_b.id]))
+        self.assertEqual(groups[0]["org_unit_ids"], [1, 3])
+
+    def test_groups_ordered_by_footprint_size_descending(self):
+        col_a = get_intervention_column("A", "a")
+        col_b = get_intervention_column("B", "b")
+        df = self._make_df(
+            [
+                {"org_unit_id": 1, col_a: 1, col_b: 1},
+                {"org_unit_id": 2, col_a: 0, col_b: 1},
+                {"org_unit_id": 3, col_a: 0, col_b: 1},
+            ]
+        )
+        groups = _build_intervention_groups(df, self._interventions_qs())
+        self.assertEqual(
+            [g["intervention_ids"] for g in groups], [frozenset([self.iv_b.id]), frozenset([self.iv_a.id])]
+        )
+
 
 class CreateRulesFromImportTestCase(SNTMalariaTestCase):
     auto_create_account = False
@@ -254,8 +308,8 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
     def _interventions_qs(self):
         return Intervention.objects.filter(intervention_category__account=self.account).values("id", "name", "code")
 
-    def test_all_minority_groups(self):
-        """Each district has a unique intervention → all minority → inclusion-only rules."""
+    def test_one_inclusion_only_rule_per_intervention_footprint(self):
+        """Three distinct mixes but only two distinct footprints, so two inclusion-only rules."""
         df = pd.DataFrame(
             [
                 {"org_unit_id": self.ou1.id, self.col_a: 1, self.col_b: 0},
@@ -269,12 +323,71 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self._interventions_qs(),
             self.user,
         )
-        self.assertEqual(len(rules), 3)
+        self.assertEqual(len(rules), 2)
         for rule in rules:
             self.assertIsNone(rule.matching_criteria)
             self.assertEqual(rule.org_units_excluded, [])
-            self.assertNotEqual(rule.org_units_included, [])
-            self.assertTrue(rule.interventions.exists())
+            self.assertEqual(rule.interventions.count(), 1)
+
+        rule_a = next(r for r in rules if r.interventions.filter(id=self.iv_a.id).exists())
+        rule_b = next(r for r in rules if r.interventions.filter(id=self.iv_b.id).exists())
+        self.assertEqual(sorted(rule_a.org_units_included), sorted([self.ou1.id, self.ou3.id]))
+        self.assertEqual(sorted(rule_b.org_units_included), sorted([self.ou2.id, self.ou3.id]))
+
+    def test_country_wide_intervention_becomes_single_lowest_priority_rule(self):
+        df = pd.DataFrame(
+            [
+                {"org_unit_id": self.ou1.id, self.col_a: 1, self.col_b: 1},
+                {"org_unit_id": self.ou2.id, self.col_a: 1, self.col_b: 0},
+                {"org_unit_id": self.ou3.id, self.col_a: 1, self.col_b: 0},
+            ]
+        )
+        rules = create_rules_from_import(
+            self.scenario,
+            df,
+            self._interventions_qs(),
+            self.user,
+        )
+        self.assertEqual(len(rules), 2)
+
+        country_wide_rule, targeted_rule = rules
+        self.assertEqual(list(country_wide_rule.interventions.all()), [self.iv_a])
+        self.assertEqual(sorted(country_wide_rule.org_units_included), sorted([self.ou1.id, self.ou2.id, self.ou3.id]))
+        self.assertEqual(list(targeted_rule.interventions.all()), [self.iv_b])
+        self.assertEqual(targeted_rule.org_units_included, [self.ou1.id])
+        self.assertLess(country_wide_rule.priority, targeted_rule.priority)
+
+    def test_refresh_assignments_reproduces_overlapping_interventions_from_different_categories(self):
+        other_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Other cat"
+        )
+        iv_c = self.create_snt_intervention(
+            intervention_category=other_category, created_by=self.user, name="Gamma", code="c", short_name="C"
+        )
+        col_c = get_intervention_column("Gamma", "c")
+        df = pd.DataFrame(
+            [
+                {"org_unit_id": self.ou1.id, self.col_a: 1, self.col_b: 0, col_c: 1},
+                {"org_unit_id": self.ou2.id, self.col_a: 1, self.col_b: 0, col_c: 0},
+                {"org_unit_id": self.ou3.id, self.col_a: 0, self.col_b: 1, col_c: 1},
+            ]
+        )
+        rules = create_rules_from_import(self.scenario, df, self._interventions_qs(), self.user)
+        self.assertEqual(len(rules), 3)
+
+        self.scenario.refresh_assignments(self.user)
+
+        assignments = InterventionAssignment.objects.filter(scenario=self.scenario)
+        self.assertCountEqual(
+            assignments.values_list("org_unit_id", "intervention_id"),
+            [
+                (self.ou1.id, self.iv_a.id),
+                (self.ou1.id, iv_c.id),
+                (self.ou2.id, self.iv_a.id),
+                (self.ou3.id, self.iv_b.id),
+                (self.ou3.id, iv_c.id),
+            ],
+        )
 
     def test_majority_group_is_also_inclusion_only(self):
         """There is no "match all" sentinel in matching_criteria - even a group covering >50% of
@@ -336,11 +449,7 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self._interventions_qs(),
             self.user,
         )
-        combo_rule = next(r for r in rules if r.interventions.count() == 2)
-        self.assertEqual(combo_rule.name, "")
-
-        single_rule = next(r for r in rules if r.interventions.count() == 1)
-        self.assertEqual(single_rule.name, "")
+        self.assertEqual([r.name for r in rules], ["", ""])
 
     def test_empty_df_returns_no_rules(self):
         df = pd.DataFrame(
