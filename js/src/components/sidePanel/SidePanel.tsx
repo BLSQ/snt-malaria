@@ -1,49 +1,29 @@
-import React, { ComponentType, FC, ReactNode } from 'react';
-import { Card, Divider, SvgIconProps } from '@mui/material';
+import React, { FC, ReactNode } from 'react';
+import { Box } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { SidebarColumn } from '../styledComponents';
-import { useSidePanelContext } from './SidePanelContext';
-import { SidePanelIconToggle } from './SidePanelIconToggle';
+import { useSidePanelHold } from './useSidePanelHold';
+import { useSidePanelLabel } from './useSidePanelLabel';
+import { BASE_LABEL_KEY } from './useSidePanelState';
 
 const styles = {
-    collapsedCard: {
-        flexShrink: 0,
-        width: 65,
-        height: '100%',
+    root: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        gap: 1.5,
-        pt: 2,
-    },
-    divider: {
-        width: '60%',
+        flex: '1 1 auto',
+        minHeight: 0,
     },
 } satisfies SxStyles;
 
 type Props = {
-    icon: ComponentType<SvgIconProps>;
-    actions?: ReactNode;
+    title: string;
+    hint?: string;
+    /** Each change holds the undocked panel open until the pointer re-enters it. */
+    holdKey?: unknown;
     children: ReactNode;
 };
 
-export const SidePanel: FC<Props> = ({ icon, actions, children }) => {
-    const { isOpen } = useSidePanelContext();
-
-    if (!isOpen) {
-        return (
-            <Card sx={styles.collapsedCard}>
-                <SidePanelIconToggle icon={icon} />
-                {actions && (
-                    <>
-                        <Divider sx={styles.divider} />
-                        {actions}
-                    </>
-                )}
-            </Card>
-        );
-    }
-
-    return <SidebarColumn>{children}</SidebarColumn>;
+export const SidePanel: FC<Props> = ({ title, hint, holdKey, children }) => {
+    useSidePanelLabel({ title, hint }, BASE_LABEL_KEY);
+    useSidePanelHold(holdKey);
+    return <Box sx={styles.root}>{children}</Box>;
 };

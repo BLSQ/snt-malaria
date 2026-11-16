@@ -7,8 +7,7 @@ import React, {
     useState,
 } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import LayersIcon from '@mui/icons-material/Layers';
-import { Card, Stack } from '@mui/material';
+import { Box, Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useGetPipelineConfig } from 'Iaso/domains/openHexa/hooks/useGetPipelineConfig';
@@ -18,18 +17,15 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { CardStyled } from '../../components/CardStyled';
+import { IconBoxed } from '../../components/IconBoxed';
 import { SidePanel } from '../../components/sidePanel/SidePanel';
-import {
-    SidePanelContext,
-    SidePanelContextValue,
-} from '../../components/sidePanel/SidePanelContext';
-import { SidePanelIconToggle } from '../../components/sidePanel/SidePanelIconToggle';
+import { SidePanelContext } from '../../components/sidePanel/SidePanelContext';
+import { SidePanelDockButton } from '../../components/sidePanel/SidePanelDockButton';
+import { SidePanelLayout } from '../../components/sidePanel/SidePanelLayout';
 import { useSidePanelState } from '../../components/sidePanel/useSidePanelState';
 import {
-    MainColumn,
     PageContainer,
     PaperFullHeight,
-    SidebarLayout,
 } from '../../components/styledComponents';
 import { SETTINGS_WRITE } from '../../constants/permissions';
 import { baseUrls } from '../../constants/urls';
@@ -45,6 +41,7 @@ import {
 } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
+import { MESSAGES as COMPOSITE_MESSAGES } from '../compositeLayerEditor/messages';
 import {
     CompositeSidebarTab,
     CompositeSidebarTabs,
@@ -57,15 +54,11 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
 import { DataLayerComparisonContainer } from './dataLayerComparison/dataLayerComparisonContainer';
 import { DataLayerList } from './dataLayerList/DataLayerList';
-import {
-    DataLayerListActions,
-    DataLayerListHeader,
-} from './dataLayerList/DataLayerListHeader';
+import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { DataLayerWizardMain } from './dataLayerWizard/DataLayerWizardMain';
 import { DataLayerWizardPanel } from './dataLayerWizard/DataLayerWizardPanel';
 import { DiscardWizardModal } from './dataLayerWizard/DiscardWizardModal';
-import { WIZARD_STEPS } from './dataLayerWizard/useDataLayerWizard';
 import { useDataLayerWizardController } from './dataLayerWizard/useDataLayerWizardController';
 import { useWizardMapPreview } from './dataLayerWizard/useWizardMapPreview';
 import { WizardLegendPreview } from './dataLayerWizard/WizardLegendPreview';
@@ -83,6 +76,9 @@ const styles = {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+    },
+    headerEnd: {
+        ml: 'auto',
     },
 } satisfies SxStyles;
 
@@ -210,10 +206,10 @@ export const DataLayers: FC = () => {
         [compositeLayerByMetricType],
     );
 
-    // Collapsible data layers sidebar. Locked (can't collapse) while creating/editing a layer,
-    // wired in further down once `wizard` exists - see `sidePanel` below.
-    const sidePanelState = useSidePanelState(true);
-    const { open: openSidePanel } = sidePanelState;
+    const sidePanel = useSidePanelState({
+        storageKey: 'snt_malaria.dataLayers.sidePanelMode',
+    });
+    const { reveal: revealSidePanel } = sidePanel;
 
     // Only meaningful while the composite editor is open, and only when there is an AI key.
     const [sidebarTab, setSidebarTab] =
@@ -230,11 +226,10 @@ export const DataLayers: FC = () => {
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
-        openSidePanel();
         setSidebarTab('library');
         setNodeSearchTerm('');
         resetAiChat();
-    }, [resetAiChat, openSidePanel]);
+    }, [resetAiChat]);
 
     // After saving, close the editor and show the resulting composite layer on the map.
     const onCompositeSaved = useCallback(
@@ -261,24 +256,6 @@ export const DataLayers: FC = () => {
     });
     const wizardPreview = useWizardMapPreview(wizard);
 
-    // Locks the sidebar open while creating/editing a layer, so its form can't be hidden
-    // mid-flow - except on the Data/Graph step, where collapsing it gives the main view room.
-    // Can't be built into `sidePanelState` above since `wizard` doesn't exist yet at that point
-    // (it needs `openSidePanel`, which needs `sidePanelState` first).
-    const isSidePanelLocked =
-        wizard.isOpen && wizard.activeStep !== WIZARD_STEPS.DATA;
-    const sidePanel: SidePanelContextValue = useMemo(
-        () => ({
-            ...sidePanelState,
-            locked: isSidePanelLocked,
-            toggle: isSidePanelLocked
-                ? sidePanelState.open
-                : sidePanelState.toggle,
-            close: isSidePanelLocked ? () => {} : sidePanelState.close,
-        }),
-        [sidePanelState, isSidePanelLocked],
-    );
-
     const onEditMetricType = useCallback(
         (metricType: MetricType) =>
             wizard.openForEdit(
@@ -295,10 +272,10 @@ export const DataLayers: FC = () => {
 
     const onWizardGraphSaved = useCallback(
         (metricType?: MetricType) => {
-            openSidePanel();
+            revealSidePanel();
             wizard.onCompositeGraphSaved(metricType);
         },
-        [wizard, openSidePanel],
+        [wizard, revealSidePanel],
     );
 
     // Keeps the edited composite selected in the list while the editor is open.
@@ -325,13 +302,18 @@ export const DataLayers: FC = () => {
                 <>
                     <Stack direction="row" alignItems="center" spacing={1}>
                         {isCompositeEditorOpen && (
-                            <SidePanelIconToggle icon={AccountTreeIcon} />
+                            <IconBoxed Icon={AccountTreeIcon} />
                         )}
                         <CompositeSidebarTabs
                             tab={sidebarTab}
                             onChangeTab={setSidebarTab}
                             showTabs={hasAiApiKey}
                         />
+                        {isCompositeEditorOpen && (
+                            <Box sx={styles.headerEnd}>
+                                <SidePanelDockButton />
+                            </Box>
+                        )}
                     </Stack>
                     {!isAiChatTab && (
                         <NodeLibrarySearch
@@ -447,16 +429,23 @@ export const DataLayers: FC = () => {
         return layerListCard;
     };
 
-    const sidePanelIcon = isCompositeEditorOpen ? AccountTreeIcon : LayersIcon;
-    const sidePanelActions =
-        isCompositeEditorActive || wizard.isOpen ? undefined : (
-            <DataLayerListActions
-                onCreate={() => {
-                    openSidePanel();
-                    wizard.open();
-                }}
-            />
-        );
+    const sidePanelLabel = (() => {
+        if (isCompositeEditorOpen) {
+            return {
+                title: formatMessage(COMPOSITE_MESSAGES.nodeLibraryTabLabel),
+            };
+        }
+        if (wizard.isOpen) {
+            return {
+                title: formatMessage(wizard.titleMessage),
+                hint: wizard.editingMetricType?.name,
+            };
+        }
+        return {
+            title: formatMessage(MESSAGES.dataLayersTitle),
+            hint: displayedMetricType?.name,
+        };
+    })();
 
     const mapColumn = (
         <Stack direction="row" gap={1} sx={{ height: '100%' }}>
@@ -535,21 +524,19 @@ export const DataLayers: FC = () => {
                     sx={{ zIndex: 401 }}
                 />
                 <PageContainer>
-                    <SidebarLayout>
-                        <SidePanel
-                            icon={sidePanelIcon}
-                            actions={sidePanelActions}
-                        >
-                            <PaperFullHeight>
+                    <SidePanelLayout
+                        panel={
+                            <SidePanel
+                                title={sidePanelLabel.title}
+                                hint={sidePanelLabel.hint}
+                                holdKey={`${wizard.isOpen}:${wizard.activeStep}:${isCompositeEditorOpen}`}
+                            >
                                 {renderSidebarColumn()}
-                            </PaperFullHeight>
-                        </SidePanel>
-                        <MainColumn>
-                            <PaperFullHeight>
-                                {renderMainColumn()}
-                            </PaperFullHeight>
-                        </MainColumn>
-                    </SidebarLayout>
+                            </SidePanel>
+                        }
+                    >
+                        <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
+                    </SidePanelLayout>
                     <DiscardWizardModal
                         open={wizard.discardOpen}
                         titleMessage={wizard.titleMessage}

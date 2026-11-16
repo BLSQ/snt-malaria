@@ -27,6 +27,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { MoreActions } from '../../../../components/MoreActions';
 import { OrgUnitSelect } from '../../../../components/OrgUnitSelect';
+import { SidePanelToggle } from '../../../../components/sidePanel/SidePanelToggle';
 import { ToggleButtonLabel } from '../../../../components/ToggleButtonLabel';
 import { exportScenarioAPIPath } from '../../../../constants/api-urls';
 import * as Permission from '../../../../constants/permissions';
@@ -106,67 +107,74 @@ export const InterventionPlanHeader: FC<Props> = ({
             alignItems="center"
             sx={styles.root}
         >
-            <Stack direction="row" spacing={2} alignItems="center">
-                <ToggleButtonGroup
-                    value={activeTab}
-                    size="small"
-                    onChange={handleTabChange}
-                    exclusive
-                >
-                    <ToggleButton value="map">
-                        <ToggleButtonLabel
-                            icon={MapOutlinedIcon}
-                            label={formatMessage(MESSAGES.mapView)}
-                        />
-                    </ToggleButton>
-                    <ToggleButton value="list">
-                        <ToggleButtonLabel
-                            icon={TableRowsOutlinedIcon}
-                            label={formatMessage(MESSAGES.listView)}
-                        />
-                    </ToggleButton>
-                    {isEditing && (
-                        <ToggleButton value="overrides">
+            <Stack direction="row" alignItems="center">
+                <SidePanelToggle />
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <ToggleButtonGroup
+                        value={activeTab}
+                        size="small"
+                        onChange={handleTabChange}
+                        exclusive
+                    >
+                        <ToggleButton value="map">
                             <ToggleButtonLabel
-                                icon={TuneOutlinedIcon}
-                                label={formatMessage(MESSAGES.overridesView)}
+                                icon={MapOutlinedIcon}
+                                label={formatMessage(MESSAGES.mapView)}
                             />
                         </ToggleButton>
-                    )}
-                    {!isEditing && (
-                        <ToggleButton value="budget">
+                        <ToggleButton value="list">
                             <ToggleButtonLabel
-                                icon={PaymentsOutlinedIcon}
-                                label={formatMessage(MESSAGES.budgetView)}
+                                icon={TableRowsOutlinedIcon}
+                                label={formatMessage(MESSAGES.listView)}
                             />
                         </ToggleButton>
-                    )}
-                    {!isEditing && (
-                        <ToggleButton value="summary">
-                            <ToggleButtonLabel
-                                icon={BarChartOutlinedIcon}
-                                label={formatMessage(MESSAGES.summaryView)}
+                        {isEditing && (
+                            <ToggleButton value="overrides">
+                                <ToggleButtonLabel
+                                    icon={TuneOutlinedIcon}
+                                    label={formatMessage(
+                                        MESSAGES.overridesView,
+                                    )}
+                                />
+                            </ToggleButton>
+                        )}
+                        {!isEditing && (
+                            <ToggleButton value="budget">
+                                <ToggleButtonLabel
+                                    icon={PaymentsOutlinedIcon}
+                                    label={formatMessage(MESSAGES.budgetView)}
+                                />
+                            </ToggleButton>
+                        )}
+                        {!isEditing && (
+                            <ToggleButton value="summary">
+                                <ToggleButtonLabel
+                                    icon={BarChartOutlinedIcon}
+                                    label={formatMessage(MESSAGES.summaryView)}
+                                />
+                            </ToggleButton>
+                        )}
+                        {!isEditing && (
+                            <ToggleButton value="comparison">
+                                <ToggleButtonLabel
+                                    icon={CompareOutlinedIcon}
+                                    label={formatMessage(
+                                        MESSAGES.comparisonView,
+                                    )}
+                                />
+                            </ToggleButton>
+                        )}
+                    </ToggleButtonGroup>
+                    {tabActions && (
+                        <>
+                            <Divider
+                                orientation="vertical"
+                                sx={styles.tabDivider}
                             />
-                        </ToggleButton>
+                            {tabActions}
+                        </>
                     )}
-                    {!isEditing && (
-                        <ToggleButton value="comparison">
-                            <ToggleButtonLabel
-                                icon={CompareOutlinedIcon}
-                                label={formatMessage(MESSAGES.comparisonView)}
-                            />
-                        </ToggleButton>
-                    )}
-                </ToggleButtonGroup>
-                {tabActions && (
-                    <>
-                        <Divider
-                            orientation="vertical"
-                            sx={styles.tabDivider}
-                        />
-                        {tabActions}
-                    </>
-                )}
+                </Stack>
             </Stack>
             <Stack direction="row" spacing={2} alignItems="center">
                 <OrgUnitSelect

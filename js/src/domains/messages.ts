@@ -652,13 +652,17 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.lockScenario',
         defaultMessage: 'Lock Scenario',
     },
-    hideSidePanel: {
-        id: 'iaso.snt_malaria.sidebarToggle.hideSidePanel',
-        defaultMessage: 'Hide side panel',
+    undockSidePanel: {
+        id: 'iaso.snt_malaria.sidebarToggle.undockSidePanel',
+        defaultMessage: 'Undock side panel',
     },
-    showSidePanel: {
-        id: 'iaso.snt_malaria.sidebarToggle.showSidePanel',
-        defaultMessage: 'Show side panel',
+    dockSidePanel: {
+        id: 'iaso.snt_malaria.sidebarToggle.dockSidePanel',
+        defaultMessage: 'Dock side panel',
+    },
+    scenarioRulesCount: {
+        id: 'iaso.snt_malaria.scenarioRule.rulesCount',
+        defaultMessage: '{count, plural, one {# rule} other {# rules}}',
     },
     manualSelection: {
         id: 'iaso.snt_malaria.scenarioRule.manualSelection',

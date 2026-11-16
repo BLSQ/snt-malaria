@@ -1,11 +1,40 @@
-import { createContext, useContext } from 'react';
+import { createContext, FocusEvent, useContext } from 'react';
+
+export type SidePanelMode = 'docked' | 'undocked';
+export type SidePanelPhase = 'lifting' | 'docking' | null;
+export type SidePanelFloating = 'closed' | 'peek' | 'pinned';
+
+export type SidePanelLabel = {
+    title: string;
+    hint?: string;
+};
+
+export type ToggleOrigin = {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+};
 
 export type SidePanelContextValue = {
-    isOpen: boolean;
-    toggle: () => void;
-    open: () => void;
-    close: () => void;
-    locked: boolean;
+    mode: SidePanelMode;
+    phase: SidePanelPhase;
+    floating: SidePanelFloating;
+    canUndock: boolean;
+    hasHeaderToggle: boolean;
+    toggleOrigin: ToggleOrigin | null;
+    label: SidePanelLabel | null;
+    dock: () => void;
+    undock: () => void;
+    openFloating: (peek?: boolean) => void;
+    closeFloating: () => void;
+    hold: () => void;
+    reveal: () => void;
+    setLabel: (key: string, label: SidePanelLabel | null) => void;
+    panelRef: (element: HTMLElement | null) => void;
+    registerToggle: (element: HTMLElement, isFallback: boolean) => () => void;
+    onEnterToggle: () => void;
+    onBlurPanel: (event: FocusEvent<HTMLElement>) => void;
 };
 
 export const SidePanelContext = createContext<

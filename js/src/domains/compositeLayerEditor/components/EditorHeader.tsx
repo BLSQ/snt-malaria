@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import SchemaIcon from '@mui/icons-material/Schema';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SidePanelToggle } from '../../../components/sidePanel/SidePanelToggle';
 import { MESSAGES } from '../messages';
 
 type Props = {
@@ -32,7 +33,10 @@ export const EditorHeader: FC<Props> = ({
             justifyContent="space-between"
             alignItems="center"
         >
-            <Typography variant="h6">{title}</Typography>
+            <Stack direction="row" alignItems="center">
+                <SidePanelToggle />
+                <Typography variant="h6">{title}</Typography>
+            </Stack>
             <Stack direction="row" alignItems="center" spacing={1}>
                 <Tooltip title={formatMessage(MESSAGES.rearrangeNodes)}>
                     <IconButton size="small" onClick={onRearrange}>

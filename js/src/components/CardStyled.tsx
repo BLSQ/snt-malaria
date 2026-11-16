@@ -40,6 +40,7 @@ type Props = {
     header?: ReactNode;
     isLoading?: boolean;
     headerSx?: SxProps;
+    contentSx?: SxProps;
     /** Drops the content area's padding and scrolling, for children that own their own. */
     flushContent?: boolean;
     children: ReactNode;
@@ -49,9 +50,16 @@ export const CardStyled: FC<Props> = ({
     header,
     isLoading,
     headerSx,
+    contentSx,
     flushContent = false,
     children,
 }) => {
+    const contentStyles = useMemo(() => {
+        const base = flushContent
+            ? styles.cardContentFlush
+            : styles.cardContent;
+        return contentSx ? { ...base, ...contentSx } : base;
+    }, [flushContent, contentSx]);
     const headerStyles = useMemo(
         () =>
             headerSx
@@ -63,9 +71,7 @@ export const CardStyled: FC<Props> = ({
         <>
             <CardHeader sx={headerStyles} title={header} />
 
-            <CardContent
-                sx={flushContent ? styles.cardContentFlush : styles.cardContent}
-            >
+            <CardContent sx={contentStyles}>
                 {isLoading ? <LoadingSpinner absolute={true} /> : children}
             </CardContent>
         </>

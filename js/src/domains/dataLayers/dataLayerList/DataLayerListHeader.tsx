@@ -5,8 +5,9 @@ import { Box, Link, MenuItem, Stack, SxProps, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import * as CorePermission from 'Iaso/utils/permissions';
+import { IconBoxed } from '../../../components/IconBoxed';
 import { MoreActions } from '../../../components/MoreActions';
-import { SidePanelIconToggle } from '../../../components/sidePanel/SidePanelIconToggle';
+import { SidePanelDockButton } from '../../../components/sidePanel/SidePanelDockButton';
 import { exportMetricValuesTemplateAPIPath } from '../../../constants/api-urls';
 import { MESSAGES } from '../messages';
 import { ImportMetricValuesDialog } from '../MetricValuesImportDialog';
@@ -36,7 +37,7 @@ export const DataLayerListHeader: FC<Props> = ({
             justifyContent="space-between"
             alignItems="center"
         >
-            <SidePanelIconToggle icon={LayersIcon} />
+            <IconBoxed Icon={LayersIcon} />
             <Typography variant="h6" sx={styles.title}>
                 {formatMessage(MESSAGES.dataLayersTitle)}
             </Typography>
@@ -61,33 +62,7 @@ export const DataLayerListHeader: FC<Props> = ({
                     </MoreActions>
                 </Box>
             </DisplayIfUserHasPerm>
+            <SidePanelDockButton />
         </Stack>
-    );
-};
-
-/** Icon-only equivalents of the header's actions, shown in the collapsed rail so they stay
- *  usable without expanding the panel. */
-export const DataLayerListActions: FC<Pick<Props, 'onCreate'>> = ({
-    onCreate,
-}) => {
-    const { formatMessage } = useSafeIntl();
-    return (
-        <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
-            <IconButton
-                onClick={onCreate}
-                color="primary"
-                overrideIcon={AddIcon}
-                tooltipMessage={MESSAGES.createLayer}
-            />
-            <MoreActions>
-                <ImportMetricValuesDialog iconProps={{}} />
-                <MenuItem
-                    component={Link}
-                    href={exportMetricValuesTemplateAPIPath}
-                >
-                    {formatMessage(MESSAGES.downloadCSVTemplate)}
-                </MenuItem>
-            </MoreActions>
-        </DisplayIfUserHasPerm>
     );
 };
