@@ -91,7 +91,7 @@ def _generate_code(name: str) -> str:
 
 
 def _create_metric_type(
-    account,
+    workspace,
     name: str,
     legend_type: str,
     legend_config: dict,
@@ -103,7 +103,8 @@ def _create_metric_type(
     is_complete: bool = False,
 ) -> MetricType:
     return MetricType.objects.create(
-        account=account,
+        account=workspace.account,
+        workspace=workspace,
         name=name,
         code=_generate_code(name),
         category=category or "Composite",
@@ -120,7 +121,7 @@ def _create_metric_type(
 
 
 def create_composite_metric_type(
-    account,
+    workspace,
     name: str,
     legend_type: str | None = None,
     legend_config: dict | None = None,
@@ -133,7 +134,7 @@ def create_composite_metric_type(
     (``is_complete=False``) until then.
     """
     resolved_type, resolved_config = placeholder_legend(legend_type, legend_config)
-    return _create_metric_type(account, name, resolved_type, resolved_config, **metadata)
+    return _create_metric_type(workspace, name, resolved_type, resolved_config, **metadata)
 
 
 def apply_composite_metadata(
@@ -179,7 +180,7 @@ def apply_composite_metadata(
 
 @transaction.atomic
 def run_and_persist_composite_layer(
-    account,
+    workspace,
     graph: dict,
     org_unit_ids: Iterable[int],
     name: str,
@@ -190,12 +191,13 @@ def run_and_persist_composite_layer(
     is_population: bool = False,
 ) -> MetricType:
     """Execute ``graph`` and persist the result as a new ``MetricType`` + ``MetricValue`` rows."""
+    account = workspace.account
     evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
     values_by_year = evaluator.run()
     legend_type, legend_config = resolve_output_legend(account, evaluator, values_by_year)
 
     metric_type = _create_metric_type(
-        account,
+        workspace,
         name,
         legend_type,
         legend_config,

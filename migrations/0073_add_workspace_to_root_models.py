@@ -1,7 +1,7 @@
 import django.db.models.deletion
 
 from django.db import migrations, models
-from django.db.models import Exists, OuterRef, Subquery
+from django.db.models import Exists, OuterRef
 
 
 WORKSPACE_NAME_MAX_LENGTH = 255
@@ -24,13 +24,15 @@ def backfill_workspace_from_account(apps, schema_editor):
 
     _create_missing_first_workspaces(Account, Workspace, apps.get_model("iaso", "MetricType"), root_models)
 
-    first_workspace_id = Subquery(
-        Workspace.objects.filter(account_id=OuterRef("account_id"), deleted_at__isnull=True)
-        .order_by("id")
-        .values("id")[:1]
+    first_workspace_id_by_account_id = dict(
+        Workspace.objects.filter(deleted_at__isnull=True)
+        .order_by("account_id", "id")
+        .distinct("account_id")
+        .values_list("account_id", "id")
     )
     for model in root_models:
-        model.objects.filter(workspace__isnull=True).update(workspace_id=first_workspace_id)
+        for account_id, workspace_id in first_workspace_id_by_account_id.items():
+            model.objects.filter(account_id=account_id, workspace__isnull=True).update(workspace_id=workspace_id)
 
 
 def _create_missing_first_workspaces(Account, Workspace, MetricType, root_models):

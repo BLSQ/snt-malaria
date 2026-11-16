@@ -191,7 +191,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         graph = self._multiply_graph(formula='"HIGH" if a * b > 10 else "LOW"')
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -285,7 +285,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_run_and_persist_creates_metric_type_and_values(self):
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(),
             org_unit_ids=self.org_unit_ids,
         )
@@ -301,7 +301,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_numeric_defaults_to_threshold_legend(self):
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(),
             org_unit_ids=self.org_unit_ids,
         )
@@ -310,7 +310,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_selected_linear_legend_is_honored(self):
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(legend_type="linear"),
             org_unit_ids=self.org_unit_ids,
         )
@@ -325,7 +325,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         manual = {"domain": [10, 20], "range": ["#aaaaaa", "#bbbbbb", "#cccccc"]}
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(legend_type="threshold", legend_config=manual),
             org_unit_ids=self.org_unit_ids,
         )
@@ -339,7 +339,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         graph["out"]["inputData"]["legend"] = {"legendType": "threshold", "legendConfig": manual}
         metric_type = run_and_persist_composite_layer(
             name="Bands",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -349,7 +349,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_threshold_uses_interior_breakpoints_and_extra_colour(self):
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(),  # defaults to a threshold legend for numeric data
             org_unit_ids=self.org_unit_ids,
         )
@@ -368,7 +368,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         graph["out"]["inputData"]["legend"] = {"legendType": "linear"}
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -419,7 +419,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(legend_type="reference", reference_metric_type_id=self.metric_a.id),
             org_unit_ids=self.org_unit_ids,
         )
@@ -441,7 +441,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(legend_type="reference"),
             org_unit_ids=self.org_unit_ids,
         )
@@ -452,7 +452,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         # An invalid/blank reference shouldn't break saving; fall back to the numeric default.
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(legend_type="reference", reference_metric_type_id=999999),
             org_unit_ids=self.org_unit_ids,
         )
@@ -470,7 +470,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -479,7 +479,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_update_reruns_in_place_keeping_metric_type_id(self):
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(formula="a * b"),
             org_unit_ids=self.org_unit_ids,
         )
@@ -503,7 +503,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_composite_can_be_used_as_input(self):
         composite = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._multiply_graph(),
             org_unit_ids=self.org_unit_ids,
         )
@@ -709,7 +709,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b"),
             org_unit_ids=self.org_unit_ids,
         )
@@ -733,7 +733,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b", legend_type="linear"),
             org_unit_ids=self.org_unit_ids,
         )
@@ -983,7 +983,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_filter_persists_only_selected_districts(self):
         metric_type = run_and_persist_composite_layer(
             name="North only",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._filter_graph(mode="all", ids=[self.ou2.id]),
             org_unit_ids=self.org_unit_ids,
         )
@@ -1247,7 +1247,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
         metric_type = run_and_persist_composite_layer(
             name="Stacked",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -1464,7 +1464,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_classify_persists_as_ordinal_string_values(self):
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=self._classify_graph(),
             org_unit_ids=self.org_unit_ids,
         )
@@ -1513,7 +1513,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         }
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -1534,7 +1534,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         }
         metric_type = run_and_persist_composite_layer(
             name="Risk score",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             graph=graph,
             org_unit_ids=self.org_unit_ids,
         )
@@ -1711,8 +1711,16 @@ class CompositeGraphHelpersTestCase(TestCase):
 
 
 class CompositeMetricTypeTestCase(SNTMalariaTestMixin, TestCase):
+    def test_create_belongs_to_the_workspace_and_its_account(self):
+        workspace = self.get_snt_workspace()
+
+        metric_type = create_composite_metric_type(workspace, name="Layer")
+
+        self.assertEqual(metric_type.workspace, workspace)
+        self.assertEqual(metric_type.account, self.account)
+
     def test_create_without_values_uses_a_placeholder_legend(self):
-        metric_type = create_composite_metric_type(self.account, name="Empty")
+        metric_type = create_composite_metric_type(self.get_snt_workspace(), name="Empty")
 
         self.assertEqual(metric_type.name, "Empty")
         self.assertEqual(metric_type.category, "Composite")
@@ -1726,7 +1734,7 @@ class CompositeMetricTypeTestCase(SNTMalariaTestMixin, TestCase):
     def test_create_keeps_a_concrete_legend(self):
         legend_config = {"domain": ["Low", "High"], "range": ["#aaaaaa", "#bbbbbb"]}
         metric_type = create_composite_metric_type(
-            self.account,
+            self.get_snt_workspace(),
             name="Manual",
             legend_type=MetricType.LegendType.ORDINAL,
             legend_config=legend_config,
@@ -1738,12 +1746,12 @@ class CompositeMetricTypeTestCase(SNTMalariaTestMixin, TestCase):
         self.assertEqual(metric_type.metric_kind, MetricType.MetricKind.POPULATION)
 
     def test_create_generates_unique_codes_for_the_same_name(self):
-        first = create_composite_metric_type(self.account, name="Same name")
-        second = create_composite_metric_type(self.account, name="Same name")
+        first = create_composite_metric_type(self.get_snt_workspace(), name="Same name")
+        second = create_composite_metric_type(self.get_snt_workspace(), name="Same name")
         self.assertNotEqual(first.code, second.code)
 
     def test_apply_metadata_only_touches_provided_fields(self):
-        metric_type = create_composite_metric_type(self.account, name="Before", units="mm")
+        metric_type = create_composite_metric_type(self.get_snt_workspace(), name="Before", units="mm")
 
         apply_composite_metadata(metric_type, name="After", category="Epidemiology")
 
@@ -1753,7 +1761,7 @@ class CompositeMetricTypeTestCase(SNTMalariaTestMixin, TestCase):
         self.assertEqual(metric_type.units, "mm")
 
     def test_apply_metadata_ignores_a_legend_that_needs_a_run(self):
-        metric_type = create_composite_metric_type(self.account, name="Layer")
+        metric_type = create_composite_metric_type(self.get_snt_workspace(), name="Layer")
         legend_config = {"domain": [1, 2], "range": ["#aaaaaa", "#bbbbbb"]}
 
         apply_composite_metadata(metric_type, legend_type=CompositeLayer.LegendType.AUTO, legend_config=legend_config)

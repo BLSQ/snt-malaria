@@ -85,7 +85,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         if is_runnable(graph):
             try:
                 metric_type = run_and_persist_composite_layer(
-                    account=account,
+                    workspace=self.workspace,
                     graph=graph,
                     org_unit_ids=self._intervention_org_unit_ids(),
                     name=name,
@@ -98,7 +98,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
 
         if metric_type is None:
             metric_type = create_composite_metric_type(
-                account,
+                self.workspace,
                 name=name,
                 legend_type=legend_type,
                 legend_config=legend_config,
@@ -170,7 +170,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
                 else:
                     # The generated MetricType is SET_NULL and may have been deleted independently.
                     metric_type = run_and_persist_composite_layer(
-                        account=account,
+                        workspace=self.workspace,
                         graph=graph,
                         org_unit_ids=self._intervention_org_unit_ids(),
                         name=(name or instance.name),
@@ -185,7 +185,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         if not has_run:
             if metric_type is None:
                 metric_type = create_composite_metric_type(
-                    account,
+                    self.workspace,
                     name=(name or instance.name),
                     legend_type=legend_type,
                     legend_config=legend_config,
