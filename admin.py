@@ -233,6 +233,23 @@ class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
         accounts = {project.account.name for project in obj.org_unit.version.data_source.projects.all()}
         return ", ".join(sorted(accounts)) if accounts else "-"
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        org_unit_ids = {obj.org_unit_id}
+        if change and form.initial.get("org_unit"):
+            # The org unit losing the mapping is affected too.
+            org_unit_ids.add(form.initial["org_unit"])
+        impact_cache.invalidate_for_org_units(org_unit_ids)
+
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+        impact_cache.invalidate_for_org_units([obj.org_unit_id])
+
+    def delete_queryset(self, request, queryset):
+        org_unit_ids = list(queryset.values_list("org_unit_id", flat=True))
+        super().delete_queryset(request, queryset)
+        impact_cache.invalidate_for_org_units(org_unit_ids)
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [

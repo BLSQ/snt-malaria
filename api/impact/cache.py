@@ -12,6 +12,8 @@ assigned intervention changes, e.g. its impact_ref.
 
 Keys also carry a per-account generation token; invalidate_account()
 drops it so every entry of that account becomes unreachable.
+invalidate_for_org_units() does the same for every account whose default
+version holds one of the given org units, e.g. when their impact mapping changes.
 
 The TTL is read from ImpactProviderConfig.cache_ttl_seconds.
 Setting it to 0 disables caching entirely.
@@ -22,8 +24,10 @@ import hashlib
 from uuid import uuid4
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Max
 
+from iaso.models import Account, OrgUnit
 from plugins.snt_malaria.models import ImpactProviderConfig, Scenario
 
 
@@ -50,6 +54,23 @@ def set(scenario_id, age_group, year_from, year_to, org_unit_ids, data, ttl) -> 
 
 def invalidate_account(account_id) -> None:
     cache.delete(_generation_key(account_id))
+
+
+def invalidate_for_org_units(org_unit_ids) -> None:
+    """Invalidate, once the transaction commits, the accounts whose impact results can include these org units.
+
+    Deferred so a concurrent request cannot cache results computed from the not-yet-committed state.
+    """
+    account_ids = list(
+        Account.objects.filter(
+            default_version_id__in=OrgUnit.objects.filter(id__in=org_unit_ids).values("version_id")
+        ).values_list("id", flat=True)
+    )
+    transaction.on_commit(lambda: _invalidate_accounts(account_ids))
+
+
+def _invalidate_accounts(account_ids) -> None:
+    cache.delete_many([_generation_key(account_id) for account_id in account_ids])
 
 
 def _generation_key(account_id) -> str:
