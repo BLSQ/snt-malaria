@@ -7,8 +7,8 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0418_create_first_snt_workspaces"),
-        ("snt_malaria", "0074_backfill_root_models_workspace"),
+        ("iaso", "0417_workspace"),
+        ("snt_malaria", "0073_add_workspace_to_root_models"),
     ]
 
     operations = [

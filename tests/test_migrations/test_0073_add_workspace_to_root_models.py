@@ -3,9 +3,9 @@ from django.utils.timezone import now
 from iaso.test import IasoMigratorTestCase
 
 
-class Test0074BackfillRootModelsWorkspace(IasoMigratorTestCase):
-    migrate_from = ("snt_malaria", "0073_add_workspace_to_root_models")
-    migrate_to = ("snt_malaria", "0074_backfill_root_models_workspace")
+class Test0073AddWorkspaceToRootModels(IasoMigratorTestCase):
+    migrate_from = [("iaso", "0417_workspace"), ("snt_malaria", "0072_merge_20261029_0952")]
+    migrate_to = ("snt_malaria", "0073_add_workspace_to_root_models")
 
     def prepare(self):
         Account = self.old_state.apps.get_model("iaso", "Account")
@@ -18,6 +18,7 @@ class Test0074BackfillRootModelsWorkspace(IasoMigratorTestCase):
         Grant = self.old_state.apps.get_model("snt_malaria", "Grant")
         CompositeLayer = self.old_state.apps.get_model("snt_malaria", "CompositeLayer")
         BudgetSettings = self.old_state.apps.get_model("snt_malaria", "BudgetSettings")
+        MetricType = self.old_state.apps.get_model("iaso", "MetricType")
 
         user = User.objects.create(username="user")
         self.account = Account.objects.create(name="SNT account", modules=["SNT_MALARIA"])
@@ -40,6 +41,12 @@ class Test0074BackfillRootModelsWorkspace(IasoMigratorTestCase):
         donor = Donor.objects.create(account=self.account, name="Global Fund")
         self.rows += [donor, Grant.objects.create(account=self.account, donor=donor, name="NFM4")]
         self.orphan_donor = Donor.objects.create(account=self.account_without_module, name="PMI")
+        self.orphan_custom_layer = MetricType.objects.create(
+            account=self.account_without_module, name="Custom", code="custom", origin="custom"
+        )
+        self.orphan_openhexa_layer = MetricType.objects.create(
+            account=self.account_without_module, name="OpenHEXA", code="openhexa", origin="openhexa"
+        )
 
     def test_every_root_row_gets_its_account_first_workspace(self):
         for row in self.rows:
@@ -55,3 +62,11 @@ class Test0074BackfillRootModelsWorkspace(IasoMigratorTestCase):
         self.assertEqual(workspace.name, "Account without module")
         self.assertEqual(Donor.objects.get(pk=self.orphan_donor.pk).workspace_id, workspace.id)
         self.assertFalse(Workspace.objects.filter(account_id=self.account_without_data.id).exists())
+
+    def test_moves_non_openhexa_layers_of_accounts_given_a_workspace_here(self):
+        Workspace = self.new_state.apps.get_model("iaso", "Workspace")
+        MetricType = self.new_state.apps.get_model("iaso", "MetricType")
+
+        workspace = Workspace.objects.get(account_id=self.account_without_module.id)
+        self.assertEqual(MetricType.objects.get(pk=self.orphan_custom_layer.pk).workspace_id, workspace.id)
+        self.assertIsNone(MetricType.objects.get(pk=self.orphan_openhexa_layer.pk).workspace_id)
