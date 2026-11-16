@@ -191,7 +191,6 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
 
     def test_duplicated_from_rule_of_another_scenario_is_rejected(self):
         same_account_scenario = self.create_snt_scenario(
-            account=self.account,
             created_by=self.user_with_full_perm,
             name="Another Scenario",
             start_year=2020,

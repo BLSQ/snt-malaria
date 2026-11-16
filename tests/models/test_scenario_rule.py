@@ -654,7 +654,7 @@ class ResolveMatchedOrgUnitsCategoricalLabelTestCase(SNTMalariaTestCase):
 
         criteria = {"and": [{"==": [{"var": metric_type.id}, "1"]}]}
 
-        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), criteria)
         self.assertCountEqual(result, [self.org_unit_1.id])
 
     def test_resolve_matched_org_units_numeric_threshold_matches_value(self):
@@ -664,5 +664,5 @@ class ResolveMatchedOrgUnitsCategoricalLabelTestCase(SNTMalariaTestCase):
 
         criteria = {"and": [{"==": [{"var": metric_type.id}, 1]}]}
 
-        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), criteria)
         self.assertCountEqual(result, [self.org_unit_1.id])

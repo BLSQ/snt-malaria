@@ -81,7 +81,9 @@ class ImpactCacheKeyTestCase(SNTMalariaTestCase):
 
     def test_invalidation_leaves_other_accounts_keys_unchanged(self):
         other_account, other_user = self.create_snt_account()
-        other_scenario = self.create_snt_scenario(account=other_account, created_by=other_user)
+        other_scenario = self.create_snt_scenario(
+            workspace=self.get_snt_workspace(other_account), created_by=other_user
+        )
         other_key_before = impact_cache._build_key(other_scenario.id, "under5", 2025, 2027)
 
         impact_cache.invalidate_account(self.account.id)

@@ -17,7 +17,6 @@ from iaso.utils.models.soft_deletable import (
 from iaso.utils.validators import JSONSchemaValidator
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.scenario_rule_cost_override import ScenarioRuleCostOverride
-from plugins.snt_malaria.models.workspace_scoped import WorkspaceFromAccountMixin
 
 
 class Scenario(SoftDeletableModel):

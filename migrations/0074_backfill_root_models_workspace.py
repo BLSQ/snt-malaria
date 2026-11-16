@@ -46,7 +46,7 @@ def _create_missing_first_workspaces(Account, Workspace, root_models):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0415_create_first_snt_workspaces"),
+        ("iaso", "0417_create_first_snt_workspaces"),
         ("snt_malaria", "0073_add_workspace_to_root_models"),
     ]
 

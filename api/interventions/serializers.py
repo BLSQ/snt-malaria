@@ -195,8 +195,7 @@ class InterventionDeleteSerializer(serializers.Serializer):
     remove_from_rules = serializers.BooleanField(default=False)
 
     def validate_replace_with(self, replacement):
-        account = self.context["request"].user.iaso_profile.account
-        if replacement.intervention_category.account_id != account.id:
+        if replacement.intervention_category.workspace_id != get_active_workspace(self.context["request"]).id:
             raise serializers.ValidationError(_("Intervention not found."))
         if replacement == self.context["intervention"]:
             raise serializers.ValidationError(_("An intervention cannot replace itself."))

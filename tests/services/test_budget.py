@@ -370,7 +370,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(len(result.org_units_costs), 0)
 
     def _create_fixed_only_scenario(self, assigned_org_units):
-        scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
+        scenario = self.create_snt_scenario(created_by=self.user, start_year=2025, end_year=2025)
         category = self.create_snt_intervention_category()
         intervention = self.create_snt_intervention(intervention_category=category, code="fixed_prorated")
         for org_unit in assigned_org_units:

@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0415_create_first_snt_workspaces"),
+        ("iaso", "0417_create_first_snt_workspaces"),
         ("snt_malaria", "0074_backfill_root_models_workspace"),
     ]
 

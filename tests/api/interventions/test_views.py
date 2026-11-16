@@ -383,7 +383,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertFalse(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
 
     def _create_scenario(self, **kwargs):
-        return self.create_snt_scenario(account=self.account, created_by=self.user_write, **kwargs)
+        return self.create_snt_scenario(created_by=self.user_write, **kwargs)
 
     def _create_rule(self, scenario, interventions, **kwargs):
         return self.create_snt_rule(scenario, interventions, created_by=self.user_write, **kwargs)
@@ -480,7 +480,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
     def test_delete_intervention_with_replace_with_keeps_deployment_years_and_grant_and_drops_cost_overrides(self):
         rts, smc = self.intervention_vaccination_rts, self.intervention_chemo_smc
         rule = self._create_rule(self._create_scenario(), [rts])
-        grant = self.create_snt_grant(account=self.account)
+        grant = self.create_snt_grant()
         ScenarioRuleIntervention.objects.filter(scenario_rule=rule).update(deployment_years=[2026], grant=grant)
         self.create_snt_rule_cost_override(rule, self.cost_line)
 
@@ -541,7 +541,9 @@ class InterventionAPITests(SNTMalariaAPITestCase):
     def test_delete_intervention_with_invalid_replace_with_returns_400(self):
         rts = self.intervention_vaccination_rts
         other_account, _ = self.create_snt_account(name="Other account")
-        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_category = self.create_snt_intervention_category(
+            workspace=self.get_snt_workspace(other_account), created_by=self.user_write
+        )
         other_intervention = self.create_snt_intervention(
             intervention_category=other_category, created_by=self.user_write
         )

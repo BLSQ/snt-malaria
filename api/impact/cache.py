@@ -69,7 +69,7 @@ def _scenario_stamp(scenario_id) -> str | None:
     row = (
         Scenario.objects.filter(pk=scenario_id)
         .annotate(interventions_updated_at=Max("intervention_assignments__intervention__updated_at"))
-        .values_list("account_id", "updated_at", "interventions_updated_at")
+        .values_list("workspace__account_id", "updated_at", "interventions_updated_at")
         .first()
     )
     if not row:
