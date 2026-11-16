@@ -78,7 +78,7 @@ def build_workspace_grants(workspace) -> list[dict]:
     )
 
 
-def build_workspace_org_units(workspace) -> list[dict]:
+def build_account_org_units(workspace) -> list[dict]:
     """The org units a rule can hand-pick - the same ones the manual rule builder's org unit tree offers."""
     return list(
         get_intervention_org_units(workspace.account)

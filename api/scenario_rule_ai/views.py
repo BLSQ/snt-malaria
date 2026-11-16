@@ -7,17 +7,16 @@ from rest_framework.response import Response
 
 from plugins.snt_malaria.api.ai_chat.mixins import AIChatAttachmentViewSetMixin
 from plugins.snt_malaria.api.scenario_rules.override_serializers import intervention_overrides_representation
-from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 
 from .agent import generate_scenario_rules
 from .permissions import ScenarioRuleAIPermission
 from .rule_set import (
+    build_account_org_units,
     build_workspace_grants,
     build_workspace_interventions,
     build_workspace_metric_types,
-    build_workspace_org_units,
     org_unit_selection_to_ai_context,
     persist_scenario_rule_set,
 )
@@ -47,7 +46,7 @@ def _rule_to_ai_context(rule: ScenarioRule, account_org_unit_ids: list[int]) -> 
 
 
 @extend_schema(tags=["SNT Malaria"])
-class ScenarioRuleAIViewSet(WorkspaceScopedViewSetMixin, AIChatAttachmentViewSetMixin, viewsets.ViewSet):
+class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
     """AI-powered scenario rule generation.
 
     Send a natural language message describing the desired scenario rules. The AI sees the account's
@@ -86,7 +85,7 @@ class ScenarioRuleAIViewSet(WorkspaceScopedViewSetMixin, AIChatAttachmentViewSet
 
         metric_types = build_workspace_metric_types(scenario.workspace)
         interventions = build_workspace_interventions(scenario.workspace)
-        org_units = build_workspace_org_units(scenario.workspace)
+        org_units = build_account_org_units(scenario.workspace)
         account_org_unit_ids = [org_unit["id"] for org_unit in org_units]
         current_rules = [
             _rule_to_ai_context(rule, account_org_unit_ids)

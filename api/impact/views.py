@@ -70,7 +70,7 @@ class ImpactViewSet(WorkspaceScopedViewSetMixin, viewsets.ViewSet):
         year_to = data["year_to"]
         org_unit_ids = data["org_unit_ids"]
 
-        ttl = impact_cache.get_ttl(self.workspace.account)
+        ttl = impact_cache.get_ttl(request.user.iaso_profile.account)
 
         if ttl:
             cached = impact_cache.get(scenario.id, age_group, year_from, year_to, org_unit_ids)
