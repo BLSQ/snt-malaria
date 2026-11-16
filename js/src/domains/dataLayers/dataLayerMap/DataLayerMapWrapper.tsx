@@ -32,15 +32,9 @@ const styles = {
     smallHeader: {
         minHeight: '36px',
     },
-    headerText: { flex: 1, minWidth: 0 },
-    title: { flex: 1, minWidth: 0, paddingRight: 1 },
-    description: {
-        display: '-webkit-box',
-        WebkitLineClamp: 3,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden',
-        overflowWrap: 'anywhere',
-    },
+    heading: { flex: 1, minWidth: 0, pr: 1 },
+    title: { flex: '0 1 auto', minWidth: 0 },
+    description: { flex: '1 1 0', minWidth: 0 },
 } satisfies SxStyles;
 
 type Props = {
@@ -120,83 +114,81 @@ export const DataLayerMapWrapper: FC<Props> = ({
                 header={
                     <Stack
                         direction="row"
-                        alignItems="flex-start"
+                        alignItems="center"
                         overflow="hidden"
                     >
                         {!small && <SidePanelToggle />}
-                        <Stack sx={styles.headerText}>
-                            <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="center"
+                        <Stack
+                            direction="row"
+                            alignItems="baseline"
+                            spacing={1.5}
+                            sx={styles.heading}
+                        >
+                            <Tooltip
+                                title={
+                                    small && description ? (
+                                        <>
+                                            {metricType?.name}
+                                            <br />
+                                            {description}
+                                        </>
+                                    ) : (
+                                        metricType?.name || ''
+                                    )
+                                }
                             >
-                                <Tooltip
-                                    title={
-                                        small && description ? (
-                                            <>
-                                                {metricType?.name}
-                                                <br />
-                                                {description}
-                                            </>
-                                        ) : (
-                                            metricType?.name || ''
-                                        )
-                                    }
+                                <Typography
+                                    variant={small ? 'body2' : 'h6'}
+                                    noWrap
+                                    sx={styles.title}
                                 >
-                                    <Typography
-                                        variant={small ? 'body2' : 'h6'}
-                                        noWrap
-                                        sx={styles.title}
-                                    >
-                                        {metricType?.name || ''}
-                                    </Typography>
-                                </Tooltip>
-                                <Stack
-                                    direction="row"
-                                    spacing={2}
-                                    alignItems="center"
-                                    sx={{ flexShrink: 0 }}
-                                >
-                                    {yearOptions.length > 0 && (
-                                        <YearStepper
-                                            years={yearOptions}
-                                            value={Number(year)}
-                                            onChange={handleYearChange}
-                                        />
-                                    )}
-                                    {small ? null : (
-                                        <OrgUnitSelect
-                                            onOrgUnitChange={
-                                                handleDisplayOrgUnitChange
-                                            }
-                                            selectedOrgUnitId={displayOrgUnitId}
-                                        />
-                                    )}
-                                    <ExportMetricValuesCsvButton
-                                        metricType={metricType}
-                                        year={year}
-                                    />
-                                    {(onRemove && (
-                                        <IconButton
-                                            overrideIcon={CancelOutlinedIcon}
-                                            tooltipMessage={MESSAGES.remove}
-                                            onClick={onRemove}
-                                        ></IconButton>
-                                    )) ||
-                                        null}
-                                </Stack>
-                            </Stack>
+                                    {metricType?.name || ''}
+                                </Typography>
+                            </Tooltip>
                             {!small && description && (
                                 <Tooltip title={description}>
                                     <Typography
                                         variant="body2"
                                         color="text.secondary"
+                                        noWrap
                                         sx={styles.description}
                                     >
                                         {description}
                                     </Typography>
                                 </Tooltip>
                             )}
+                        </Stack>
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems="center"
+                            sx={{ flexShrink: 0 }}
+                        >
+                            {yearOptions.length > 0 && (
+                                <YearStepper
+                                    years={yearOptions}
+                                    value={Number(year)}
+                                    onChange={handleYearChange}
+                                />
+                            )}
+                            {small ? null : (
+                                <OrgUnitSelect
+                                    onOrgUnitChange={handleDisplayOrgUnitChange}
+                                    selectedOrgUnitId={displayOrgUnitId}
+                                />
+                            )}
+                            <ExportMetricValuesCsvButton
+                                metricType={metricType}
+                                year={year}
+                            />
+                            {(onRemove && (
+                                <IconButton
+                                    overrideIcon={CancelOutlinedIcon}
+                                    tooltipMessage={MESSAGES.remove}
+                                    onClick={onRemove}
+                                ></IconButton>
+                            )) ||
+                                null}
                         </Stack>
                     </Stack>
                 }
