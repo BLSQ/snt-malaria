@@ -38,7 +38,6 @@ jobs:
     needs: config
     uses: BLSQ/iaso-ci/.github/workflows/tests.yml@main
     with:
-      # TODO: revert to main once iaso 1455d17587 (JSONLogic string_value fix) is released to main
-      iaso_branch: develop
+      iaso_branch: main
       plugin_branch: main
       plugin_name: snt_malaria
