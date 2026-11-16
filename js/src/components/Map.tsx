@@ -108,8 +108,6 @@ type Props = {
     dataKey?: string;
     /** When true, adds rounded corners and a border around the map. */
     border?: boolean;
-    /** When set, overrides the border color of selected org units (e.g. rule color perimeter). */
-    selectedBorderColor?: string;
     /** When true, hides the zoom / reset-zoom controls (e.g. for a static thumbnail preview). */
     hideControls?: boolean;
     /** When true, disables all user interaction (drag, zoom, keyboard) for a static thumbnail. */
@@ -127,7 +125,6 @@ export const Map: FC<Props> = ({
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
-    selectedBorderColor,
     RenderTooltip,
     hideControls = false,
     disableInteractions = false,
@@ -175,26 +172,10 @@ export const Map: FC<Props> = ({
         return shape.getBounds();
     }, [leafOrgUnits]);
 
-    const { pristineOrgUnits, selectedOrgUnits } = useMemo(() => {
-        if (!selectedOrgUnitIds) {
-            return { pristineOrgUnits: leafOrgUnits, selectedOrgUnits: [] };
-        }
-
-        const orgUnitsToSelect: OrgUnit[] = [];
-        const unselectedOrgUnits: OrgUnit[] = [];
-        leafOrgUnits.forEach(orgUnit => {
-            if (selectedOrgUnitIds.includes(orgUnit.id)) {
-                orgUnitsToSelect.push(orgUnit);
-            } else {
-                unselectedOrgUnits.push(orgUnit);
-            }
-        });
-
-        return {
-            pristineOrgUnits: unselectedOrgUnits,
-            selectedOrgUnits: orgUnitsToSelect,
-        };
-    }, [leafOrgUnits, selectedOrgUnitIds]);
+    const selectedIds = useMemo(
+        () => (selectedOrgUnitIds ? new Set(selectedOrgUnitIds) : undefined),
+        [selectedOrgUnitIds],
+    );
 
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
@@ -234,43 +215,18 @@ export const Map: FC<Props> = ({
                     </>
                 )}
                 <Pane name="root">
-                    {pristineOrgUnits?.map(orgUnit => {
-                        const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
-                        return (
-                            <MapGeoJSON
-                                key={orgUnit.id}
-                                dataKey={dataKey}
-                                orgUnit={orgUnit}
-                                orgUnitMapMisc={orgUnitMapMisc}
-                                color={mapTheme.borderColor}
-                                weight={mapTheme.shapeWeight}
-                                defaultColor={defaultColor}
-                                onOrgUnitClick={onOrgUnitClick}
-                                RenderTooltip={RenderTooltip}
-                            />
-                        );
-                    })}
-                </Pane>
-                <Pane name="active" style={{ zIndex: 401 }}>
-                    {selectedOrgUnits?.map(orgUnit => {
-                        const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
-                        return (
-                            <MapGeoJSON
-                                key={orgUnit.id}
-                                dataKey={dataKey}
-                                orgUnit={orgUnit}
-                                orgUnitMapMisc={orgUnitMapMisc}
-                                color={
-                                    selectedBorderColor ??
-                                    mapTheme.selectedShapeColor
-                                }
-                                weight={mapTheme.selectedShapeWeight}
-                                defaultColor={defaultColor}
-                                onOrgUnitClick={onOrgUnitClick}
-                                RenderTooltip={RenderTooltip}
-                            />
-                        );
-                    })}
+                    {leafOrgUnits.map(orgUnit => (
+                        <MapGeoJSON
+                            key={orgUnit.id}
+                            dataKey={dataKey}
+                            orgUnit={orgUnit}
+                            orgUnitMapMisc={getOrgUnitMapMisc(orgUnit.id)}
+                            defaultColor={defaultColor}
+                            isSelected={selectedIds?.has(orgUnit.id)}
+                            onOrgUnitClick={onOrgUnitClick}
+                            RenderTooltip={RenderTooltip}
+                        />
+                    ))}
                 </Pane>
                 {legendConfig && !hideLegend && (
                     <MapLegend legendConfig={legendConfig} />

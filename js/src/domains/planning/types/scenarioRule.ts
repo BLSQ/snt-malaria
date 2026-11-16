@@ -45,4 +45,5 @@ export type ScenarioRulePreview = {
         'color' | 'name' | 'interventions' | 'intervention_overrides'
     >;
     matchedOrgUnitIds: number[];
+    mapHighlightedOrgUnitIds?: number[];
 };

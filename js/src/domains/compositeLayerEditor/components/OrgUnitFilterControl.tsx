@@ -138,7 +138,6 @@ export const OrgUnitFilterControl: FC<Props> = ({
                 orgUnits={orgUnits}
                 getOrgUnitMapMisc={getOrgUnitMapMisc}
                 selectedOrgUnitIds={selectedIds}
-                selectedBorderColor={theme.palette.primary.main}
                 defaultExpanded={expanded}
                 onExpandedChange={updateExpanded}
                 onResize={onResize}

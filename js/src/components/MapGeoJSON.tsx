@@ -11,9 +11,9 @@ type Props = {
         label: string | number | undefined;
         color: string | undefined;
     };
-    color: string;
-    weight: number;
     defaultColor: string;
+    /** Undefined when no selection is active. */
+    isSelected?: boolean;
     onOrgUnitClick: (orgUnitId: number) => void;
     RenderTooltip?: (props: { orgUnit: OrgUnit }) => React.ReactNode;
 };
@@ -22,9 +22,8 @@ export const MapGeoJSON: FC<Props> = ({
     dataKey,
     orgUnit,
     orgUnitMapMisc,
-    color,
-    weight,
     defaultColor,
+    isSelected,
     onOrgUnitClick,
     RenderTooltip,
 }) => (
@@ -32,10 +31,13 @@ export const MapGeoJSON: FC<Props> = ({
         key={dataKey ? `${orgUnit.id}-${dataKey}` : orgUnit.id}
         data={orgUnit.geo_json as unknown as GeoJson}
         style={{
-            color: color,
-            weight: weight,
+            color: mapTheme.borderColor,
+            weight: mapTheme.shapeWeight,
             fillColor: orgUnitMapMisc?.color ?? defaultColor,
-            fillOpacity: mapTheme.fillOpacity,
+            fillOpacity:
+                isSelected === false
+                    ? mapTheme.paleFillOpacity
+                    : mapTheme.fillOpacity,
         }}
         eventHandlers={{
             click: () => onOrgUnitClick(orgUnit.id),

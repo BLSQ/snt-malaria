@@ -35,13 +35,15 @@ import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignm
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioBudget } from './hooks/useGetScenarioBudget';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
-import { ScenarioRule, ScenarioRulePreview } from './types/scenarioRule';
+import { ScenarioRulePreview } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
     scenarioId: number;
     displayOrgUnitId?: number;
 };
+
+const NO_MATCHED_ORG_UNITS: number[] = [];
 
 export const Planning: FC = () => {
     const { scenarioId, displayOrgUnitId } = useParamsObject(
@@ -125,18 +127,7 @@ export const Planning: FC = () => {
     );
 
     // TODO Find a better place for this
-    const [matchedOrgUnitIds, setMatchedOrgUnitIds] = useState<number[]>([]);
-    const [previewRule, setPreviewRule] = useState<
-        Partial<ScenarioRule> | undefined
-    >();
-
-    const onPreviewScenarioRule = useCallback(
-        (preview?: ScenarioRulePreview) => {
-            setPreviewRule(preview?.rule);
-            setMatchedOrgUnitIds(preview?.matchedOrgUnitIds ?? []);
-        },
-        [],
-    );
+    const [rulePreview, setRulePreview] = useState<ScenarioRulePreview>();
 
     const hasNoRules = useMemo(
         () =>
@@ -237,7 +228,7 @@ export const Planning: FC = () => {
                         }
                     >
                         <ScenarioRulesPanel
-                            onPreviewScenarioRule={onPreviewScenarioRule}
+                            onPreviewScenarioRule={setRulePreview}
                             scenarioId={scenarioId}
                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
@@ -250,8 +241,14 @@ export const Planning: FC = () => {
                     <MainColumn>
                         <PlanningMainColumn
                             renderHeader={renderPlanHeader}
-                            matchedOrgUnitIds={matchedOrgUnitIds}
-                            previewRule={previewRule}
+                            matchedOrgUnitIds={
+                                rulePreview?.matchedOrgUnitIds ??
+                                NO_MATCHED_ORG_UNITS
+                            }
+                            mapHighlightedOrgUnitIds={
+                                rulePreview?.mapHighlightedOrgUnitIds
+                            }
+                            previewRule={rulePreview?.rule}
                             scenarioRules={scenarioRules || []}
                             isBudgetLoaded={
                                 Boolean(orgUnits) && !isLoadingBudget

@@ -1,40 +1,40 @@
 import { postRequest } from 'bluesquare-components';
-import { UseMutationResult } from 'react-query';
-import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { UseQueryResult } from 'react-query';
+import { useSnackQuery } from 'Iaso/libs/apiHooks';
+import { MetricsFilters } from '../../dataLayers/types/metrics';
 import { MetricTypeCriterion } from '../types/scenarioRule';
-import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
 
-type Payload = {
-    data_layer_years?: Record<string, number>;
-    matching_criteria: MetricTypeCriterion[];
-    org_units_excluded?: string; // comma separated list of org unit ids
-    org_units_included?: string; // comma separated list of org unit ids
+export type ScenarioRulePreviewResult = {
+    ids: number[];
+    criteria: MetricTypeCriterion[];
 };
 
-export const usePreviewScenarioRule = (): UseMutationResult =>
-    useSnackMutation({
-        mutationFn: (body: Partial<Payload>) => {
-            const matchingCriteria = matchingCriteriaToJsonLogic(
-                body.matching_criteria ?? [],
-            );
+export const getPreviewScenarioRuleQueryKey = (
+    jsonLogic: MetricsFilters | null,
+    dataLayerYears?: Record<string, number>,
+) => ['scenarioRulePreview', jsonLogic, dataLayerYears ?? null];
 
-            const org_units_excluded = !!body.org_units_excluded
-                ? body.org_units_excluded.split(',')
-                : undefined;
-            const org_units_included = !!body.org_units_included
-                ? body.org_units_included.split(',')
-                : undefined;
-
-            if (matchingCriteria === null && !org_units_included?.length) {
-                return Promise.resolve([]);
-            }
-
-            return postRequest(`/api/snt_malaria/scenario_rules/preview/`, {
-                matching_criteria: matchingCriteria,
-                org_units_excluded,
-                org_units_included,
-                data_layer_years: body.data_layer_years,
-            });
+export const usePreviewScenarioRule = (
+    matchingCriteria: MetricTypeCriterion[],
+    jsonLogic: MetricsFilters | null,
+    dataLayerYears?: Record<string, number>,
+): UseQueryResult<ScenarioRulePreviewResult> =>
+    useSnackQuery({
+        queryKey: getPreviewScenarioRuleQueryKey(jsonLogic, dataLayerYears),
+        queryFn: async () => ({
+            ids: jsonLogic
+                ? await postRequest(
+                      `/api/snt_malaria/scenario_rules/preview/`,
+                      {
+                          matching_criteria: jsonLogic,
+                          data_layer_years: dataLayerYears,
+                      },
+                  )
+                : [],
+            criteria: matchingCriteria,
+        }),
+        options: {
+            keepPreviousData: true,
+            staleTime: Infinity,
         },
-        showSuccessSnackBar: false,
     });

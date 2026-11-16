@@ -67,8 +67,12 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     onPreviewChange,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { scenario, overridesTabContainer, interventionCategories } =
-        usePlanningContext();
+    const {
+        scenario,
+        overridesTabContainer,
+        interventionCategories,
+        mapMetricTypeId,
+    } = usePlanningContext();
     const mode = getFormMode(rule, isDuplicate);
     const { data: palette } = useGetColors();
 
@@ -181,6 +185,26 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         ],
     );
 
+    const mapCriteria = useMemo(
+        () =>
+            matchingCriteria.filter(
+                criterion => criterion.metric_type === mapMetricTypeId,
+            ),
+        [matchingCriteria, mapMetricTypeId],
+    );
+    const {
+        ruleMatchedIds: mapCriteriaMatchedIds,
+        matchedCriteria: mapCriteriaResultCriteria,
+    } = useRuleMatchedOrgUnits({
+        matchingCriteria: mapCriteria,
+        dataLayerYears: scenario?.data_layer_years,
+    });
+    const mapHighlightedOrgUnitIds =
+        mapCriteria.length > 0 &&
+        mapCriteriaResultCriteria?.[0]?.metric_type === mapMetricTypeId
+            ? mapCriteriaMatchedIds
+            : undefined;
+
     const canSubmit =
         formik.isValid &&
         interventions.length > 0 &&
@@ -203,6 +227,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                 intervention_overrides: interventionOverrides,
             },
             matchedOrgUnitIds,
+            mapHighlightedOrgUnitIds,
         });
     }, [
         color,
@@ -210,6 +235,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         interventions,
         interventionOverrides,
         matchedOrgUnitIds,
+        mapHighlightedOrgUnitIds,
         isAwaitingFirstResult,
     ]);
 
