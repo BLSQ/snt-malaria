@@ -35,9 +35,9 @@ def build_workspace_metric_types(workspace) -> list[dict]:
     calculations) and metric_kind=POPULATION composites. A layer excluded from either shows no name
     in the UI, so neither the AI nor a restored rule set may reference one the human form can't."""
     return list(
-        MetricType.objects.filter(
-            account=workspace.account, is_utility=False, metric_kind=MetricType.MetricKind.ANY
-        ).values("id", "name", "description", "legend_type", "legend_config")
+        MetricType.objects.visible_in_workspace(workspace)
+        .filter(is_utility=False, metric_kind=MetricType.MetricKind.ANY)
+        .values("id", "name", "description", "legend_type", "legend_config")
     )
 
 

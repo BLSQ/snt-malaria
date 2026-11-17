@@ -5,7 +5,7 @@ import anthropic
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-from iaso.models import Account, MetricType
+from iaso.models import Account, MetricType, Workspace
 from plugins.snt_malaria.api.ai_chat.serializers import MAX_ATTACHMENT_SIZE_BYTES
 from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
@@ -614,6 +614,26 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         interventions_sent = call_args[0][3]
         self.assertEqual(sorted(m["name"] for m in metric_types_sent), sorted(["Incidence", "Incidence category"]))
         self.assertEqual([i["name"] for i in interventions_sent], ["Bednets"])
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_metric_types_sent_include_own_workspace_and_shared_but_not_other_workspace(self, mock_gen):
+        other_workspace = Workspace.objects.create(account=self.account, name="Other workspace")
+        MetricType.objects.create(
+            account=self.account, workspace=self.scenario.workspace, name="Own layer", code="own_layer"
+        )
+        MetricType.objects.create(
+            account=self.account, workspace=other_workspace, name="Other workspace layer", code="other_ws_layer"
+        )
+
+        mock_gen.return_value = self._mock_result(rules=None)
+        self.client.force_authenticate(self.user)
+
+        self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "hi"}, format="json")
+
+        metric_types_sent = mock_gen.call_args[0][2]
+        self.assertEqual(
+            sorted(m["name"] for m in metric_types_sent), sorted(["Incidence", "Incidence category", "Own layer"])
+        )
 
 
 class ScenarioRuleAIAttachmentAPITestCase(ScenarioRuleAIAPITestCase):
