@@ -23,13 +23,15 @@ export const usePreviewScenarioRule = (
         queryKey: getPreviewScenarioRuleQueryKey(jsonLogic, dataLayerYears),
         queryFn: async () => ({
             ids: jsonLogic
-                ? await postRequest(
-                      `/api/snt_malaria/scenario_rules/preview/`,
-                      {
-                          matching_criteria: jsonLogic,
-                          data_layer_years: dataLayerYears,
-                      },
-                  )
+                ? (
+                      await postRequest(
+                          `/api/snt_malaria/scenario_rules/preview/`,
+                          {
+                              data_layer_years: dataLayerYears,
+                              rules: { rule: { matching_criteria: jsonLogic } },
+                          },
+                      )
+                  ).rule
                 : [],
             criteria: matchingCriteria,
         }),

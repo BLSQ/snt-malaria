@@ -113,11 +113,8 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
         return intervention_overrides_representation(obj)
 
 
-class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
+class ScenarioRulePreviewRuleSerializer(serializers.ModelSerializer):
     matching_criteria = serializers.JSONField(required=False, allow_null=True, default=None)
-    data_layer_years = serializers.DictField(
-        child=serializers.IntegerField(), required=False, allow_null=True, default=dict
-    )
 
     class Meta:
         model = ScenarioRule
@@ -125,8 +122,32 @@ class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
             "matching_criteria",
             "org_units_excluded",
             "org_units_included",
-            "data_layer_years",
         ]
+
+
+class ScenarioRulePreviewSerializer(serializers.Serializer):
+    """Previews several draft rules in one request; `rules` is keyed by caller-chosen names and the
+    response maps each name to the org unit ids that rule targets."""
+
+    data_layer_years = serializers.DictField(
+        child=serializers.IntegerField(), required=False, allow_null=True, default=dict
+    )
+    rules = serializers.DictField(child=ScenarioRulePreviewRuleSerializer(), allow_empty=False)
+
+    def resolve(self, account) -> dict:
+        data_layer_years = self.validated_data["data_layer_years"]
+        return {
+            key: list(
+                ScenarioRule.resolve_draft_org_unit_ids(
+                    account,
+                    rule.get("matching_criteria"),
+                    rule.get("org_units_excluded", []),
+                    rule.get("org_units_included", []),
+                    data_layer_years=data_layer_years,
+                )
+            )
+            for key, rule in self.validated_data["rules"].items()
+        }
 
 
 class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
