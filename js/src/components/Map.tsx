@@ -1,5 +1,12 @@
-import React, { FC, useMemo, useState } from 'react';
-import { Box } from '@mui/material';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
+import { Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import L from 'leaflet';
 import { MapContainer, ZoomControl, Pane } from 'react-leaflet';
@@ -16,9 +23,16 @@ import {
     defaultZoomSnap,
 } from '../domains/planning/libs/map-utils';
 import { FitBounds } from './FitBounds';
+import {
+    MapHover,
+    MapHoverCard,
+    MapHoverCardContent,
+    MapHoverCardHandle,
+} from './hoverCard/MapHoverCard';
 import { InvalidateOnResize } from './InvalidateOnResize';
 import { MapGeoJSON } from './MapGeoJSON';
 import { MapTypeLayer } from './MapTyleLayer';
+import { OnMapMove } from './OnMapMove';
 import { ResetZoomControl } from './ResetZoomControl';
 
 const styles = {
@@ -69,10 +83,6 @@ const styles = {
         '& .leaflet-control-attribution': {
             display: 'none',
         },
-        '& .leaflet-tooltip': {
-            maxWidth: '300px !important',
-            width: 'max-content',
-        },
     },
     bordered: {
         borderRadius: theme => `${theme.shape.borderRadius * 2}px`,
@@ -88,7 +98,8 @@ type Props = {
         label: string | number | undefined;
         color: string | undefined;
     };
-    RenderTooltip?: (props: { orgUnit: OrgUnit }) => React.ReactNode;
+    /** Content of the hover card; defaults to the org unit's map label. */
+    getTooltipContent?: (orgUnit: OrgUnit) => MapHoverCardContent;
     legendConfig?: {
         units: string;
         legend_type: string; //'linear' | 'ordinal' | 'threshold';
@@ -125,7 +136,7 @@ export const Map: FC<Props> = ({
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
-    RenderTooltip,
+    getTooltipContent,
     hideControls = false,
     disableInteractions = false,
 }) => {
@@ -177,6 +188,32 @@ export const Map: FC<Props> = ({
         [selectedOrgUnitIds],
     );
 
+    const hoverCardRef = useRef<MapHoverCardHandle>(null);
+    const handleOrgUnitHover = useCallback(
+        (hover: MapHover | null) => hoverCardRef.current?.update(hover),
+        [],
+    );
+    const forgetHoverCardCoverage = useCallback(
+        () => hoverCardRef.current?.forgetCoverage(),
+        [],
+    );
+    useEffect(forgetHoverCardCoverage, [leafOrgUnits, forgetHoverCardCoverage]);
+    const getHoverCardContent = useCallback(
+        (orgUnit: OrgUnit): MapHoverCardContent => {
+            if (getTooltipContent) {
+                return getTooltipContent(orgUnit);
+            }
+            const { label } = getOrgUnitMapMisc(orgUnit.id);
+            return {
+                body:
+                    label != null && label !== '' ? (
+                        <Typography variant="body2">{label}</Typography>
+                    ) : undefined,
+            };
+        },
+        [getTooltipContent, getOrgUnitMapMisc],
+    );
+
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
             <MapContainer
@@ -200,6 +237,7 @@ export const Map: FC<Props> = ({
                 zoomDelta={defaultZoomDelta}
             >
                 <MapTypeLayer />
+                <OnMapMove onMove={forgetHoverCardCoverage} />
                 <InvalidateOnResize
                     bounds={bounds}
                     boundsOptions={boundsOptions}
@@ -224,7 +262,11 @@ export const Map: FC<Props> = ({
                             defaultColor={defaultColor}
                             isSelected={selectedIds?.has(orgUnit.id)}
                             onOrgUnitClick={onOrgUnitClick}
-                            RenderTooltip={RenderTooltip}
+                            onOrgUnitHover={
+                                disableInteractions
+                                    ? undefined
+                                    : handleOrgUnitHover
+                            }
                         />
                     ))}
                 </Pane>
@@ -232,6 +274,12 @@ export const Map: FC<Props> = ({
                     <MapLegend legendConfig={legendConfig} />
                 )}
             </MapContainer>
+            {!disableInteractions && (
+                <MapHoverCard
+                    ref={hoverCardRef}
+                    getContent={getHoverCardContent}
+                />
+            )}
         </Box>
     );
 };

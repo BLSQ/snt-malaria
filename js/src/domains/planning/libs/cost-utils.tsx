@@ -87,6 +87,12 @@ export const formatBigNumber = (value: number, currency?: string) => {
         : formattedValue;
 };
 
+/** Adds the currency symbol, on the side the currency uses, to an already formatted amount. */
+export const withCurrency = (formattedAmount: string, currency?: string) =>
+    currency
+        ? formatCurrencyAmount(formattedAmount, currency)
+        : formattedAmount;
+
 export const formatCost = (value: number, currency?: string): string =>
     formatBigNumber(value, currency) ?? formatCurrencyAmount(0, currency);
 
