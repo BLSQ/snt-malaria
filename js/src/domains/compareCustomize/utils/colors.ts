@@ -1,7 +1,27 @@
 import { blueGrey } from '@mui/material/colors';
+import { alpha, darken } from '@mui/material/styles';
+import { theme } from '../../../constants/theme';
 
 export const SCENARIO_BASE_COLORS = ['#FFC107', '#673AB7', '#3D74FF'] as const;
 export const NO_INTERVENTION_COLOR = blueGrey[200];
+
+type TagColors = { background: string; text: string };
+
+const SCENARIO_TAG_COLORS: Record<string, TagColors> = {
+    '#FFC107': { background: '#FEF1D3', text: '#7A5300' },
+    '#673AB7': {
+        background: theme.palette.primary.light,
+        text: theme.palette.primary.main,
+    },
+    '#3D74FF': { background: '#E5ECFF', text: '#2A57CC' },
+};
+
+/** Light background and readable text for chips in a scenario's colour. */
+export const getScenarioTagColors = (color: string): TagColors =>
+    SCENARIO_TAG_COLORS[color.toUpperCase()] ?? {
+        background: alpha(color, 0.16),
+        text: darken(color, 0.45),
+    };
 
 const clamp = (value: number, min = 0, max = 1) =>
     Math.min(Math.max(value, min), max);

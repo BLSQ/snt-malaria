@@ -2,14 +2,16 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import MapOutlined from '@mui/icons-material/MapOutlined';
 import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
+import { HoverCardValue } from '../../../../components/hoverCard/HoverCardValue';
 import { Map as SNTMap } from '../../../../components/Map';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { aggregateOrgUnitCosts } from '../../libs/budget-aggregation';
 import { defaultLegend, severityColorRange } from '../../libs/color-utils';
-import { formatBigNumber } from '../../libs/cost-utils';
+import { formatBigNumber, withCurrency } from '../../libs/cost-utils';
 import { getColorForShape } from '../../libs/map-utils';
 import { BudgetOrgUnit } from '../../types/budget';
 
@@ -22,7 +24,7 @@ const styles = {
 } satisfies SxStyles;
 
 export const CostPerDistrictSummary: FC = () => {
-    const { formatMessage } = useSafeIntl();
+    const { formatMessage, formatNumber } = useSafeIntl();
     const { budgets, orgUnits, currency } = usePlanningContext();
     const [selectedInterventionId, setSelectedInterventionId] =
         useState<number>(0);
@@ -101,6 +103,35 @@ export const CostPerDistrictSummary: FC = () => {
         ];
     }, [orgUnitCosts, formatMessage]);
 
+    const selectedInterventionLabel = interventionOptions.find(
+        option => option.value === selectedInterventionId,
+    )?.label;
+
+    const getTooltipContent = useCallback(
+        (orgUnit: OrgUnit) => {
+            const ouc = orgUnitCosts.find(c => c.org_unit_id === orgUnit.id);
+            const cost = ouc ? Math.max(getActiveCost(ouc), 0) : 0;
+            const amount = formatNumber(cost, { maximumFractionDigits: 0 });
+            return {
+                body: (
+                    <HoverCardValue
+                        caption={selectedInterventionLabel ?? ''}
+                        value={withCurrency(amount, currency)}
+                        color={getOrgUnitMapMisc(orgUnit.id).color}
+                    />
+                ),
+            };
+        },
+        [
+            orgUnitCosts,
+            getActiveCost,
+            formatNumber,
+            selectedInterventionLabel,
+            currency,
+            getOrgUnitMapMisc,
+        ],
+    );
+
     return (
         <WidgetCard
             title={formatMessage(MESSAGES.costPerDistrictTitle)}
@@ -125,6 +156,7 @@ export const CostPerDistrictSummary: FC = () => {
                     getOrgUnitMapMisc={getOrgUnitMapMisc}
                     legendConfig={legendConfig}
                     dataKey={String(selectedInterventionId)}
+                    getTooltipContent={getTooltipContent}
                 />
             </Box>
         </WidgetCard>
