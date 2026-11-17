@@ -7,11 +7,14 @@ import React, {
     useState,
 } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
+import { uniq } from 'lodash';
 import { createPortal } from 'react-dom';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardStyled } from '../../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
+import { usePrefetchMetricValues } from '../../../../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../../../../messages';
+import { getDataLayerYear } from '../../../../scenarios/types';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useCreateUpdateScenarioRule } from '../../../hooks/useCreateUpdateScenarioRule';
 import {
@@ -180,6 +183,20 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             includedOrgUnits,
         ],
     );
+
+    const criteriaMetricValuesParams = useMemo(
+        () =>
+            uniq(
+                matchingCriteria
+                    .map(criterion => criterion.metric_type)
+                    .filter((id): id is number => id != null),
+            ).map(metricTypeId => ({
+                metricTypeId,
+                year: getDataLayerYear(scenario?.data_layer_years, metricTypeId),
+            })),
+        [matchingCriteria, scenario?.data_layer_years],
+    );
+    usePrefetchMetricValues(criteriaMetricValuesParams);
 
     const canSubmit =
         formik.isValid &&
