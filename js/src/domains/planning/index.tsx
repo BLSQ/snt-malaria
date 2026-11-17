@@ -245,9 +245,7 @@ export const Planning: FC = () => {
                                 rulePreview?.matchedOrgUnitIds ??
                                 NO_MATCHED_ORG_UNITS
                             }
-                            mapHighlightedOrgUnitIds={
-                                rulePreview?.mapHighlightedOrgUnitIds
-                            }
+                            matchedIdsByMetric={rulePreview?.matchedIdsByMetric}
                             previewRule={rulePreview?.rule}
                             scenarioRules={scenarioRules || []}
                             isBudgetLoaded={

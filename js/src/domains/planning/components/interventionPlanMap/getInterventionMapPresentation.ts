@@ -14,29 +14,28 @@ import { AssignmentDisplay } from './buildAssignmentDisplay';
  * - Preview + no metric layer: use assignment-derived legend data but hide the
  *   map legend chrome (hideLegend); no highlight, the fill already shows the
  *   rule's matches.
- * - Preview + metric layer: show metric legend; highlight
- *   `mapHighlightedOrgUnitIds`.
- * - Saved mode: assignment legend when no metric layer; no highlight.
+ * - Preview + metric layer: show metric legend; highlight the org units
+ *   matched by that metric's criteria, none when it isn't one of them.
+ * - Saved mode: assignment legend; no highlight.
  */
 export function getInterventionMapPresentation({
     isPreviewingRule,
     activeMetricLayer,
     previewRule,
-    mapHighlightedOrgUnitIds,
+    matchedIdsByMetric,
     assignmentLegend,
 }: {
     isPreviewingRule: boolean;
     activeMetricLayer: MetricType | undefined;
     previewRule?: Partial<ScenarioRule>;
-    mapHighlightedOrgUnitIds?: number[];
+    matchedIdsByMetric?: Record<string, number[]>;
     assignmentLegend: AssignmentDisplay['legend'];
 }) {
     const hideLegend = isPreviewingRule && !activeMetricLayer;
     const legendConfig = activeMetricLayer ?? assignmentLegend;
-    const highlightedOrgUnitIds =
-        isPreviewingRule && activeMetricLayer
-            ? mapHighlightedOrgUnitIds
-            : undefined;
+    const highlightedOrgUnitIds = activeMetricLayer
+        ? matchedIdsByMetric?.[activeMetricLayer.id]
+        : undefined;
     const mapDataKey = previewRule?.color;
 
     return {

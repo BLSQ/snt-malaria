@@ -28,7 +28,7 @@ const styles = {
 type Props = {
     renderHeader: (tabActions?: ReactNode) => ReactElement;
     matchedOrgUnitIds: number[];
-    mapHighlightedOrgUnitIds?: number[];
+    matchedIdsByMetric?: Record<string, number[]>;
     previewRule?: Partial<ScenarioRule>;
     scenarioRules: ScenarioRule[];
     isBudgetLoaded: boolean;
@@ -37,7 +37,7 @@ type Props = {
 export const PlanningMainColumn: FC<Props> = ({
     renderHeader,
     matchedOrgUnitIds,
-    mapHighlightedOrgUnitIds,
+    matchedIdsByMetric,
     previewRule,
     scenarioRules,
     isBudgetLoaded,
@@ -62,7 +62,7 @@ export const PlanningMainColumn: FC<Props> = ({
                     {activeTab === 'map' && (
                         <InterventionPlanMap
                             matchedOrgUnitIds={matchedOrgUnitIds}
-                            mapHighlightedOrgUnitIds={mapHighlightedOrgUnitIds}
+                            matchedIdsByMetric={matchedIdsByMetric}
                             previewRule={previewRule}
                         />
                     )}

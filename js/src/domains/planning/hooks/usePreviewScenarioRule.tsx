@@ -1,40 +1,32 @@
 import { postRequest } from 'bluesquare-components';
+import { isEmpty, mapValues } from 'lodash';
 import { UseQueryResult } from 'react-query';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { MetricsFilters } from '../../dataLayers/types/metrics';
-import { MetricTypeCriterion } from '../types/scenarioRule';
 
-export type ScenarioRulePreviewResult = {
-    ids: number[];
-    criteria: MetricTypeCriterion[];
-};
+export type ScenarioRulePreviewRequest = Record<string, MetricsFilters>;
+export type ScenarioRulePreviewResult = Record<string, number[]>;
 
 export const getPreviewScenarioRuleQueryKey = (
-    jsonLogic: MetricsFilters | null,
+    rules: ScenarioRulePreviewRequest,
     dataLayerYears?: Record<string, number>,
-) => ['scenarioRulePreview', jsonLogic, dataLayerYears ?? null];
+) => ['scenarioRulePreview', rules, dataLayerYears ?? null];
 
 export const usePreviewScenarioRule = (
-    matchingCriteria: MetricTypeCriterion[],
-    jsonLogic: MetricsFilters | null,
+    rules: ScenarioRulePreviewRequest,
     dataLayerYears?: Record<string, number>,
 ): UseQueryResult<ScenarioRulePreviewResult> =>
     useSnackQuery({
-        queryKey: getPreviewScenarioRuleQueryKey(jsonLogic, dataLayerYears),
-        queryFn: async () => ({
-            ids: jsonLogic
-                ? (
-                      await postRequest(
-                          `/api/snt_malaria/scenario_rules/preview/`,
-                          {
-                              data_layer_years: dataLayerYears,
-                              rules: { rule: { matching_criteria: jsonLogic } },
-                          },
-                      )
-                  ).rule
-                : [],
-            criteria: matchingCriteria,
-        }),
+        queryKey: getPreviewScenarioRuleQueryKey(rules, dataLayerYears),
+        queryFn: () =>
+            isEmpty(rules)
+                ? Promise.resolve({})
+                : postRequest(`/api/snt_malaria/scenario_rules/preview/`, {
+                      data_layer_years: dataLayerYears,
+                      rules: mapValues(rules, matchingCriteria => ({
+                          matching_criteria: matchingCriteria,
+                      })),
+                  }),
         options: {
             keepPreviousData: true,
             staleTime: Infinity,
