@@ -21,6 +21,7 @@ import { useMetricConfig } from '../../utils/metricConfig';
 import { ImpactDifferenceTooltipBody } from './ImpactDifferenceTooltipBody';
 import { LabelChip } from './LabelChip';
 import { PlanTag } from './PlanTag';
+import { useImpactDetailsExpansion } from './useImpactDetailsExpansion';
 
 const styles = {
     root: {
@@ -224,6 +225,10 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
         s => s.id === selectedComparisonId,
     );
     const hasData = deltaMap.size > 0;
+    const getImpactDetails = useImpactDetailsExpansion({
+        scenarioId: selectedComparisonId,
+        highlightedMetric: selectedMetric,
+    });
 
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => {
@@ -271,6 +276,10 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
             metricConfig,
             intl,
         ],
+    );
+    const getTooltipActions = useCallback(
+        (orgUnit: OrgUnit) => getImpactDetails(orgUnit.id),
+        [getImpactDetails],
     );
     const dataKey = useMemo(
         () =>
@@ -344,6 +353,7 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
                 hideLegend={!hasData}
                 defaultColor={NO_INTERVENTION_COLOR}
                 getTooltipContent={getTooltipContent}
+                getTooltipActions={getTooltipActions}
                 dataKey={dataKey}
             />
             {chipOverlay}

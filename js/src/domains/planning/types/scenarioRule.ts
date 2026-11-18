@@ -39,6 +39,12 @@ export type MetricTypeCriterion = {
     string_value?: string;
 };
 
+export type RuleFormActions = {
+    toggleOrgUnit: (orgUnitId: number) => void;
+    /** Replaces the criterion on the same metric type, or adds it. */
+    setCriterion: (criterion: MetricTypeCriterion) => void;
+};
+
 export type ScenarioRulePreview = {
     rule: Pick<
         ScenarioRule,
@@ -53,4 +59,5 @@ export type ScenarioRulePreview = {
     matchedOrgUnitIds: number[];
     /** Org units matched by each metric's criteria alone, keyed by metric type id. */
     matchedIdsByMetric?: Record<string, number[]>;
+    actions: RuleFormActions;
 };

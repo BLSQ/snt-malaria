@@ -14,7 +14,7 @@ import { MESSAGES } from '../../../../messages';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
 import { compactInputStyles, operatorSymbolStyles } from './styles';
 
-type Operator = MetricTypeCriterion['operator'];
+export type Operator = MetricTypeCriterion['operator'];
 
 export const EQUAL_OPERATOR: Operator = '==';
 
@@ -33,6 +33,9 @@ const operatorOptions: {
 export const getOperatorSymbol = (operator: string) =>
     operatorOptions.find(option => option.value === operator)?.symbol ??
     operator;
+
+export const getOperatorOption = (operator: Operator) =>
+    operatorOptions.find(option => option.value === operator);
 
 const SYMBOL_CLASS = 'operatorToken-symbol';
 const HOVER_CHEVRON_CLASS = 'operatorToken-hoverChevron';

@@ -6,7 +6,10 @@ import { hoverCardSpacing } from '../../../../components/hoverCard/hoverCardSpac
 import { HoverCardValue } from '../../../../components/hoverCard/HoverCardValue';
 import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
-import { useGetMetricValues } from '../../../dataLayers/hooks/useGetMetrics';
+import {
+    flattenMetricTypes,
+    useGetMetricValues,
+} from '../../../dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../messages';
 import { getDataLayerYear } from '../../../scenarios/types';
@@ -15,7 +18,7 @@ import {
     getMapStyleForOrgUnit,
     useGetOrgUnitMetric,
 } from '../../libs/map-utils';
-import { ScenarioRule } from '../../types/scenarioRule';
+import { RuleFormActions, ScenarioRule } from '../../types/scenarioRule';
 import { buildAssignmentDisplay } from './buildAssignmentDisplay';
 import {
     buildPreviewAssignments,
@@ -25,6 +28,7 @@ import { CriterionMatchLine } from './CriterionMatchLine';
 import { getInterventionMapPresentation } from './getInterventionMapPresentation';
 import { InterventionsTooltipBody } from './InterventionsTooltipBody';
 import { RuleSelectionTooltipBody } from './RuleSelectionTooltipBody';
+import { useRuleMapActions } from './useRuleMapActions';
 import { useRuleTooltipData } from './useRuleTooltipData';
 
 const styles: SxStyles = {
@@ -50,12 +54,14 @@ type Props = {
     matchedOrgUnitIds?: number[];
     matchedIdsByMetric?: Record<string, number[]>;
     previewRule?: Partial<ScenarioRule>;
+    ruleFormActions?: RuleFormActions;
 };
 
 export const InterventionPlanMap: FC<Props> = ({
     matchedOrgUnitIds,
     matchedIdsByMetric,
     previewRule,
+    ruleFormActions,
 }) => {
     const {
         orgUnits,
@@ -69,7 +75,7 @@ export const InterventionPlanMap: FC<Props> = ({
     } = usePlanningContext();
 
     const metricTypes = useMemo(
-        () => metricTypeCategories?.flatMap(category => category.items) ?? [],
+        () => flattenMetricTypes(metricTypeCategories),
         [metricTypeCategories],
     );
     const selectedMetricLayer = useMemo(
@@ -153,6 +159,16 @@ export const InterventionPlanMap: FC<Props> = ({
         dataLayerYears: scenario?.data_layer_years,
     });
 
+    const { getRuleActions, operatorPreviewIds } = useRuleMapActions({
+        ruleFormActions,
+        activeMetricLayer,
+        getOrgUnitMetric: getSelectedMetric,
+        previewRule,
+        matchedOrgUnitIds,
+        matchedIdsByMetric,
+        dataLayerYears: scenario?.data_layer_years,
+    });
+
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => {
             if (!isPreviewingRule) {
@@ -211,6 +227,11 @@ export const InterventionPlanMap: FC<Props> = ({
         ],
     );
 
+    const getTooltipActions = useCallback(
+        (orgUnit: OrgUnit) => getRuleActions(orgUnit.id),
+        [getRuleActions],
+    );
+
     return (
         <Box height="100%" width="100%" sx={styles.mainBox}>
             {orgUnits && (
@@ -219,11 +240,17 @@ export const InterventionPlanMap: FC<Props> = ({
                     border
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitStyle}
-                    selectedOrgUnitIds={mapPresentation.highlightedOrgUnitIds}
+                    selectedOrgUnitIds={
+                        operatorPreviewIds ??
+                        mapPresentation.highlightedOrgUnitIds
+                    }
                     legendConfig={mapPresentation.legendConfig}
                     hideLegend={mapPresentation.hideLegend}
                     dataKey={mapPresentation.mapDataKey}
                     getTooltipContent={getTooltipContent}
+                    getTooltipActions={
+                        isPreviewingRule ? getTooltipActions : undefined
+                    }
                 />
             )}
             {metricTypeCategories && isPreviewingRule && (

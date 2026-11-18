@@ -60,23 +60,31 @@ type Placement = {
  * Places a card next to `anchor` on the side that fits in the viewport and covers
  * the least according to `getCoverage`. `currentSide` is kept while it still fits;
  * a side that covers clearly less is reported as `preferredSide`.
+ * The side is chosen for `plannedSize`, the largest size the card can grow to,
+ * so it keeps its side when it grows.
  */
 export const computePlacement = ({
     anchor,
     size,
+    plannedSize = size,
     viewport,
     getCoverage,
     currentSide,
 }: {
     anchor: Point;
     size: Size;
+    plannedSize?: Size;
     viewport: Size;
     getCoverage: GetCoverage;
     currentSide?: Side;
 }): Placement => {
+    const toPosition = (side: Side): Point => {
+        const rect = getCardRect(anchor, size, side);
+        return { x: rect.left, y: rect.top };
+    };
     const candidates = SIDES.map(side => ({
         side,
-        rect: getCardRect(anchor, size, side),
+        rect: getCardRect(anchor, plannedSize, side),
     }))
         .filter(({ rect }) => fitsIn(rect, viewport))
         .map(candidate => ({
@@ -99,19 +107,16 @@ export const computePlacement = ({
         isSameSide(candidate.side, currentSide),
     );
     if (!current) {
-        return {
-            side: best.side,
-            position: { x: best.rect.left, y: best.rect.top },
-        };
+        return { side: best.side, position: toPosition(best.side) };
     }
 
     const isClearlyBetter =
         current.covered - best.covered >=
-            SIDE_SWITCH_MIN_GAIN * size.width * size.height &&
+            SIDE_SWITCH_MIN_GAIN * plannedSize.width * plannedSize.height &&
         best.covered <= SIDE_SWITCH_MAX_RATIO * current.covered;
     return {
         side: current.side,
-        position: { x: current.rect.left, y: current.rect.top },
+        position: toPosition(current.side),
         preferredSide: isClearlyBetter ? best.side : undefined,
     };
 };

@@ -11,6 +11,7 @@ import { uniq } from 'lodash';
 import { createPortal } from 'react-dom';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardStyled } from '../../../../../components/CardStyled';
+import { useFlash } from '../../../../../hooks/useFlash';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
 import { usePrefetchMetricValues } from '../../../../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../../../../messages';
@@ -23,13 +24,19 @@ import {
     useScenarioRuleFormState,
 } from '../../../hooks/useScenarioRuleFormState';
 import { pickRandomPaletteColor } from '../../../libs/color-utils';
+import { upsertCriterion } from '../../../libs/rule-map-actions';
 import {
     getRuleDisplayName,
     parseOrgUnitIds,
     resolveRuleOrgUnitIds,
 } from '../../../libs/rule-utils';
-import { ScenarioRule, ScenarioRulePreview } from '../../../types/scenarioRule';
+import {
+    RuleFormActions,
+    ScenarioRule,
+    ScenarioRulePreview,
+} from '../../../types/scenarioRule';
 import { RuleOverridesTab } from '../overrides/RuleOverridesTab';
+import { toggleLeaf } from './orgUnitScopeSelector/scopeTreeUtils';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
 import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
@@ -184,6 +191,59 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         ],
     );
 
+    const ruleFormState = {
+        ruleMatchedIds:
+            matchingCriteria.length > 0
+                ? (ruleMatches.ruleMatchedIds ?? [])
+                : [],
+        includedOrgUnits,
+        excludedOrgUnits,
+        matchingCriteria,
+    };
+    const ruleFormStateRef = useRef(ruleFormState);
+    ruleFormStateRef.current = ruleFormState;
+    const { setFieldValue, setFieldTouched } = formik;
+    const [flashingMetricTypeId, flashMetricType] = useFlash<number>();
+    const [isScopeFlashing, flashScope] = useFlash<boolean>();
+    const ruleFormActions = useMemo<RuleFormActions>(() => {
+        const setFieldValueAndState = (field: string, value: unknown) => {
+            setFieldTouched(field, true, false);
+            setFieldValue(field, value);
+        };
+        return {
+            toggleOrgUnit: orgUnitId => {
+                const state = ruleFormStateRef.current;
+                const { hand, exc } = toggleLeaf(
+                    orgUnitId,
+                    new Set(parseOrgUnitIds(state.includedOrgUnits)),
+                    new Set(parseOrgUnitIds(state.excludedOrgUnits)),
+                    new Set(state.ruleMatchedIds),
+                );
+                setFieldValueAndState(
+                    'org_units_included',
+                    Array.from(hand).join(','),
+                );
+                setFieldValueAndState(
+                    'org_units_excluded',
+                    Array.from(exc).join(','),
+                );
+                flashScope(true);
+            },
+            setCriterion: criterion => {
+                setFieldValueAndState(
+                    'matching_criteria',
+                    upsertCriterion(
+                        ruleFormStateRef.current.matchingCriteria,
+                        criterion,
+                    ),
+                );
+                if (criterion.metric_type !== undefined) {
+                    flashMetricType(criterion.metric_type);
+                }
+            },
+        };
+    }, [setFieldValue, setFieldTouched, flashMetricType, flashScope]);
+
     const criteriaMetricValuesParams = useMemo(
         () =>
             uniq(
@@ -227,6 +287,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             },
             matchedOrgUnitIds,
             matchedIdsByMetric: ruleMatches.matchedIdsByMetric,
+            actions: ruleFormActions,
         });
     }, [
         color,
@@ -238,6 +299,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         excludedOrgUnits,
         matchedOrgUnitIds,
         ruleMatches.matchedIdsByMetric,
+        ruleFormActions,
         isAwaitingFirstResult,
     ]);
 
@@ -268,6 +330,8 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                 <ScenarioRuleForm
                     ruleMatches={ruleMatches}
                     notice={notice}
+                    flashingMetricTypeId={flashingMetricTypeId}
+                    isScopeFlashing={isScopeFlashing}
                     matchedOrgUnitIds={
                         isAwaitingFirstResult ? undefined : matchedOrgUnitIds
                     }
