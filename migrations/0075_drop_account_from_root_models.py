@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0417_workspace"),
+        ("iaso", "0419_workspace"),
         ("snt_malaria", "0073_add_workspace_to_root_models"),
     ]
 
