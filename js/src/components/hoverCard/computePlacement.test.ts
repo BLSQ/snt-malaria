@@ -146,4 +146,21 @@ describe('computePlacement', () => {
 
         expect(placement.position.x).toBe(0);
     });
+
+    it('chooses the side for the planned size but positions the current size', () => {
+        const anchor = { x: 400, y: 600 };
+        const placement = computePlacement({
+            anchor,
+            size,
+            plannedSize: { width: 340, height: 300 },
+            viewport,
+            getCoverage: getRectsCoverage([]),
+        });
+
+        expect(placement.side).toEqual({ up: true, left: false });
+        expect(placement.position).toEqual({
+            x: anchor.x + POINTER_OFFSET,
+            y: anchor.y - POINTER_OFFSET - size.height,
+        });
+    });
 });

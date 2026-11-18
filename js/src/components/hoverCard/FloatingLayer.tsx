@@ -28,7 +28,6 @@ const layerStyle: CSSProperties = {
     position: 'fixed',
     top: 0,
     left: 0,
-    pointerEvents: 'none',
     transition: `opacity ${FADE_MS}ms ease`,
     willChange: 'transform',
 };
@@ -36,13 +35,21 @@ const layerStyle: CSSProperties = {
 export type FloatingLayerHandle = {
     /** Viewport coordinates to place the layer next to; null hides it. */
     setAnchor: (anchor: Point | null) => void;
+    /** Like `setAnchor`, but chooses the side afresh instead of keeping the current one. */
+    placeAt: (anchor: Point) => void;
 };
 
 type Props = {
     /** How much of what matters (e.g. map shapes) a viewport rect would hide. */
     getCoverage: GetCoverage;
+    /** The largest size the layer can grow to from its current content. */
+    getPlannedSize: (layer: HTMLElement) => Size;
+    /** Keeps the layer on its side and lets it receive pointer events. */
+    isPinned?: boolean;
     children: (side: Side) => ReactNode;
 };
+
+const NO_COVERAGE: GetCoverage = () => 0;
 
 const getViewport = (): Size => ({
     width: window.innerWidth,
@@ -50,7 +57,7 @@ const getViewport = (): Size => ({
 });
 
 export const FloatingLayer = forwardRef<FloatingLayerHandle, Props>(
-    ({ getCoverage, children }, ref) => {
+    ({ getCoverage, getPlannedSize, isPinned = false, children }, ref) => {
         const theme = useTheme();
         const layerRef = useRef<HTMLDivElement>(null);
         const anchorRef = useRef<Point | null>(null);
@@ -97,14 +104,16 @@ export const FloatingLayer = forwardRef<FloatingLayerHandle, Props>(
             const placement = computePlacement({
                 anchor,
                 size: sizeRef.current,
+                plannedSize: getPlannedSize(layer),
                 viewport: getViewport(),
-                getCoverage,
+                getCoverage:
+                    isPinned && sideRef.current ? NO_COVERAGE : getCoverage,
                 currentSide: sideRef.current,
             });
             applySide(placement.side);
             layer.style.transform = `translate(${placement.position.x}px, ${placement.position.y}px)`;
             switchToSide(placement.preferredSide);
-        }, [applySide, getCoverage, switchToSide]);
+        }, [applySide, getCoverage, getPlannedSize, isPinned, switchToSide]);
         positionRef.current = position;
 
         const setAnchor = useCallback(
@@ -130,7 +139,18 @@ export const FloatingLayer = forwardRef<FloatingLayerHandle, Props>(
             [endSideSwitch],
         );
 
-        useImperativeHandle(ref, () => ({ setAnchor }), [setAnchor]);
+        const placeAt = useCallback(
+            (anchor: Point) => {
+                sideRef.current = undefined;
+                setAnchor(anchor);
+            },
+            [setAnchor],
+        );
+
+        useImperativeHandle(ref, () => ({ setAnchor, placeAt }), [
+            setAnchor,
+            placeAt,
+        ]);
 
         useLayoutEffect(() => {
             const layer = layerRef.current;
@@ -166,6 +186,7 @@ export const FloatingLayer = forwardRef<FloatingLayerHandle, Props>(
                     ...layerStyle,
                     zIndex: theme.zIndex.tooltip,
                     opacity: isShown && !isSwitchingSide ? 1 : 0,
+                    pointerEvents: isPinned ? 'auto' : 'none',
                 }}
             >
                 {content}

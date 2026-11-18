@@ -20,6 +20,7 @@ import {
 import { useOrgUnitTree } from '../../../../../../components/orgUnitTree/useOrgUnitTree';
 import { MESSAGES } from '../../../../../messages';
 import { MetricTypeCriterion } from '../../../../types/scenarioRule';
+import { flashingStyles, flashTransition } from '../styles';
 import { RuleMatchedOrgUnits } from '../useRuleMatchedOrgUnits';
 import { ScopeTreeRow } from './ScopeTreeRow';
 import {
@@ -27,8 +28,8 @@ import {
     leafKind,
     pickLeaves,
     pruneNoOpOverrides,
-    restoreLeaves,
     sumAggregates,
+    toggleLeaf,
     unpickLeaves,
 } from './scopeTreeUtils';
 import { ScopeAggregate } from './types';
@@ -48,7 +49,9 @@ const styles = {
         borderRadius: 2,
         overflow: 'hidden',
         backgroundColor: 'background.paper',
+        transition: flashTransition(),
     },
+    flashingBox: flashingStyles,
     searchRow: {
         display: 'flex',
         alignItems: 'center',
@@ -96,6 +99,8 @@ type Props = {
     handpickedIds: number[];
     onChangeExcluded: (ids: number[]) => void;
     onChangeHandpicked: (ids: number[]) => void;
+    /** Briefly highlights the tree after it was changed from elsewhere. */
+    isFlashing?: boolean;
 };
 
 export const OrgUnitScopeSelector: FC<Props> = ({
@@ -106,6 +111,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
     handpickedIds,
     onChangeExcluded,
     onChangeHandpicked,
+    isFlashing = false,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -209,17 +215,12 @@ export const OrgUnitScopeSelector: FC<Props> = ({
             if (!tree) return;
             const leafIds = tree.leafIdsByAncestor.get(nodeId) ?? [];
             if (isLeaf) {
-                const kind = leafKind(nodeId, ruleIds, handIds, excIds);
-                if (kind === 'exc') {
-                    onChangeExcluded(
-                        Array.from(restoreLeaves(leafIds, excIds)),
-                    );
-                    return;
-                }
-                const { hand, exc } =
-                    kind === 'none'
-                        ? pickLeaves(leafIds, handIds, excIds, ruleIds)
-                        : unpickLeaves(leafIds, handIds, excIds, ruleIds);
+                const { hand, exc } = toggleLeaf(
+                    nodeId,
+                    handIds,
+                    excIds,
+                    ruleIds,
+                );
                 onChangeHandpicked(Array.from(hand));
                 onChangeExcluded(Array.from(exc));
                 return;
@@ -271,7 +272,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
 
     if (isTreeError) {
         return (
-            <Box sx={styles.box}>
+            <Box sx={[styles.box, isFlashing && styles.flashingBox]}>
                 <Box sx={styles.centeredMessage}>
                     <CloudOff sx={{ fontSize: 24, color: 'text.secondary' }} />
                     <Typography variant="body2" sx={{ mt: 0.5 }}>
@@ -299,7 +300,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
 
     return (
         <Box>
-            <Box sx={styles.box}>
+            <Box sx={[styles.box, isFlashing && styles.flashingBox]}>
                 <Box sx={styles.searchRow}>
                     <InlineSearchInput
                         value={query}

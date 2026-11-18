@@ -97,20 +97,32 @@ export const useMetricConfig = (): Record<MetricKey, MetricConfig> => {
 };
 
 /**
- * Formats a single (non-delta) value of `metric`: costs in the account's
+ * Formats a single (non-delta) value of a metric: costs in the account's
  * local currency, other metrics with their `MetricConfig.format`.
  */
-export const useMetricValueFormatter = (
+export const useMetricValuesFormatter = (): ((
     metric: MetricKey,
-): ((value: number) => string) => {
+    value: number,
+) => string) => {
     const { formatNumber } = useSafeIntl();
     const { data: budgetSettings } = useGetBudgetSettings();
     const currencyCode = budgetSettings?.local_currency;
     return useCallback(
-        (value: number) =>
+        (metric: MetricKey, value: number) =>
             metric === MetricKey.OrgUnitTotalCost
                 ? formatCost(value, currencyCode)
                 : formatNumber(value, METRIC_CONFIG[metric].format),
-        [metric, currencyCode, formatNumber],
+        [currencyCode, formatNumber],
+    );
+};
+
+/** {@link useMetricValuesFormatter} for one metric. */
+export const useMetricValueFormatter = (
+    metric: MetricKey,
+): ((value: number) => string) => {
+    const formatMetricValue = useMetricValuesFormatter();
+    return useCallback(
+        (value: number) => formatMetricValue(metric, value),
+        [metric, formatMetricValue],
     );
 };
