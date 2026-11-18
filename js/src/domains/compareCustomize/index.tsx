@@ -19,6 +19,7 @@ import { useGetScenarios } from '../scenarios/hooks/useGetScenarios';
 import { ComparisonDataProvider } from './ComparisonDataContext';
 import { ComparisonCharts } from './components/ComparisonCharts';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
+import { ImpactProviderInfo } from './components/ImpactProviderInfo';
 import { ImpactWarnings } from './components/ImpactWarnings';
 import { InterventionMaps } from './components/InterventionMaps';
 import { MetricsSummary } from './components/MetricsSummary';
@@ -350,6 +351,9 @@ export const CompareCustomize: FC = () => {
                                         />
                                     }
                                 >
+                                    <ImpactProviderInfo
+                                        providerMeta={providerMeta}
+                                    />
                                     <ImpactWarnings
                                         showYearRangeError={showYearRangeError}
                                         scenarioYearRanges={scenarioYearRanges}
@@ -361,7 +365,6 @@ export const CompareCustomize: FC = () => {
                                         interventionsWithoutImpactRef={
                                             interventionsWithoutImpactRef
                                         }
-                                        providerMeta={providerMeta}
                                     />
                                 </ConfigurationPanel>
                             </PaperFullHeight>
