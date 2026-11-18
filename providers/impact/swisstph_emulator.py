@@ -3,7 +3,9 @@ from __future__ import annotations
 import logging
 import warnings
 
+from dataclasses import replace
 from functools import cache
+from importlib import metadata
 from typing import Any, Callable
 
 from django.utils.translation import gettext_lazy as _
@@ -27,6 +29,7 @@ from plugins.snt_malaria.providers.impact.base import (
 
 logger = logging.getLogger(__name__)
 
+EMULATOR_DISTRIBUTION = "cmr-emulator"
 DEFAULT_BUNDLE = "v7_av"
 DEFAULT_COVERAGE = 0.8
 REQUIRED_OUTPUTS = {"incidence", "uncomplicated", "severe", "prevalence"}
@@ -98,6 +101,9 @@ class SwissTPHEmulatorImpactProvider(ImpactProvider):
             if not isinstance(value, (int, float)) or not 0 <= value <= 1:
                 raise IncompleteConfigError(f"Coverage for {intervention} must be a number between 0 and 1")
         return {intervention: float(value) for intervention, value in coverage.items()}
+
+    def get_meta(self) -> ImpactProviderMeta:
+        return replace(self.meta, version=metadata.version(EMULATOR_DISTRIBUTION))
 
     @property
     def supports_bulk(self) -> bool:

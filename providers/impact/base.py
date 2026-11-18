@@ -29,6 +29,7 @@ class ImpactProviderMeta:
 
     provider_key: str
     metric_annotations: dict[str, str] = field(default_factory=dict)
+    version: str | None = None
 
 
 @dataclass

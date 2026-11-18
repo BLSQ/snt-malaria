@@ -18,6 +18,7 @@ from plugins.snt_malaria.providers.impact.swisstph_emulator import SwissTPHEmula
 
 
 _LOAD_PATCH = "plugins.snt_malaria.providers.impact.swisstph_emulator._load_emulator"
+_VERSION_PATCH = "plugins.snt_malaria.providers.impact.swisstph_emulator.metadata.version"
 _INTERVENTIONS = ["IG2", "PBO", "STD", "SMC", "PMC", "RTSS", "IRS"]
 _EIR_FACTORS = {"EIR_lci": 0.5, "EIR_mean": 1.0, "EIR_uci": 1.5}
 _AVERTED_TARGETS = [
@@ -126,7 +127,8 @@ class SwissTPHEmulatorMetadataTests(SimpleTestCase):
         self.assertEqual(self.provider.get_age_groups(), ["0-100", "0-5", "5-10"])
 
     def test_meta_annotates_case_metrics_as_all_cases(self):
-        annotations = self.provider.get_meta().metric_annotations
+        with patch(_VERSION_PATCH, return_value="0.1.0"):
+            annotations = self.provider.get_meta().metric_annotations
 
         self.assertEqual(
             {metric: str(text) for metric, text in annotations.items()},
@@ -135,6 +137,14 @@ class SwissTPHEmulatorMetadataTests(SimpleTestCase):
                 "number_uncomplicated_cases": "All uncomplicated malaria cases",
             },
         )
+
+    def test_meta_reports_the_installed_emulator_version(self):
+        with patch(_VERSION_PATCH, return_value="0.1.0") as version:
+            meta = self.provider.get_meta()
+
+        version.assert_called_once_with("cmr-emulator")
+        self.assertEqual(meta.provider_key, "swisstph_emulator")
+        self.assertEqual(meta.version, "0.1.0")
 
     def test_available_impact_refs_are_emulator_interventions_plus_cm(self):
         refs = [option.ref for option in self.provider.get_available_impact_refs()]
