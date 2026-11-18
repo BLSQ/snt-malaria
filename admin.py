@@ -71,6 +71,11 @@ class InterventionAdmin(admin.ModelAdmin):
     )
     ordering = ("name",)
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if change and "impact_ref" in form.changed_data:
+            impact_cache.invalidate_accounts_on_commit([obj.intervention_category.account_id])
+
 
 @admin.register(InterventionAssignment)
 class InterventionAssignmentAdmin(admin.ModelAdmin):

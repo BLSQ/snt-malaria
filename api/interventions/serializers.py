@@ -2,6 +2,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from plugins.snt_malaria.api.impact import cache as impact_cache
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLineWriteSerializer,
@@ -94,9 +95,12 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", None)
+        impact_ref_changed = validated_data.get("impact_ref", instance.impact_ref) != instance.impact_ref
 
         with transaction.atomic():
             intervention = super().update(instance, validated_data)
+            if impact_ref_changed:
+                impact_cache.invalidate_accounts_on_commit([intervention.intervention_category.account_id])
 
             if cost_breakdown_lines_data is not None:
                 for line_data in cost_breakdown_lines_data:
