@@ -241,6 +241,7 @@ class MetricsImporter:
             try:
                 metric_type, _created = MetricType.objects.update_or_create(
                     account=self.account,
+                    workspace=None,
                     code=col,
                     defaults={
                         "name": col,

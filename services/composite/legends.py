@@ -24,20 +24,20 @@ def placeholder_legend(legend_type=None, legend_config=None) -> tuple[str, dict]
     return MetricType.LegendType.THRESHOLD, {"domain": [], "range": list(SEVEN_SHADES)}
 
 
-def _get_reference_metric_type(account, reference_id) -> MetricType | None:
-    """The account's ``MetricType`` to copy a legend from, or ``None`` if unusable."""
+def _get_reference_metric_type(workspace, reference_id) -> MetricType | None:
+    """The workspace's ``MetricType`` to copy a legend from, or ``None`` if unusable."""
     try:
         reference_id = int(reference_id)
     except (TypeError, ValueError):
         return None
-    reference = MetricType.objects.filter(id=reference_id, account=account).first()
+    reference = MetricType.objects.visible_in_workspace(workspace).filter(id=reference_id).first()
     if reference is None or not reference.legend_type or not reference.legend_config:
         return None
     return reference
 
 
 def resolve_output_legend(
-    account, evaluator: CompositeGraphEvaluator, values_by_year: ValuesByYear
+    workspace, evaluator: CompositeGraphEvaluator, values_by_year: ValuesByYear
 ) -> tuple[str, dict]:
     """Return ``(legend_type, legend_config)`` for the output, honouring the user's legend choice.
 
@@ -53,11 +53,11 @@ def resolve_output_legend(
     # keep their exact colours instead of being rebuilt with default shades.
     selected = (evaluator.output_legend_type or "auto").lower()
     if selected == REFERENCE_LEGEND:
-        reference = _get_reference_metric_type(account, evaluator.output_reference_metric_type_id)
+        reference = _get_reference_metric_type(workspace, evaluator.output_reference_metric_type_id)
         if reference is None:
             connected_ids = evaluator.connected_data_layer_metric_type_ids()
             if connected_ids:
-                reference = _get_reference_metric_type(account, connected_ids[0])
+                reference = _get_reference_metric_type(workspace, connected_ids[0])
         # Categorical results can only render with an ordinal reference legend; a numeric reference
         # legend falls through to the ordinal builder below.
         if reference is not None and (not categorical or reference.legend_type == MetricType.LegendType.ORDINAL):

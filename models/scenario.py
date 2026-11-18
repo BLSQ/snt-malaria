@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
 from django.db.models import Deferrable, F, Q
 
-from iaso.models import MetricValue
+from iaso.models import MetricType, MetricValue
 from iaso.utils.jsonlogic import jsonlogic_to_exists_q_clauses
 from iaso.utils.models.color import ColorField
 from iaso.utils.models.soft_deletable import (
@@ -210,7 +210,9 @@ class ScenarioRule(models.Model):
         account = workspace.account
         org_units = get_intervention_org_units(account)
 
-        metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
+        metric_values = MetricValue.objects.filter(
+            metric_type__in=MetricType.objects.visible_in_workspace(workspace), org_unit_id__isnull=False
+        )
 
         data_layer_years = {int(mt_id): year for mt_id, year in (data_layer_years or {}).items()}
 

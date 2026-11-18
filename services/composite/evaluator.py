@@ -117,8 +117,9 @@ def _coerce_numeric(value: Value) -> Value:
 class CompositeGraphEvaluator:
     """Resolves a serialized Flume graph into per-org-unit values for the output node."""
 
-    def __init__(self, account, graph: dict | None, org_unit_ids: Iterable[int]):
-        self.account = account
+    def __init__(self, workspace, graph: dict | None, org_unit_ids: Iterable[int]):
+        self.workspace = workspace
+        self.visible_metric_types = MetricType.objects.visible_in_workspace(workspace)
         self.graph = graph or {}
         self.org_unit_ids = list(org_unit_ids)
         self._cache: dict[str, ValuesByYear] = {}
@@ -249,18 +250,18 @@ class CompositeGraphEvaluator:
 
         # Categorical layers (e.g. seasonality) store their category in ``string_value`` with a null
         # ``value``, so read both and keep whichever the row carries. Year-less rows go under the
-        # ``None`` (timeless) bucket. The account filter on the join keeps tenancy in one query; the
+        # ``None`` (timeless) bucket. The workspace filter on the join keeps tenancy in one query; the
         # ownership check below only runs when nothing came back.
         queryset = MetricValue.objects.filter(
             metric_type_id=metric_type_id,
-            metric_type__account=self.account,
+            metric_type__in=self.visible_metric_types,
             org_unit_id__in=self.org_unit_ids,
         )
         if pinned_year is not None:
             queryset = queryset.filter(year=pinned_year)
         rows = list(queryset.values_list("org_unit_id", "year", "value", "string_value"))
-        if not rows and not MetricType.objects.filter(id=metric_type_id, account=self.account).exists():
-            raise CompositeGraphError(f"Metric type {metric_type_id} does not belong to this account.")
+        if not rows and not self.visible_metric_types.filter(id=metric_type_id).exists():
+            raise CompositeGraphError(f"Metric type {metric_type_id} does not belong to this workspace.")
 
         values_by_year: ValuesByYear = {}
         for org_unit_id, year, value, string_value in rows:
@@ -671,7 +672,7 @@ class CompositeGraphEvaluator:
             metric_type_id = int(raw_id)
         except (TypeError, ValueError):
             return None
-        metric_type = MetricType.objects.filter(id=metric_type_id, account=self.account).first()
+        metric_type = self.visible_metric_types.filter(id=metric_type_id).first()
         if metric_type and isinstance(metric_type.legend_config, dict):
             domain = metric_type.legend_config.get("domain")
             if isinstance(domain, list) and domain:

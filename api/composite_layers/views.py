@@ -61,17 +61,15 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         data = serializer.validated_data
         return {field: data.pop(field) for field in METRIC_METADATA_FIELDS if field in data}
 
-    @staticmethod
-    def _account_metric_type_id(metric_type_id, account):
+    def _visible_metric_type_id(self, metric_type_id):
         """A graph can name a layer that has since been deleted, so ids read from it are checked."""
         if metric_type_id is None:
             return None
-        if not MetricType.objects.filter(id=metric_type_id, account=account).exists():
+        if not MetricType.objects.visible_in_workspace(self.workspace).filter(id=metric_type_id).exists():
             return None
         return metric_type_id
 
     def perform_create(self, serializer):
-        account = self.workspace.account
         data = serializer.validated_data
         name = data["name"].strip()
         metadata = self._pop_metric_metadata(serializer)
@@ -129,7 +127,6 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.instance
-        account = self.workspace.account
         data = serializer.validated_data
         metadata = self._pop_metric_metadata(serializer)
         name = data.get("name")
@@ -149,7 +146,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
             legend_type, legend_config, reference_metric_type_id = read_legend_from_graph(graph)
             extra["legend_type"] = legend_type
             extra["legend_config"] = legend_config
-            extra["legend_reference_metric_type_id"] = self._account_metric_type_id(reference_metric_type_id, account)
+            extra["legend_reference_metric_type_id"] = self._visible_metric_type_id(reference_metric_type_id)
         else:
             legend_type, legend_config = instance.legend_type, instance.legend_config
 
@@ -160,7 +157,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
             try:
                 if metric_type is not None:
                     metric_type = update_composite_metric_type(
-                        account=account,
+                        workspace=self.workspace,
                         metric_type=metric_type,
                         graph=graph,
                         org_unit_ids=self._intervention_org_unit_ids(),
@@ -235,10 +232,9 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        account = self.workspace.account
         try:
             result = preview_composite_layer(
-                account, serializer.validated_data["graph"], self._intervention_org_unit_ids()
+                self.workspace, serializer.validated_data["graph"], self._intervention_org_unit_ids()
             )
         except CompositeGraphError as error:
             raise serializers.ValidationError({"graph": str(error)})

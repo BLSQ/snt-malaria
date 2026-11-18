@@ -2,7 +2,16 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, OrgUnitType, SourceVersion
+from iaso.models import (
+    Account,
+    DataSource,
+    MetricType,
+    MetricValue,
+    OrgUnit,
+    OrgUnitType,
+    SourceVersion,
+    Workspace,
+)
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
     AccountSettings,
@@ -479,6 +488,17 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         criteria = {"and": [{">=": [{"var": metric_type.id}, 1]}]}
         result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), criteria)
         self.assertCountEqual(result, [self.district_1.id, self.district_2.id])
+
+    def test_criteria_on_layer_from_another_workspace_matches_nothing(self):
+        workspace = self.get_snt_workspace()
+        other_workspace = Workspace.objects.create(account=self.account, name="Other workspace")
+        other_layer = MetricType.objects.create(workspace=other_workspace, name="Other layer", code="other_layer")
+        MetricValue.objects.create(metric_type=other_layer, org_unit=self.district_1, value=1, year=2025)
+        criteria = {"and": [{">=": [{"var": other_layer.id}, 1]}]}
+
+        result = ScenarioRule.resolve_matched_org_units(workspace, criteria)
+
+        self.assertEqual(result, [])
 
     def test_null_criteria_returns_empty(self):
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)

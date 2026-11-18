@@ -7,7 +7,7 @@ from iaso.api.common import UserSerializer
 from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.api.scenarios.utils import get_interventions, get_missing_headers
 from plugins.snt_malaria.models import Scenario, ScenarioRule
-from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units, get_workspace_metric_type_ids
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -71,9 +71,9 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
         if not value:
             return value
 
-        account = get_active_workspace(self.context["request"]).account
-        account_metric_type_ids = {str(mt_id) for mt_id in get_account_metric_type_ids(account)}
-        invalid_keys = [key for key in value if key not in account_metric_type_ids]
+        workspace = get_active_workspace(self.context["request"])
+        workspace_metric_type_ids = {str(mt_id) for mt_id in get_workspace_metric_type_ids(workspace)}
+        invalid_keys = [key for key in value if key not in workspace_metric_type_ids]
         if invalid_keys:
             raise serializers.ValidationError(_("Invalid metric type ids: %(ids)s") % {"ids": invalid_keys})
 

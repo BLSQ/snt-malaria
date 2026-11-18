@@ -184,7 +184,7 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             workspace = get_active_workspace(request)
             fields["unit_type"].queryset = CostUnitType.objects.filter(workspace=workspace)
             fields["intervention"].queryset = Intervention.objects.filter(intervention_category__workspace=workspace)
-            fields["population_layer"].queryset = MetricType.objects.filter(account=workspace.account)
+            fields["population_layer"].queryset = MetricType.objects.visible_in_workspace(workspace)
         return fields
 
     def _current_value(self, attrs, field):

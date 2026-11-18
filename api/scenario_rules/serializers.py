@@ -5,7 +5,7 @@ from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import OrgUnit
 from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.models import Scenario, ScenarioRule
-from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units, get_workspace_metric_type_ids
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
@@ -175,15 +175,14 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
         if matching_criteria is None:
             return matching_criteria
 
-        account = get_active_workspace(self.context["request"]).account
-        account_metric_types = get_account_metric_type_ids(account)
+        workspace_metric_types = get_workspace_metric_type_ids(get_active_workspace(self.context["request"]))
         invalid_metric_types = []
 
         conditions = matching_criteria["and"]
         for condition in conditions:
             operator = next(iter(condition))
             metric_type_id = condition[operator][0]["var"]
-            if metric_type_id not in account_metric_types:
+            if metric_type_id not in workspace_metric_types:
                 invalid_metric_types.append(metric_type_id)
 
         if invalid_metric_types:

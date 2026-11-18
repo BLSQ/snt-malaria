@@ -44,7 +44,7 @@ def _write_metric_values(metric_type: MetricType, values_by_year: ValuesByYear) 
     MetricValue.objects.bulk_create(rows, batch_size=BULK_CREATE_BATCH_SIZE)
 
 
-def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -> dict:
+def preview_composite_layer(workspace, graph: dict, org_unit_ids: Iterable[int]) -> dict:
     """Evaluate ``graph`` and return its result WITHOUT persisting anything.
 
     Used by the live in-editor preview. Returns a dict shaped for the map component::
@@ -58,9 +58,9 @@ def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -
             "years": [int, ...],  # distinct non-null years, newest first
         }
     """
-    evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
+    evaluator = CompositeGraphEvaluator(workspace, graph, org_unit_ids)
     values_by_year = evaluator.run()
-    legend_type, legend_config = resolve_output_legend(account, evaluator, values_by_year)
+    legend_type, legend_config = resolve_output_legend(workspace, evaluator, values_by_year)
 
     metric_values = []
     years = set()
@@ -86,7 +86,7 @@ def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -
 
 
 def _generate_code(name: str) -> str:
-    # Suffixed with a random hex to satisfy MetricType's unique (account, code).
+    # Suffixed with a random hex to satisfy MetricType's unique code per workspace.
     return f"composite_{slugify(name)[:80]}_{uuid.uuid4().hex[:8]}"
 
 
@@ -191,10 +191,9 @@ def run_and_persist_composite_layer(
     is_population: bool = False,
 ) -> MetricType:
     """Execute ``graph`` and persist the result as a new ``MetricType`` + ``MetricValue`` rows."""
-    account = workspace.account
-    evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
+    evaluator = CompositeGraphEvaluator(workspace, graph, org_unit_ids)
     values_by_year = evaluator.run()
-    legend_type, legend_config = resolve_output_legend(account, evaluator, values_by_year)
+    legend_type, legend_config = resolve_output_legend(workspace, evaluator, values_by_year)
 
     metric_type = _create_metric_type(
         workspace,
@@ -214,7 +213,7 @@ def run_and_persist_composite_layer(
 
 @transaction.atomic
 def update_composite_metric_type(
-    account,
+    workspace,
     metric_type: MetricType,
     graph: dict,
     org_unit_ids: Iterable[int],
@@ -230,7 +229,7 @@ def update_composite_metric_type(
     Keeps the same ``MetricType`` id (so existing references stay valid) while refreshing its legend
     and ``MetricValue`` rows.
     """
-    evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
+    evaluator = CompositeGraphEvaluator(workspace, graph, org_unit_ids)
     values_by_year = evaluator.run()
 
     apply_composite_metadata(
@@ -243,7 +242,7 @@ def update_composite_metric_type(
         is_population=is_population,
     )
 
-    metric_type.legend_type, metric_type.legend_config = resolve_output_legend(account, evaluator, values_by_year)
+    metric_type.legend_type, metric_type.legend_config = resolve_output_legend(workspace, evaluator, values_by_year)
     # The graph just ran successfully, producing real values, so the layer is now usable -
     # relevant when this re-run is what first turns a shell into a real layer.
     metric_type.is_complete = True
