@@ -24,8 +24,8 @@ def get_intervention_org_units(account):
     return qs
 
 
-def get_account_metric_type_ids(account) -> set:
-    return set(MetricType.objects.filter(account=account).values_list("id", flat=True))
+def get_workspace_metric_type_ids(workspace) -> set:
+    return set(MetricType.objects.visible_in_workspace(workspace).values_list("id", flat=True))
 
 
 class AccountSettings(models.Model):

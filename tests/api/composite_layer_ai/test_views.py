@@ -5,7 +5,7 @@ import anthropic
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-from iaso.models import Account, MetricType, MetricValue
+from iaso.models import Account, MetricType, MetricValue, Workspace
 from plugins.snt_malaria.api.ai_chat.serializers import MAX_ATTACHMENT_SIZE_BYTES
 from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
@@ -25,6 +25,7 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
             name="Test Account",
             anthropic_api_key="sk-test-key",
         )
+        self.workspace = self.get_snt_workspace(self.account)
         self.account_no_key = Account.objects.create(name="Account Without Key")
 
         self.user = self.create_user_with_profile(
@@ -210,6 +211,19 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         metric_types_sent = call_args[0][2]
         self.assertEqual(len(metric_types_sent), 1)
         self.assertEqual(metric_types_sent[0]["name"], "Rainfall")
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_metric_types_of_other_workspaces_are_not_sent(self, mock_gen):
+        other_workspace = Workspace.objects.create(account=self.account, name="Other workspace")
+        MetricType.objects.create(workspace=other_workspace, name="Other workspace layer", code="other_ws_layer")
+        MetricType.objects.create(workspace=self.workspace, name="Own layer", code="own_layer")
+        mock_gen.return_value = self._mock_generate_composite_layer_graph(with_graph=False)
+        self.client.force_authenticate(self.user)
+
+        self.client.post(BASE_URL, {"message": "hi"}, format="json")
+
+        metric_types_sent = mock_gen.call_args[0][2]
+        self.assertCountEqual([mt["name"] for mt in metric_types_sent], ["Rainfall", "Own layer"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
     def test_yearly_metric_type_has_years_in_catalog(self, mock_gen):

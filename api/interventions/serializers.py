@@ -2,6 +2,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLineWriteSerializer,
@@ -35,8 +36,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         ]
 
     def validate_intervention_category(self, intervention_category):
-        account = self.context["request"].user.iaso_profile.account
-        if intervention_category.account_id != account.id:
+        if intervention_category.workspace_id != get_active_workspace(self.context["request"]).id:
             raise serializers.ValidationError(_("Intervention category not found."))
         return intervention_category
 
@@ -78,8 +78,7 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
     def validate_grant(self, grant):
         if grant is None:
             return grant
-        account = self.context["request"].user.iaso_profile.account
-        if grant.account_id != account.id:
+        if grant.workspace_id != get_active_workspace(self.context["request"]).id:
             raise serializers.ValidationError(_("Grant not found."))
         return grant
 
@@ -196,8 +195,7 @@ class InterventionDeleteSerializer(serializers.Serializer):
     remove_from_rules = serializers.BooleanField(default=False)
 
     def validate_replace_with(self, replacement):
-        account = self.context["request"].user.iaso_profile.account
-        if replacement.intervention_category.account_id != account.id:
+        if replacement.intervention_category.workspace_id != get_active_workspace(self.context["request"]).id:
             raise serializers.ValidationError(_("Intervention not found."))
         if replacement == self.context["intervention"]:
             raise serializers.ValidationError(_("An intervention cannot replace itself."))

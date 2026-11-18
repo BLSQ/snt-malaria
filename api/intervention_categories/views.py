@@ -8,26 +8,20 @@ from plugins.snt_malaria.api.intervention_categories.permissions import Interven
 from plugins.snt_malaria.api.intervention_categories.serializers import (
     InterventionCategorySerializer,
 )
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import InterventionCategory
 
 
-class InterventionCategoryViewSet(viewsets.ModelViewSet):
+class InterventionCategoryViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = InterventionCategory.objects.prefetch_related("intervention_set")
     serializer_class = InterventionCategorySerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "patch", "delete", "head", "options"]
     permission_classes = [InterventionCategoryPermission]
 
-    def get_queryset(self):
-        return InterventionCategory.objects.prefetch_related("intervention_set").filter(
-            account=self.request.user.iaso_profile.account
-        )
-
     def perform_create(self, serializer):
         try:
-            serializer.save(
-                account=self.request.user.iaso_profile.account,
-                created_by=self.request.user,
-            )
+            serializer.save(workspace=self.workspace, created_by=self.request.user)
         except IntegrityError as e:
             self._raise_for_integrity_error(e)
 

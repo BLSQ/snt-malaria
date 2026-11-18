@@ -5,6 +5,7 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 
 from iaso.models import MetricType, MetricValue
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.api.ai_chat.mixins import AIChatAttachmentViewSetMixin
 from plugins.snt_malaria.api.composite_layers.permissions import CompositeLayerPermission
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
@@ -50,7 +51,9 @@ class CompositeLayerAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
             return Response({"error": self.API_KEY_MISSING_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         metric_types = list(
-            MetricType.objects.filter(account=account, is_utility=False).values("id", "name", "description")
+            MetricType.objects.visible_in_workspace(get_active_workspace(request))
+            .filter(is_utility=False)
+            .values("id", "name", "description")
         )
 
         # Which years each layer has data for (never the values themselves), so the prompt can

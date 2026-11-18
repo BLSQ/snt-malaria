@@ -22,8 +22,8 @@ class ImpactCacheKeyTestCase(SNTMalariaTestCase):
         super().setUp()
         cache.clear()
         self.account, self.user, _, self.version, _ = self.create_snt_account_with_project()
-        self.scenario = self.create_snt_scenario(account=self.account, created_by=self.user)
-        category = self.create_snt_intervention_category(account=self.account, created_by=self.user)
+        self.scenario = self.create_snt_scenario(workspace=self.get_snt_workspace(), created_by=self.user)
+        category = self.create_snt_intervention_category(workspace=self.get_snt_workspace(), created_by=self.user)
         self.intervention = self.create_snt_intervention(
             intervention_category=category, created_by=self.user, impact_ref="smc"
         )
@@ -46,7 +46,7 @@ class ImpactCacheKeyTestCase(SNTMalariaTestCase):
         self.assertEqual(self._key(), self._key())
 
     def test_key_for_scenario_without_assignments(self):
-        scenario = self.create_snt_scenario(account=self.account, created_by=self.user)
+        scenario = self.create_snt_scenario(workspace=self.get_snt_workspace(), created_by=self.user)
 
         self.assertIsNotNone(impact_cache._build_key(scenario.id, "under5", 2025, 2027))
 
@@ -81,7 +81,9 @@ class ImpactCacheKeyTestCase(SNTMalariaTestCase):
 
     def test_invalidation_leaves_other_accounts_keys_unchanged(self):
         other_account, other_user = self.create_snt_account()
-        other_scenario = self.create_snt_scenario(account=other_account, created_by=other_user)
+        other_scenario = self.create_snt_scenario(
+            workspace=self.get_snt_workspace(other_account), created_by=other_user
+        )
         other_key_before = impact_cache._build_key(other_scenario.id, "under5", 2025, 2027)
 
         impact_cache.invalidate_account(self.account.id)

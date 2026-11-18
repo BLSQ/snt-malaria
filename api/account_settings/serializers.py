@@ -60,4 +60,7 @@ class AccountSettingsSerializer(serializers.ModelSerializer):
             scoped_out = OrgUnitType.objects.filter(projects__account=account).distinct()
             self.fields["focus_org_unit_type_id"].queryset = scoped_out
             self.fields["intervention_org_unit_type_id"].queryset = scoped_out
-            self.fields["default_population_id"].queryset = MetricType.objects.filter(account=account)
+            # Account settings apply to every workspace, so only account-wide layers can be the default.
+            self.fields["default_population_id"].queryset = MetricType.objects.filter(
+                account=account, workspace__isnull=True
+            )

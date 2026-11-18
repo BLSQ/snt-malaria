@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from iaso.models.metric import MetricType
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import CompositeLayer
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.services.composite.evaluator import CompositeGraphError, CompositeGraphIncompleteError
@@ -26,7 +27,7 @@ from .serializers import (
 )
 
 
-class CompositeLayerViewSet(viewsets.ModelViewSet):
+class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
     """
     Composite data layers: a serialized node graph plus the ``MetricType`` it produces.
 
@@ -35,15 +36,10 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
     ``MetricValue`` rows; a graph that cannot run yet is stored as-is.
     """
 
+    queryset = CompositeLayer.objects.select_related("metric_type")
     ordering_fields = ["id", "name", "updated_at"]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
     permission_classes = [CompositeLayerPermission]
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
-            return CompositeLayer.objects.none()
-        return CompositeLayer.objects.filter(account=user.iaso_profile.account).select_related("metric_type")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -55,7 +51,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         return CompositeLayerRetrieveSerializer
 
     def _intervention_org_unit_ids(self):
-        account = self.request.user.iaso_profile.account
+        account = self.workspace.account
         return list(get_intervention_org_units(account).values_list("id", flat=True))
 
     @staticmethod
@@ -65,17 +61,15 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
         return {field: data.pop(field) for field in METRIC_METADATA_FIELDS if field in data}
 
-    @staticmethod
-    def _account_metric_type_id(metric_type_id, account):
+    def _visible_metric_type_id(self, metric_type_id):
         """A graph can name a layer that has since been deleted, so ids read from it are checked."""
         if metric_type_id is None:
             return None
-        if not MetricType.objects.filter(id=metric_type_id, account=account).exists():
+        if not MetricType.objects.visible_in_workspace(self.workspace).filter(id=metric_type_id).exists():
             return None
         return metric_type_id
 
     def perform_create(self, serializer):
-        account = self.request.user.iaso_profile.account
         data = serializer.validated_data
         name = data["name"].strip()
         metadata = self._pop_metric_metadata(serializer)
@@ -89,7 +83,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         if is_runnable(graph):
             try:
                 metric_type = run_and_persist_composite_layer(
-                    account=account,
+                    workspace=self.workspace,
                     graph=graph,
                     org_unit_ids=self._intervention_org_unit_ids(),
                     name=name,
@@ -102,7 +96,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
 
         if metric_type is None:
             metric_type = create_composite_metric_type(
-                account,
+                self.workspace,
                 name=name,
                 legend_type=legend_type,
                 legend_config=legend_config,
@@ -110,7 +104,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
             )
 
         serializer.save(
-            account=account,
+            workspace=self.workspace,
             name=name,
             graph=graph,
             legend_type=legend_type,
@@ -133,7 +127,6 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.instance
-        account = self.request.user.iaso_profile.account
         data = serializer.validated_data
         metadata = self._pop_metric_metadata(serializer)
         name = data.get("name")
@@ -153,7 +146,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
             legend_type, legend_config, reference_metric_type_id = read_legend_from_graph(graph)
             extra["legend_type"] = legend_type
             extra["legend_config"] = legend_config
-            extra["legend_reference_metric_type_id"] = self._account_metric_type_id(reference_metric_type_id, account)
+            extra["legend_reference_metric_type_id"] = self._visible_metric_type_id(reference_metric_type_id)
         else:
             legend_type, legend_config = instance.legend_type, instance.legend_config
 
@@ -164,7 +157,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
             try:
                 if metric_type is not None:
                     metric_type = update_composite_metric_type(
-                        account=account,
+                        workspace=self.workspace,
                         metric_type=metric_type,
                         graph=graph,
                         org_unit_ids=self._intervention_org_unit_ids(),
@@ -174,7 +167,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
                 else:
                     # The generated MetricType is SET_NULL and may have been deleted independently.
                     metric_type = run_and_persist_composite_layer(
-                        account=account,
+                        workspace=self.workspace,
                         graph=graph,
                         org_unit_ids=self._intervention_org_unit_ids(),
                         name=(name or instance.name),
@@ -189,7 +182,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         if not has_run:
             if metric_type is None:
                 metric_type = create_composite_metric_type(
-                    account,
+                    self.workspace,
                     name=(name or instance.name),
                     legend_type=legend_type,
                     legend_config=legend_config,
@@ -239,10 +232,9 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        account = request.user.iaso_profile.account
         try:
             result = preview_composite_layer(
-                account, serializer.validated_data["graph"], self._intervention_org_unit_ids()
+                self.workspace, serializer.validated_data["graph"], self._intervention_org_unit_ids()
             )
         except CompositeGraphError as error:
             raise serializers.ValidationError({"graph": str(error)})

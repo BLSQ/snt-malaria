@@ -83,6 +83,7 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
 
         metric_type, created = MetricType.objects.update_or_create(
             account=account,
+            workspace=None,
             code=layer["code"],
             defaults={
                 "name": layer["name"],

@@ -1,5 +1,4 @@
 from decimal import Decimal
-from unittest.mock import Mock
 
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from iaso.models.metric import MetricType
@@ -9,6 +8,7 @@ from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import
     InterventionCostBreakdownLineWriteSerializer,
 )
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioRuleCostOverride
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
 )
@@ -17,7 +17,7 @@ from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base
 class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLineBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_write)}
+        self.context = {"request": self.build_snt_request(self.user_write)}
 
     def test_create_cost_breakdown_line_cost_below_zero(self):
         data = {
@@ -268,7 +268,9 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
 
     def _create_rule_overrides(self):
         """An all-years and a 2026 override for cost_line2 (fixed) in a rule deploying SMC."""
-        scenario = self.create_snt_scenario(account=self.account, created_by=self.user_write)
+        scenario = self.create_snt_scenario(
+            workspace=get_or_create_first_workspace(self.account), created_by=self.user_write
+        )
         rule = self.create_snt_rule(scenario, [self.intervention_chemo_smc], created_by=self.user_write)
         all_years = self.create_snt_rule_cost_override(
             rule,
@@ -408,7 +410,7 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
 class InterventionCostBreakdownLineWriteSerializerTests(InterventionCostBreakdownLineBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_write)}
+        self.context = {"request": self.build_snt_request(self.user_write)}
         self.population_metric = MetricType.objects.create(
             account=self.account,
             name="Population total",

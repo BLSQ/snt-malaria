@@ -3,6 +3,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.impact import cache as impact_cache
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.providers.impact import get_provider_for_account
 from plugins.snt_malaria.services.impact import ImpactService
 
@@ -53,7 +54,7 @@ class ImpactProviderMetaViewSet(viewsets.ViewSet):
         return Response(ImpactProviderMetaSerializer(provider.get_meta()).data)
 
 
-class ImpactViewSet(viewsets.ViewSet):
+class ImpactViewSet(WorkspaceScopedViewSetMixin, viewsets.ViewSet):
     http_method_names = ["get", "options"]
 
     def list(self, request):

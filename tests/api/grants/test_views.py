@@ -21,26 +21,30 @@ class GrantAPITestCase(SNTMalariaAPITestCase):
             username="user read", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
         )
 
-        self.donor_gf = Donor.objects.create(account=self.account, name="Global Fund")
-        self.donor_pmi = Donor.objects.create(account=self.account, name="PMI")
+        self.donor_gf = Donor.objects.create(workspace=self.get_snt_workspace(), name="Global Fund")
+        self.donor_pmi = Donor.objects.create(workspace=self.get_snt_workspace(), name="PMI")
 
         self.grant_nfm = Grant.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             donor=self.donor_gf,
             name="NFM4",
             short_name="NFM4",
             description="Global Fund grant cycle",
             amount=Decimal("1000000.00"),
         )
-        self.grant_pmi = Grant.objects.create(account=self.account, donor=self.donor_pmi, name="PMI 2026")
+        self.grant_pmi = Grant.objects.create(workspace=self.get_snt_workspace(), donor=self.donor_pmi, name="PMI 2026")
 
         # Other account to verify tenancy isolation
         self.other_account, _ = self.create_snt_account(name="Other Account")
         self.other_user = self.create_user_with_profile(
             username="other user", account=self.other_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
-        self.other_donor = Donor.objects.create(account=self.other_account, name="Other Donor")
-        self.other_grant = Grant.objects.create(account=self.other_account, donor=self.other_donor, name="Other Grant")
+        self.other_donor = Donor.objects.create(
+            workspace=self.get_snt_workspace(self.other_account), name="Other Donor"
+        )
+        self.other_grant = Grant.objects.create(
+            workspace=self.get_snt_workspace(self.other_account), donor=self.other_donor, name="Other Grant"
+        )
 
     # List
 
@@ -114,7 +118,7 @@ class GrantAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertEqual(result["name"], "NFM5")
         created = Grant.objects.get(id=result["id"])
-        self.assertEqual(created.account, self.account)
+        self.assertEqual(created.workspace.account, self.account)
         self.assertEqual(created.donor, self.donor_gf)
         self.assertEqual(created.amount, Decimal("2000000.00"))
 
@@ -193,7 +197,7 @@ class GrantAPITestCase(SNTMalariaAPITestCase):
         self.assertFalse(Grant.objects.filter(id=self.grant_pmi.id).exists())
 
     def test_delete_referenced_by_intervention_unassigns_grant(self):
-        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_write)
+        defaults = self.create_snt_default_interventions(workspace=self.get_snt_workspace(), created_by=self.user_write)
         intervention = defaults["intervention_rts"]
         intervention.grant = self.grant_nfm
         intervention.save()
@@ -206,8 +210,10 @@ class GrantAPITestCase(SNTMalariaAPITestCase):
         self.assertIsNone(intervention.grant)
 
     def test_delete_referenced_by_assignment_unassigns_grant(self):
-        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_write)
-        scenario = self.create_snt_scenario(account=self.account, created_by=self.user_write, name="Scenario")
+        defaults = self.create_snt_default_interventions(workspace=self.get_snt_workspace(), created_by=self.user_write)
+        scenario = self.create_snt_scenario(
+            workspace=self.get_snt_workspace(), created_by=self.user_write, name="Scenario"
+        )
         org_unit = self.create_snt_org_unit(name="District")
         assignment = self.create_snt_assignment(
             scenario=scenario,

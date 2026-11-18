@@ -556,8 +556,9 @@ CATEGORIES_AND_INTERVENTIONS = {
 
 
 class InterventionSeeder:
-    def __init__(self, account, stdout_writer=None):
-        self.account = account
+    def __init__(self, workspace, stdout_writer=None):
+        self.workspace = workspace
+        self.account = workspace.account
         self.stdout_write = stdout_writer or print
 
     def seed_cost_unit_types(self, print_progress=True):
@@ -571,7 +572,7 @@ class InterventionSeeder:
         updated_count = 0
         for unit_data in COST_UNIT_TYPES:
             _, created = CostUnitType.objects.update_or_create(
-                account=self.account,
+                workspace=self.workspace,
                 name=unit_data["name"],
                 defaults={
                     "description": unit_data["description"],
@@ -584,7 +585,7 @@ class InterventionSeeder:
                 updated_count += 1
         if print_progress:
             self.stdout_write(
-                f"Cost unit types for account {self.account.name}: {created_count} created, {updated_count} updated"
+                f"Cost unit types for workspace {self.workspace.name}: {created_count} created, {updated_count} updated"
             )
 
         self._migrate_legacy_cost_unit_types(print_progress)
@@ -592,9 +593,9 @@ class InterventionSeeder:
     def _migrate_legacy_cost_unit_types(self, print_progress):
         """Re-point breakdown lines from legacy enum-label units to the new ones,
         then delete the legacy unit rows."""
-        legacy_units = CostUnitType.objects.filter(account=self.account, name__in=LEGACY_UNIT_MAPPING.keys())
+        legacy_units = CostUnitType.objects.filter(workspace=self.workspace, name__in=LEGACY_UNIT_MAPPING.keys())
         for legacy_unit in legacy_units:
-            new_unit = CostUnitType.objects.get(account=self.account, name=LEGACY_UNIT_MAPPING[legacy_unit.name])
+            new_unit = CostUnitType.objects.get(workspace=self.workspace, name=LEGACY_UNIT_MAPPING[legacy_unit.name])
             moved_lines = InterventionCostBreakdownLine.objects.filter(unit_type=legacy_unit).update(unit_type=new_unit)
             legacy_unit.delete()
             if print_progress:
@@ -603,7 +604,7 @@ class InterventionSeeder:
                     f"({moved_lines} cost breakdown lines re-pointed)"
                 )
 
-        unmapped_units = CostUnitType.objects.filter(account=self.account, name__in=UNMAPPED_LEGACY_UNIT_NAMES)
+        unmapped_units = CostUnitType.objects.filter(workspace=self.workspace, name__in=UNMAPPED_LEGACY_UNIT_NAMES)
         for unmapped_unit in unmapped_units:
             if print_progress:
                 self.stdout_write(
@@ -616,10 +617,10 @@ class InterventionSeeder:
         # is skipped below.
         self.seed_cost_unit_types()
 
-        if InterventionCategory.objects.filter(account=self.account).exists():
+        if InterventionCategory.objects.filter(workspace=self.workspace).exists():
             response = (
                 input(
-                    f"Interventions already exist for account {self.account.name}. "
+                    f"Interventions already exist for workspace {self.workspace.name}. "
                     "Do you want to override them? Answering 'n' keeps them and only creates missing ones. (y/N): "
                 )
                 .strip()
@@ -627,21 +628,21 @@ class InterventionSeeder:
             )
             if response != "y":
                 self.stdout_write(
-                    f"Keeping existing interventions for account {self.account.name}, creating missing ones only"
+                    f"Keeping existing interventions for workspace {self.workspace.name}, creating missing ones only"
                 )
             else:
-                # Delete existing interventions and categories for this account.
+                # Delete existing interventions and categories for this workspace.
                 # Breakdown lines must go first: CostUnitType is protected by them.
                 InterventionCostBreakdownLine.objects.filter(
-                    intervention__intervention_category__account=self.account
+                    intervention__intervention_category__workspace=self.workspace
                 ).delete()
                 InterventionAssignment.objects.filter(
-                    intervention__intervention_category__account=self.account
+                    intervention__intervention_category__workspace=self.workspace
                 ).delete()
-                Intervention.objects.filter(intervention_category__account=self.account).delete()
-                InterventionCategory.objects.filter(account=self.account).delete()
-                CostUnitType.objects.filter(account=self.account).delete()
-                self.stdout_write(f"Existing interventions for account {self.account.name} have been deleted.")
+                Intervention.objects.filter(intervention_category__workspace=self.workspace).delete()
+                InterventionCategory.objects.filter(workspace=self.workspace).delete()
+                CostUnitType.objects.filter(workspace=self.workspace).delete()
+                self.stdout_write(f"Existing interventions for workspace {self.workspace.name} have been deleted.")
                 # Reseed the units from a clean slate.
                 self.seed_cost_unit_types()
 
@@ -649,7 +650,7 @@ class InterventionSeeder:
         if created_by is None:
             self.stdout_write(f"Skipping interventions for account {self.account.name}: no user to set as created_by")
             return
-        self.stdout_write(f"Creating interventions for account {self.account.name}:")
+        self.stdout_write(f"Creating interventions for workspace {self.workspace.name}:")
         self._create_interventions(created_by)
 
     def create_interventions_for_api_account(self, user):
@@ -661,12 +662,11 @@ class InterventionSeeder:
         self._create_budget_settings(print_progress)
 
         for category_name, data in CATEGORIES_AND_INTERVENTIONS.items():
-            # Look up on the unique constraint ([account, name]) only, so
-            # existing rows with a diverging short_name are matched instead of
-            # triggering a duplicate INSERT.
+            # Look up on name only, so existing rows with a diverging short_name
+            # are matched instead of triggering a duplicate INSERT.
             category, created = InterventionCategory.objects.get_or_create(
                 name=category_name,
-                account=self.account,
+                workspace=self.workspace,
                 defaults={
                     "short_name": data.get("short_name", category_name),
                     # "description": data["description"],
@@ -700,10 +700,10 @@ class InterventionSeeder:
             self.stdout_write("Done.")
 
     def _create_budget_settings(self, print_progress):
-        """Create budget settings for the account if they don't exist."""
-        if not BudgetSettings.objects.filter(account=self.account).exists():
+        """Create budget settings for the workspace if they don't exist."""
+        if not BudgetSettings.objects.filter(workspace=self.workspace).exists():
             BudgetSettings.objects.create(
-                account=self.account,
+                workspace=self.workspace,
                 local_currency="USD",  # Default to USD, can be changed per account
                 exchange_rate=1.0,  # 1:1 exchange rate with USD as default
                 inflation_rate=0.03,  # 3% inflation rate as default
@@ -715,7 +715,7 @@ class InterventionSeeder:
         """Create cost breakdown lines for a given intervention."""
         for cost_data in cost_settings:
             # Guaranteed to exist: seed_cost_unit_types() runs before this.
-            unit_type = CostUnitType.objects.get(account=self.account, name=cost_data["unit_type"])
+            unit_type = CostUnitType.objects.get(workspace=self.workspace, name=cost_data["unit_type"])
 
             # Metric layers come from data imports and may not exist yet at
             # seed time, so resolve leniently and leave the line without a
