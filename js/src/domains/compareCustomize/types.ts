@@ -70,6 +70,7 @@ export type YearImpactMetrics = ImpactMetrics & {
 export type ImpactProviderMeta = {
     provider_key: string;
     metric_annotations: Partial<Record<ImpactMetricKey, string>>;
+    version: string | null;
 };
 
 export type InterventionRef = {

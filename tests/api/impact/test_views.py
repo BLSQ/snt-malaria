@@ -130,8 +130,18 @@ class ImpactProviderMetaViewTests(ImpactViewsBaseTestCase):
         result = self.assertJSONResponse(self.client.get(PROVIDER_META_URL), status.HTTP_200_OK)
         self.assertEqual(
             result,
-            {"provider_key": "swisstph", "metric_annotations": {"number_cases": "Treated cases"}},
+            {"provider_key": "swisstph", "metric_annotations": {"number_cases": "Treated cases"}, "version": None},
         )
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_returns_the_provider_version(self, mock_get_provider):
+        mock_provider = MagicMock()
+        mock_provider.get_meta.return_value = ImpactProviderMeta(provider_key="swisstph_emulator", version="0.1.0")
+        mock_get_provider.return_value = mock_provider
+
+        self.client.force_authenticate(user=self.user)
+        result = self.assertJSONResponse(self.client.get(PROVIDER_META_URL), status.HTTP_200_OK)
+        self.assertEqual(result["version"], "0.1.0")
 
     @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
     def test_metric_annotations_follow_the_request_language(self, mock_get_provider):
