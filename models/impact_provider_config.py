@@ -11,6 +11,7 @@ class ImpactProviderConfig(models.Model):
 
     class ProviderKey(models.TextChoices):
         SWISSTPH = "swisstph", "SwissTPH"
+        SWISSTPH_EMULATOR = "swisstph_emulator", "SwissTPH emulated"
         IDM = "idm", "IDM"
         FAKE = "fake", "Fake (demo)"
 
