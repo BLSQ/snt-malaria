@@ -10,12 +10,12 @@ import { SxStyles } from 'Iaso/types/general';
 import { useKeepInViewWhileAnimating } from '../hooks/useKeepInViewWhileAnimating';
 import { WarningBoxRevealContext } from './WarningBoxRevealContext';
 
-export type WarningSeverity = 'error' | 'warning' | 'info';
+export type WarningSeverity = 'error' | 'warning' | 'neutral';
 
 const severityIcons = {
     error: ErrorOutlineIcon,
     warning: WarningAmberOutlinedIcon,
-    info: InfoOutlinedIcon,
+    neutral: InfoOutlinedIcon,
 };
 
 const severityStyles = {
@@ -35,10 +35,10 @@ const severityStyles = {
         },
         icon: { color: 'warning.dark' },
     },
-    info: {
+    neutral: {
         borderColor: 'divider',
-        header: { backgroundColor: 'background.default' },
-        icon: { color: 'info.main' },
+        header: { backgroundColor: 'common.white' },
+        icon: { color: 'text.secondary' },
     },
 };
 
@@ -59,11 +59,18 @@ const styles = {
         py: 1.5,
         textAlign: 'left',
     },
-    title: {
+    heading: {
         flex: 1,
         minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    title: {
         typography: 'body2',
         fontWeight: 'medium',
+    },
+    subtitle: {
+        color: 'text.secondary',
     },
     chevron: {
         color: 'text.secondary',
@@ -73,6 +80,10 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         gap: 1.5,
+    },
+    neutralBody: {
+        borderTop: 1,
+        borderColor: 'divider',
     },
     description: {
         color: 'text.secondary',
@@ -90,6 +101,8 @@ const styles = {
 type Props = {
     severity: WarningSeverity;
     title: string;
+    subtitle?: string;
+    leading?: ReactNode;
     description?: string;
     collapsible?: boolean;
     defaultExpanded?: boolean;
@@ -100,6 +113,8 @@ type Props = {
 export const WarningBox: FC<Props> = ({
     severity,
     title,
+    subtitle,
+    leading,
     description,
     collapsible = true,
     defaultExpanded = false,
@@ -137,10 +152,17 @@ export const WarningBox: FC<Props> = ({
                 aria-expanded={isToggleable ? isExpanded : undefined}
                 sx={[styles.header, severityStyle.header]}
             >
-                <Icon fontSize="small" sx={severityStyle.icon} />
-                <Typography component="span" sx={styles.title}>
-                    {title}
-                </Typography>
+                {leading ?? <Icon fontSize="small" sx={severityStyle.icon} />}
+                <Box sx={styles.heading}>
+                    <Typography component="span" sx={styles.title}>
+                        {title}
+                    </Typography>
+                    {subtitle && (
+                        <Typography variant="caption" sx={styles.subtitle}>
+                            {subtitle}
+                        </Typography>
+                    )}
+                </Box>
                 {isToggleable &&
                     (isExpanded ? (
                         <ExpandLessIcon fontSize="small" sx={styles.chevron} />
@@ -151,7 +173,12 @@ export const WarningBox: FC<Props> = ({
             {hasBody && (
                 <Collapse in={isExpanded} {...keepInViewWhileExpanding}>
                     <WarningBoxRevealContext.Provider value={revealWarningBox}>
-                        <Box sx={styles.body}>
+                        <Box
+                            sx={[
+                                styles.body,
+                                severity === 'neutral' && styles.neutralBody,
+                            ]}
+                        >
                             {description && (
                                 <Typography
                                     variant="body2"

@@ -840,6 +840,57 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Impact figures come from a demo provider and are not model results.',
     },
+    dataInformationTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.dataInformationTitle',
+        defaultMessage: 'Data information',
+    },
+    emulatorName: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorName',
+        defaultMessage: 'OpenMalaria emulator',
+    },
+    emulatorVersion: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorVersion',
+        defaultMessage: 'Version {version}',
+    },
+    emulatorViewOnGithub: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorViewOnGithub',
+        defaultMessage: 'View on GitHub',
+    },
+    emulatorDescription: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorDescription',
+        defaultMessage:
+            'A fast stand-in for OpenMalaria simulations. ' +
+            'For each health district and intervention package, it gives annual malaria prevalence and clinical incidence, ' +
+            'plus the prevalence reduction and episodes averted compared with case management only.',
+    },
+    emulatorDeveloperLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorDeveloperLabel',
+        defaultMessage: 'Developer',
+    },
+    emulatorCoverageLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorCoverageLabel',
+        defaultMessage: 'Coverage',
+    },
+    emulatorCoverage: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorCoverage',
+        defaultMessage: 'Cameroon, health districts (admin 2)',
+    },
+    emulatorYearsLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorYearsLabel',
+        defaultMessage: 'Years',
+    },
+    emulatorYears: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorYears',
+        defaultMessage: '2026–2030, annual',
+    },
+    emulatorUncertaintyLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorUncertaintyLabel',
+        defaultMessage: 'Uncertainty',
+    },
+    emulatorUncertainty: {
+        id: 'iaso.snt_malaria.compareCustomize.emulatorUncertainty',
+        defaultMessage: 'Approx. 90% emulator-error band',
+    },
     operatorEqual: {
         id: 'iaso.snt_malaria.scenarioRule.operatorEqual',
         defaultMessage: 'Equal to',

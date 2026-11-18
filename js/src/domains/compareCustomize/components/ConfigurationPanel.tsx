@@ -43,6 +43,20 @@ type Props = {
 
 const CARD_PADDING = 2;
 
+export const sectionStyles = {
+    section: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+    },
+    sectionTitle: {
+        fontSize: '1rem',
+        fontWeight: 500,
+        color: 'text.primary',
+        mt: 2,
+    },
+} satisfies SxStyles;
+
 const styles = {
     scenarioRow: {
         display: 'grid',
@@ -75,17 +89,7 @@ const styles = {
         width: theme => theme.spacing(4),
         minWidth: theme => theme.spacing(4),
     },
-    section: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-    },
-    sectionTitle: {
-        fontSize: '1rem',
-        fontWeight: 500,
-        color: 'text.primary',
-        mt: 2,
-    },
+    ...sectionStyles,
     subLabel: {
         color: 'text.primary',
         mb: 1,
