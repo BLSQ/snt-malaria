@@ -277,6 +277,18 @@ class ScenarioRule(models.Model):
         excluded = set(org_units_excluded)
         return (matched - excluded) | included
 
+    @staticmethod
+    def resolve_draft_org_unit_ids(
+        account,
+        matching_criteria,
+        org_units_excluded: list[int],
+        org_units_included: list[int],
+        data_layer_years=None,
+    ) -> set[int]:
+        """Resolve the org unit ids a not-yet-saved rule would target."""
+        matched = ScenarioRule.resolve_matched_org_units(account, matching_criteria, data_layer_years=data_layer_years)
+        return ScenarioRule.resolve_org_unit_ids(matching_criteria, matched, org_units_excluded, org_units_included)
+
     def _compute_org_unit_ids(self) -> set[int]:
         """Resolve the set of org unit ids this rule targets based on its matching mode."""
         return ScenarioRule.resolve_org_unit_ids(

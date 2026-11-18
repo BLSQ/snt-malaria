@@ -38,11 +38,13 @@ const styles: SxStyles = {
 
 type Props = {
     matchedOrgUnitIds?: number[];
+    matchedIdsByMetric?: Record<string, number[]>;
     previewRule?: Partial<ScenarioRule>;
 };
 
 export const InterventionPlanMap: FC<Props> = ({
     matchedOrgUnitIds,
+    matchedIdsByMetric,
     previewRule,
 }) => {
     const {
@@ -120,14 +122,14 @@ export const InterventionPlanMap: FC<Props> = ({
                 isPreviewingRule,
                 activeMetricLayer,
                 previewRule,
-                matchedOrgUnitIds,
+                matchedIdsByMetric,
                 assignmentLegend: assignmentDisplay.legend,
             }),
         [
             isPreviewingRule,
             activeMetricLayer,
             previewRule,
-            matchedOrgUnitIds,
+            matchedIdsByMetric,
             assignmentDisplay.legend,
         ],
     );
@@ -156,7 +158,6 @@ export const InterventionPlanMap: FC<Props> = ({
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitStyle}
                     selectedOrgUnitIds={mapPresentation.highlightedOrgUnitIds}
-                    selectedBorderColor={mapPresentation.selectedBorderColor}
                     legendConfig={mapPresentation.legendConfig}
                     hideLegend={mapPresentation.hideLegend}
                     dataKey={mapPresentation.mapDataKey}

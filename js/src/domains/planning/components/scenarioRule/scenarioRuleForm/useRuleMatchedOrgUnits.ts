@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDebouncedCallback } from 'bluesquare-components';
-import { usePreviewScenarioRule } from '../../../hooks/usePreviewScenarioRule';
+import { useMemo } from 'react';
+import { useDebounce } from 'bluesquare-components';
+import { groupBy, isEmpty, mapValues, omit, pickBy } from 'lodash';
+import { useQueryClient } from 'react-query';
+import {
+    getPreviewScenarioRuleQueryKey,
+    ScenarioRulePreviewRequest,
+    usePreviewScenarioRule,
+} from '../../../hooks/usePreviewScenarioRule';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
+import { matchingCriteriaToJsonLogic } from '../../../utils/jsonLogic';
 
 const DEBOUNCE_MS = 500;
+const RULE_KEY = 'rule';
+const NO_MATCHED_ORG_UNITS: number[] = [];
 
 type UseRuleMatchedOrgUnitsArgs = {
     matchingCriteria: MetricTypeCriterion[];
@@ -14,52 +23,60 @@ export type RuleMatchedOrgUnits = {
     // Org units matched by the criteria alone, independent of any
     // handpicks/exclusions. Undefined until the first result arrives.
     ruleMatchedIds: number[] | undefined;
+    // Org units matched by each metric's criteria alone, keyed by metric type id.
+    matchedIdsByMetric: Record<string, number[]> | undefined;
     isAwaitingFirstResult: boolean;
     isLoading: boolean;
+};
+
+const buildPreviewRules = (
+    matchingCriteria: MetricTypeCriterion[],
+): ScenarioRulePreviewRequest => {
+    const ruleJsonLogic = matchingCriteriaToJsonLogic(matchingCriteria);
+    if (!ruleJsonLogic) {
+        return {};
+    }
+    const metricJsonLogics = mapValues(
+        groupBy(matchingCriteria, 'metric_type'),
+        matchingCriteriaToJsonLogic,
+    );
+    return {
+        ...(pickBy(metricJsonLogics) as ScenarioRulePreviewRequest),
+        [RULE_KEY]: ruleJsonLogic,
+    };
 };
 
 export const useRuleMatchedOrgUnits = ({
     matchingCriteria,
     dataLayerYears,
 }: UseRuleMatchedOrgUnitsArgs): RuleMatchedOrgUnits => {
-    const { mutate, isLoading } = usePreviewScenarioRule();
-    const [ruleMatchedIds, setRuleMatchedIds] = useState<number[] | undefined>(
-        undefined,
+    const queryClient = useQueryClient();
+    const rules = useMemo(
+        () => buildPreviewRules(matchingCriteria),
+        [matchingCriteria],
     );
-    const hasRequestedFirstResult = useRef(false);
+    const [debouncedRules] = useDebounce(rules, DEBOUNCE_MS);
+    const isCached =
+        queryClient.getQueryData(
+            getPreviewScenarioRuleQueryKey(rules, dataLayerYears),
+        ) !== undefined;
+    const skipDebounce = isEmpty(rules) || isCached;
 
-    const runPreview = useCallback(() => {
-        mutate(
-            {
-                matching_criteria: matchingCriteria,
-                data_layer_years: dataLayerYears,
-            },
-            {
-                onSuccess: data => setRuleMatchedIds(data as number[]),
-            },
-        );
-    }, [mutate, matchingCriteria, dataLayerYears]);
+    const { data, isFetching } = usePreviewScenarioRule(
+        skipDebounce ? rules : debouncedRules,
+        dataLayerYears,
+    );
 
-    const debouncedRunPreview = useDebouncedCallback(runPreview, DEBOUNCE_MS);
-
-    useEffect(() => {
-        if (matchingCriteria.length === 0) {
-            debouncedRunPreview.cancel();
-            setRuleMatchedIds([]);
-            return;
-        }
-        if (!hasRequestedFirstResult.current) {
-            hasRequestedFirstResult.current = true;
-            runPreview();
-            return;
-        }
-        debouncedRunPreview();
-    }, [matchingCriteria, dataLayerYears, runPreview, debouncedRunPreview]);
+    const matchedIdsByMetric = useMemo(
+        () => data && omit(data, RULE_KEY),
+        [data],
+    );
 
     return {
-        ruleMatchedIds,
+        ruleMatchedIds: data && (data[RULE_KEY] ?? NO_MATCHED_ORG_UNITS),
+        matchedIdsByMetric,
         isAwaitingFirstResult:
-            matchingCriteria.length > 0 && ruleMatchedIds === undefined,
-        isLoading,
+            matchingCriteria.length > 0 && data === undefined,
+        isLoading: isFetching,
     };
 };

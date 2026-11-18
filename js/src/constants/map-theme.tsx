@@ -9,5 +9,6 @@ export const mapTheme = {
     selectedShapeWeight: 3,
     activeShapeColor: theme.palette.secondary.main,
     activeShapeWeight: 4,
-    fillOpacity: 0.75,
+    fillOpacity: 0.8,
+    paleFillOpacity: 0.2,
 };

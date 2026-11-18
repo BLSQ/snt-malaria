@@ -230,8 +230,6 @@ type Props = {
     };
     /** Org units to highlight on both the thumbnail and the enlarged map. */
     selectedOrgUnitIds?: number[];
-    /** Overrides the default highlight border color for `selectedOrgUnitIds`. */
-    selectedBorderColor?: string;
     /** Called when a district is clicked, on both the thumbnail and the enlarged dialog map. */
     onOrgUnitClick?: (orgUnitId: number) => void;
     /** Rendered beside the map inside the enlarged dialog (e.g. a searchable district list). */
@@ -259,7 +257,6 @@ export const CollapsibleMapPreview: FC<Props> = ({
     onYearChange,
     getOrgUnitMapMisc: getOrgUnitMapMiscProp,
     selectedOrgUnitIds,
-    selectedBorderColor,
     onOrgUnitClick,
     dialogSidePanel,
 }) => {
@@ -336,7 +333,6 @@ export const CollapsibleMapPreview: FC<Props> = ({
                             legendConfig={legendConfig as MetricType}
                             getOrgUnitMapMisc={getOrgUnitMapMisc}
                             selectedOrgUnitIds={selectedOrgUnitIds}
-                            selectedBorderColor={selectedBorderColor}
                             onOrgUnitClick={onOrgUnitClick}
                             hideLegend
                             hideControls
@@ -427,7 +423,6 @@ export const CollapsibleMapPreview: FC<Props> = ({
                                     legendConfig={legendConfig as MetricType}
                                     getOrgUnitMapMisc={getOrgUnitMapMisc}
                                     selectedOrgUnitIds={selectedOrgUnitIds}
-                                    selectedBorderColor={selectedBorderColor}
                                     onOrgUnitClick={onOrgUnitClick}
                                 />
                             </Box>

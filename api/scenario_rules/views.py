@@ -129,18 +129,6 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def preview(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        account = request.user.iaso_profile.account
-        matching_criteria = serializer.validated_data.get("matching_criteria")
-        data_layer_years = serializer.validated_data.get("data_layer_years")
-        matched = ScenarioRule.resolve_matched_org_units(account, matching_criteria, data_layer_years=data_layer_years)
-
-        result = ScenarioRule.resolve_org_unit_ids(
-            matching_criteria,
-            matched,
-            serializer.validated_data.get("org_units_excluded", []),
-            serializer.validated_data.get("org_units_included", []),
-        )
-        return Response(list(result), status=status.HTTP_200_OK)
+        return Response(serializer.resolve(request.user.iaso_profile.account), status=status.HTTP_200_OK)

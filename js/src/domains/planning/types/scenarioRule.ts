@@ -45,4 +45,6 @@ export type ScenarioRulePreview = {
         'color' | 'name' | 'interventions' | 'intervention_overrides'
     >;
     matchedOrgUnitIds: number[];
+    /** Org units matched by each metric's criteria alone, keyed by metric type id. */
+    matchedIdsByMetric?: Record<string, number[]>;
 };

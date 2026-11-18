@@ -1,4 +1,5 @@
-import { useQuery, UseQueryResult } from 'react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient, UseQueryResult } from 'react-query';
 import { Form } from 'Iaso/domains/forms/types/forms';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
@@ -77,25 +78,44 @@ export const useGetMetricOrgUnits = (
     });
 };
 
-export const useGetMetricValues = ({
+const getMetricValuesQuery = ({
     metricTypeId,
     orgUnitId,
     year,
-}: MetricValuesParams): UseQueryResult<MetricValue[], Error> => {
+}: MetricValuesParams) => {
     const params = new URLSearchParams();
     if (metricTypeId) params.set('metric_type_id', metricTypeId.toString());
     if (orgUnitId) params.set('org_unit_id', orgUnitId.toString());
     if (year != null) params.set('reference_year', year.toString());
     const url = `/api/metricvalues/?${params.toString()}`;
-
-    return useSnackQuery({
+    return {
         queryKey: ['metricValues', metricTypeId, orgUnitId, year],
-        queryFn: () => getRequest(url),
+        queryFn: (): Promise<MetricValue[]> => getRequest(url),
+        cacheTime: Infinity, // disable auto fetch on cache expiration
+        staleTime: 1000 * 60 * 15, // in MS
+    };
+};
+
+export const useGetMetricValues = (
+    params: MetricValuesParams,
+): UseQueryResult<MetricValue[], Error> => {
+    const { queryKey, queryFn, ...cacheOptions } = getMetricValuesQuery(params);
+    return useSnackQuery({
+        queryKey,
+        queryFn,
         options: {
-            cacheTime: Infinity, // disable auto fetch on cache expiration
-            staleTime: 1000 * 60 * 15, // in MS
+            ...cacheOptions,
             refetchOnWindowFocus: false, // This is only needed with staleTime set
-            enabled: Boolean(metricTypeId) || Boolean(orgUnitId),
+            enabled: Boolean(params.metricTypeId) || Boolean(params.orgUnitId),
         },
     });
+};
+
+export const usePrefetchMetricValues = (paramsList: MetricValuesParams[]) => {
+    const queryClient = useQueryClient();
+    useEffect(() => {
+        paramsList.forEach(params => {
+            queryClient.prefetchQuery(getMetricValuesQuery(params));
+        });
+    }, [paramsList, queryClient]);
 };
