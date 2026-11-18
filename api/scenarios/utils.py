@@ -91,35 +91,29 @@ def _build_intervention_groups(
     interventions_qs,
 ) -> list[dict]:
     """
-    Group org units by their intervention combination.
+    Group interventions by their footprint, i.e. the exact set of org units they are deployed in.
 
-    Returns a list of dicts:
+    Returns a list of dicts, largest footprint first:
         {
             "intervention_ids": frozenset of intervention ids,
             "org_unit_ids": list of org unit ids,
         }
     """
-    intervention_lookup = {}
+    footprint_interventions: dict[frozenset[int], set[int]] = defaultdict(set)
     for intervention in interventions_qs:
         col_name = get_intervention_column(intervention["name"], intervention["code"])
-        intervention_lookup[col_name] = intervention["id"]
+        if col_name not in assignment_df.columns:
+            continue
+        org_unit_ids = assignment_df.loc[assignment_df[col_name] == 1, "org_unit_id"]
+        footprint = frozenset(int(org_unit_id) for org_unit_id in org_unit_ids)
+        if footprint:
+            footprint_interventions[footprint].add(intervention["id"])
 
-    org_unit_interventions: dict[int, set[int]] = defaultdict(set)
-    for _, row in assignment_df.iterrows():
-        org_unit_id = int(row["org_unit_id"])
-        for col_name, intervention_id in intervention_lookup.items():
-            if row.get(col_name) == 1:
-                org_unit_interventions[org_unit_id].add(intervention_id)
-
-    groups_map: dict[frozenset[int], list[int]] = defaultdict(list)
-    for org_unit_id, intervention_ids in org_unit_interventions.items():
-        if intervention_ids:
-            groups_map[frozenset(intervention_ids)].append(org_unit_id)
-
-    return [
-        {"intervention_ids": intervention_ids, "org_unit_ids": sorted(org_unit_ids)}
-        for intervention_ids, org_unit_ids in groups_map.items()
+    groups = [
+        {"intervention_ids": frozenset(intervention_ids), "org_unit_ids": sorted(footprint)}
+        for footprint, intervention_ids in footprint_interventions.items()
     ]
+    return sorted(groups, key=lambda group: (-len(group["org_unit_ids"]), min(group["intervention_ids"])))
 
 
 def create_rules_from_import(
@@ -130,8 +124,8 @@ def create_rules_from_import(
 ) -> list[ScenarioRule]:
     """Create ScenarioRules from a CSV import's assignment DataFrame.
 
-    Analyses the DataFrame to group org units by their intervention combination, then creates one
-    inclusion-only rule per group.
+    Creates one inclusion-only rule per distinct intervention footprint, so each intervention appears in
+    exactly one rule. Broader footprints get lower priorities.
     """
     groups = _build_intervention_groups(assignment_df, interventions_qs)
     if not groups:
