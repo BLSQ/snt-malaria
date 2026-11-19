@@ -16,7 +16,6 @@ import { baseUrls } from '../../../constants/urls';
 import { MESSAGES } from '../../messages';
 import { useStickyBottomTitle } from '../hooks/useStickyBottomTitle';
 import {
-    ImpactProviderMeta,
     MatchWarningGroup,
     MatchWarningOrgUnit,
     ScenarioYearRange,
@@ -96,7 +95,6 @@ type Props = {
     orgUnitsNotFound?: MatchWarningOrgUnit[];
     unmatchedInterventionMixes?: MatchWarningGroup[];
     interventionsWithoutImpactRef?: MatchWarningGroup[];
-    providerMeta?: ImpactProviderMeta;
 };
 
 export const ImpactWarnings: FC<Props> = ({
@@ -106,7 +104,6 @@ export const ImpactWarnings: FC<Props> = ({
     orgUnitsNotFound = [],
     unmatchedInterventionMixes = [],
     interventionsWithoutImpactRef = [],
-    providerMeta,
 }) => {
     const { formatMessage } = useSafeIntl();
     const currentUser = useCurrentUser();
@@ -139,7 +136,6 @@ export const ImpactWarnings: FC<Props> = ({
         return () => setPinnedBottomHeight(undefined);
     }, [hasWarnings, setPinnedBottomHeight, theme]);
 
-    const isFakeProvider = providerMeta?.provider_key === 'fake';
     const unmatchedDistrictCount = useMemo(
         () =>
             new Set(unmatchedInterventionMixes.flatMap(mix => mix.orgUnitNames))
@@ -260,16 +256,6 @@ export const ImpactWarnings: FC<Props> = ({
                             />
                         ))}
                     </WarningBox>
-                )}
-                {isFakeProvider && (
-                    <WarningBox
-                        severity="info"
-                        defaultExpanded
-                        title={formatMessage(MESSAGES.fakeProviderInfoTitle)}
-                        description={formatMessage(
-                            MESSAGES.fakeProviderInfoBody,
-                        )}
-                    />
                 )}
             </Box>
             {hasWarnings && <Box ref={contentEndRef} />}

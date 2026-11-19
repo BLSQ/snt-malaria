@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from plugins.snt_malaria.models.impact_provider_config import ImpactProviderConfig
 from plugins.snt_malaria.providers.impact.base import ImpactProviderMeta
@@ -6,14 +6,17 @@ from plugins.snt_malaria.providers.impact.fake import FakeImpactProvider
 from plugins.snt_malaria.providers.impact.idm import IDMImpactProvider
 from plugins.snt_malaria.providers.impact.registry import get_provider_for_account
 from plugins.snt_malaria.providers.impact.swisstph import SwissTPHImpactProvider
+from plugins.snt_malaria.providers.impact.swisstph_emulator import SwissTPHEmulatorImpactProvider
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
 DUMMY_CONFIG = {"db_name": "test", "db_host": "localhost", "db_port": 5432, "db_username": "user"}
 DUMMY_SECRET = "s3cret"
+EMULATOR_OUTPUTS = ["incidence", "uncomplicated", "severe", "prevalence"]
 
 _SWISSTPH_DB_PATCH = "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection"
 _IDM_DB_PATCH = "plugins.snt_malaria.providers.impact.idm.ensure_db_connection"
+_EMULATOR_LOAD_PATCH = "plugins.snt_malaria.providers.impact.swisstph_emulator._load_emulator"
 
 
 class ProviderRegistryTests(SNTMalariaTestCase):
@@ -38,6 +41,20 @@ class ProviderRegistryTests(SNTMalariaTestCase):
         self.assertEqual(provider.config, DUMMY_CONFIG)
         self.assertEqual(provider.secret, DUMMY_SECRET)
         self.assertEqual(provider.meta.provider_key, "swisstph")
+
+    def test_swisstph_emulator_config_returns_swisstph_emulator(self):
+        emulator = MagicMock(meta={"targets": [{"output": o, "averted": "averted"} for o in EMULATOR_OUTPUTS]})
+        self.create_snt_impact_provider_config(provider_key="swisstph_emulator", config={})
+        with patch(_EMULATOR_LOAD_PATCH, return_value=(emulator, str.lower)):
+            provider = get_provider_for_account(self.account)
+        self.assertIsInstance(provider, SwissTPHEmulatorImpactProvider)
+        self.assertEqual(provider.meta.provider_key, "swisstph_emulator")
+
+    def test_swisstph_emulator_without_installed_package_returns_none(self):
+        self.create_snt_impact_provider_config(provider_key="swisstph_emulator", config={})
+        with patch(_EMULATOR_LOAD_PATCH, side_effect=ImportError("No module named cmr_emulator")):
+            provider = get_provider_for_account(self.account)
+        self.assertIsNone(provider)
 
     @patch(_IDM_DB_PATCH, return_value="default")
     def test_idm_config_returns_idm(self, _mock_ensure):

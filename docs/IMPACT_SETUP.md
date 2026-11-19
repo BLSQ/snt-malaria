@@ -26,7 +26,7 @@ create a new entry for the account.
 | Field               | Description |
 |---------------------|-------------|
 | `account`           | The IASO account (one config per account) |
-| `provider_key`      | The provider identifier (e.g. `swisstph`, `idm`, `fake`) |
+| `provider_key`      | The provider identifier (e.g. `swisstph`, `swisstph_emulator`, `idm`, `fake`) |
 | `config`            | JSON with provider-specific settings. The structure varies per provider — see the provider-specific tables below for required and optional keys. |
 | `secret`            | A sensitive credential (password, API key, token, etc.). Always a single string, encrypted at rest using Fernet. Requires `ENCRYPTED_TEXT_FIELD_KEY` to be set in the environment. |
 | `cache_ttl_seconds` | How long impact API responses are cached, in seconds. Defaults to `604800` (7 days). Set to `0` to disable caching. |
@@ -68,6 +68,41 @@ Example JSON for the `config` field:
 
 > [!NOTE]
 > Cameroon uses `admin_field: "admin_2"` and EIR_CI values `"middle"`, `"low"`, `"high"`.
+
+### SwissTPH emulated Configuration
+
+Predictions come from the SwissTPH OpenMalaria emulator, run in-process — no
+database. The emulator is the [`cmr-emulator`](https://pypi.org/project/cmr-emulator/)
+package, an IASO dependency. To upgrade it, bump its version in IASO's
+`pyproject.toml` and run `uv lock`.
+
+**Config:** every key is optional, `{}` is a valid config.
+
+| Key            | Default      | Description                                                                     |
+|----------------|--------------|---------------------------------------------------------------------------------|
+| `bundle`       | `"v7_av"`    | Emulator bundle; must provide clinical/uncomplicated/severe incidence, prevalence and population |
+| `eir_ci_mean`  | `"EIR_mean"` | EIR level for the mean band                                                     |
+| `eir_ci_lower` | `"EIR_lci"`  | EIR level for the lower bound                                                   |
+| `eir_ci_upper` | `"EIR_uci"`  | EIR level for the upper bound                                                   |
+| `coverage`     | `{}`         | Coverage (0-1) per emulator intervention when deployed; unlisted ones use `0.8` |
+
+**Secret:** not used (leave empty).
+
+Example:
+
+```json
+{
+  "coverage": {"SMC": 0.9, "PMC": 0.7}
+}
+```
+
+Results are per district (admin 2) for 2026-2030 and age groups `0-5`,
+`5-10`, `0-100`. The emulator predicts rates per person-year; cases, uncomplicated
+cases and severe cases are the clinical, uncomplicated and severe incidence
+multiplied by the age group's population. All case metrics count all episodes,
+not only treated ones. The emulator has no deaths output, so `direct_deaths` is
+empty. Org units the emulator doesn't know are reported as
+"not found".
 
 ### IDM Configuration
 
@@ -146,6 +181,27 @@ intervention maps to exactly one column.
 | R21                                               | `deployed_int_vaccine`               |
 | RTS,S                                             | `deployed_int_rtss`                  |
 
+
+### SwissTPH emulated format
+
+Use the emulator's intervention name. Interventions not deployed are run at
+coverage 0. `CM` is accepted and ignored, since case management is the
+emulator's baseline.
+
+| Intervention                                      | impact_ref |
+|---------------------------------------------------|------------|
+| CM                                                | `CM`       |
+| IRS                                               | `IRS`      |
+| Standard Pyrethroid (Campaign / Routine / School) | `STD`      |
+| PBO (Campaign / Routine / School)                 | `PBO`      |
+| Dual AI (Campaign / Routine / School)             | `IG2`      |
+| PMC (SP)                                          | `PMC`      |
+| SMC (SP+AQ)                                       | `SMC`      |
+| R21 / RTS,S                                       | `RTSS`     |
+| CM Subsidy, iCCM, IPTp, LSM                       | n/a        |
+
+Only one net type should be deployed at a time; the emulator was never
+trained on combined nets and logs a warning.
 
 ### IDM format
 
