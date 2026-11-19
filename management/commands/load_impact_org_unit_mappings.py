@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from iaso.models import Account, OrgUnit
+from plugins.snt_malaria.api.impact import cache as impact_cache
 from plugins.snt_malaria.models import ImpactOrgUnitMapping
 
 
@@ -113,6 +114,7 @@ def load_impact_org_unit_mappings(account, mapping_nodes, overwrite=False, logge
     created_count = 0
     updated_count = 0
     skipped_count = 0
+    mapped_org_unit_ids = []
     with transaction.atomic():
         for org_unit in org_unit_list:
             log(f"  Processing: {org_unit.name} (id={org_unit.id})")
@@ -125,10 +127,13 @@ def load_impact_org_unit_mappings(account, mapping_nodes, overwrite=False, logge
                 org_unit=org_unit,
                 defaults={"reference": reference},
             )
+            mapped_org_unit_ids.append(org_unit.id)
             if created:
                 created_count += 1
             else:
                 updated_count += 1
+        if mapped_org_unit_ids:
+            impact_cache.invalidate_for_org_units(mapped_org_unit_ids)
     log("Committed.")
 
     return {"created": created_count, "updated": updated_count, "skipped": skipped_count}

@@ -1,13 +1,16 @@
 from datetime import timedelta
+from unittest.mock import Mock
 
 from django.core.cache import cache
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from iaso.models import OrgUnit
+from iaso.models import OrgUnit, SourceVersion
 from plugins.snt_malaria.api.impact import cache as impact_cache
-from plugins.snt_malaria.models import Intervention
+from plugins.snt_malaria.api.interventions.serializers import InterventionDetailWriteSerializer
+from plugins.snt_malaria.management.commands.load_impact_org_unit_mappings import load_impact_org_unit_mappings
+from plugins.snt_malaria.models import ImpactOrgUnitMapping, Intervention
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
@@ -122,3 +125,219 @@ class InvalidateImpactCacheAdminActionTestCase(SNTMalariaTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertNotEqual(self._key(), key_before)
+
+
+@override_settings(CACHES=LOCMEM_CACHES)
+class ImpactMappingChangeInvalidatesCacheTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        self.account, self.user, self.source, self.version, _ = self.create_snt_account_with_project()
+        self.user.is_staff = True
+        self.user.is_superuser = True
+        self.user.save()
+        self.client.force_login(self.user)
+        self.scenario = self.create_snt_scenario(account=self.account, created_by=self.user)
+        self.org_unit = OrgUnit.objects.create(name="District", version=self.version)
+        self.other_org_unit = OrgUnit.objects.create(name="Other district", version=self.version)
+        self.mapping = ImpactOrgUnitMapping.objects.create(org_unit=self.org_unit, reference="District-1")
+
+        self.other_account, other_user, _, _, _ = self.create_snt_account_with_project(
+            source_name="other source", project_name="other project"
+        )
+        self.other_scenario = self.create_snt_scenario(account=self.other_account, created_by=other_user)
+
+    def _keys(self):
+        return (
+            impact_cache._build_key(self.scenario.id, "under5", 2025, 2027),
+            impact_cache._build_key(self.other_scenario.id, "under5", 2025, 2027),
+        )
+
+    def _assert_only_own_account_invalidated(self, keys_before):
+        key, other_key = self._keys()
+        self.assertNotEqual(key, keys_before[0])
+        self.assertEqual(other_key, keys_before[1])
+
+    def test_invalidate_for_org_units_drops_accounts_whose_default_version_holds_them_on_commit(self):
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            impact_cache.invalidate_for_org_units([self.org_unit.id])
+            self.assertEqual(self._keys(), keys_before)
+
+        self.assertEqual(len(callbacks), 1)
+        self._assert_only_own_account_invalidated(keys_before)
+
+    def test_invalidate_for_org_units_ignores_org_units_outside_default_versions(self):
+        older_version = SourceVersion.objects.create(data_source=self.source, number=0)
+        stray_org_unit = OrgUnit.objects.create(name="Stray", version=older_version)
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            impact_cache.invalidate_for_org_units([stray_org_unit.id])
+
+        self.assertEqual(self._keys(), keys_before)
+
+    def test_admin_edit_of_mapping_reference_invalidates_account_cache(self):
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse("admin:snt_malaria_impactorgunitmapping_change", args=[self.mapping.pk]),
+                {"org_unit": self.org_unit.pk, "reference": "District-2"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self._assert_only_own_account_invalidated(keys_before)
+
+    def test_admin_delete_of_mapping_invalidates_account_cache(self):
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse("admin:snt_malaria_impactorgunitmapping_delete", args=[self.mapping.pk]),
+                {"post": "yes"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ImpactOrgUnitMapping.objects.exists())
+        self._assert_only_own_account_invalidated(keys_before)
+
+    def test_admin_bulk_delete_of_mappings_invalidates_account_cache(self):
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse("admin:snt_malaria_impactorgunitmapping_changelist"),
+                {"action": "delete_selected", "_selected_action": [self.mapping.pk], "post": "yes"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ImpactOrgUnitMapping.objects.exists())
+        self._assert_only_own_account_invalidated(keys_before)
+
+    def test_loading_mappings_from_file_invalidates_account_cache(self):
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            load_impact_org_unit_mappings(
+                account=self.account,
+                mapping_nodes=[{"name": "Other district", "reference": "Other-1"}],
+            )
+
+        self._assert_only_own_account_invalidated(keys_before)
+
+    def test_loading_mappings_without_any_match_keeps_cache(self):
+        keys_before = self._keys()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            load_impact_org_unit_mappings(
+                account=self.account,
+                mapping_nodes=[{"name": "Unknown", "reference": "Unknown-1"}],
+            )
+
+        self.assertEqual(self._keys(), keys_before)
+
+
+@override_settings(CACHES=LOCMEM_CACHES)
+class InterventionImpactRefChangeInvalidatesCacheTestCase(SNTMalariaTestCase):
+    """Saving an intervention always bumps the key via updated_at, so these tests check the account generation."""
+
+    auto_create_account = False
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        self.account, self.user, _, _, _ = self.create_snt_account_with_project()
+        self.user.is_staff = True
+        self.user.is_superuser = True
+        self.user.save()
+        self.client.force_login(self.user)
+        category = self.create_snt_intervention_category(account=self.account, created_by=self.user)
+        self.intervention = self.create_snt_intervention(
+            intervention_category=category, created_by=self.user, impact_ref="smc"
+        )
+        self.other_account, _ = self.create_snt_account()
+
+    def _generations(self):
+        return (
+            impact_cache._account_generation(self.account.id),
+            impact_cache._account_generation(self.other_account.id),
+        )
+
+    def _assert_only_own_account_invalidated(self, generations_before):
+        generation, other_generation = self._generations()
+        self.assertNotEqual(generation, generations_before[0])
+        self.assertEqual(other_generation, generations_before[1])
+
+    def _save_with_serializer(self, data):
+        serializer = InterventionDetailWriteSerializer(
+            instance=self.intervention,
+            data=data,
+            partial=True,
+            context={"request": Mock(user=self.user)},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+    def test_api_update_of_impact_ref_invalidates_account_cache_on_commit(self):
+        generations_before = self._generations()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            self._save_with_serializer({"impact_ref": "pmc"})
+            self.assertEqual(self._generations(), generations_before)
+
+        self._assert_only_own_account_invalidated(generations_before)
+
+    def test_api_update_without_impact_ref_change_keeps_account_cache(self):
+        generations_before = self._generations()
+
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            self._save_with_serializer({"name": "Renamed", "impact_ref": "smc"})
+
+        self.assertEqual(callbacks, [])
+        self.assertEqual(self._generations(), generations_before)
+
+    def test_admin_list_edit_of_impact_ref_invalidates_account_cache(self):
+        generations_before = self._generations()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse("admin:snt_malaria_intervention_changelist"),
+                {
+                    "form-TOTAL_FORMS": "1",
+                    "form-INITIAL_FORMS": "1",
+                    "form-0-id": self.intervention.pk,
+                    "form-0-impact_ref": "pmc",
+                    "_save": "Save",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.impact_ref, "pmc")
+        self._assert_only_own_account_invalidated(generations_before)
+
+    def test_admin_edit_without_impact_ref_change_keeps_account_cache(self):
+        generations_before = self._generations()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse("admin:snt_malaria_intervention_change", args=[self.intervention.pk]),
+                {
+                    "intervention_category": self.intervention.intervention_category_id,
+                    "created_by": self.user.pk,
+                    "name": "Renamed",
+                    "code": self.intervention.code,
+                    "impact_ref": "smc",
+                    "target_population": "",
+                    "description": "",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.name, "Renamed")
+        self.assertEqual(self._generations(), generations_before)
