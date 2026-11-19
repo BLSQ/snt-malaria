@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
 import { Intervention } from '../../../interventions/types';
@@ -13,6 +14,7 @@ import {
     buildInterventionGroups,
     getOrgUnitsForIntervention,
 } from '../../utils/interventionGroups';
+import { InterventionMixTooltipBody } from './InterventionMixTooltipBody';
 import { LabelChip } from './LabelChip';
 
 const styles = {
@@ -64,7 +66,9 @@ export const InterventionPlanMap: FC<Props> = ({
     titleDotColor,
     titleText,
 }) => {
-    const { selectedOrgUnitIds } = useComparisonDataContext();
+    const { selectedOrgUnitIds, baselineScenarioId } =
+        useComparisonDataContext();
+    const isBaseline = scenarioId === baselineScenarioId;
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits } = useGetOrgUnits({
@@ -81,6 +85,32 @@ export const InterventionPlanMap: FC<Props> = ({
             return new Map<number, Intervention[]>();
         return buildOrgUnitLookup(interventionAssignments ?? []);
     }, [interventionAssignments, isLoadingInterventionAssignments]);
+
+    const { data: baselineInterventionAssignments } = useGetInterventionPlans(
+        isBaseline ? undefined : baselineScenarioId,
+    );
+    const baselineOrgUnitInterventions = useMemo(
+        () =>
+            baselineInterventionAssignments &&
+            buildOrgUnitLookup(baselineInterventionAssignments),
+        [baselineInterventionAssignments],
+    );
+
+    const getTooltipContent = useCallback(
+        (orgUnit: OrgUnit) => ({
+            body: (
+                <InterventionMixTooltipBody
+                    interventions={orgUnitInterventions.get(orgUnit.id) ?? []}
+                    baselineInterventions={
+                        baselineOrgUnitInterventions &&
+                        (baselineOrgUnitInterventions.get(orgUnit.id) ?? [])
+                    }
+                    scenarioColor={titleDotColor}
+                />
+            ),
+        }),
+        [orgUnitInterventions, baselineOrgUnitInterventions, titleDotColor],
+    );
 
     const highlightedOrgUnits = useMemo(
         () =>
@@ -144,6 +174,7 @@ export const InterventionPlanMap: FC<Props> = ({
                     !interventionAssignments ||
                     interventionAssignments.length <= 0
                 }
+                getTooltipContent={getTooltipContent}
             />
             <Box sx={styles.overlay}>
                 <LabelChip color={titleDotColor} label={titleText} />

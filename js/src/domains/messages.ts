@@ -773,6 +773,55 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noLayer',
         defaultMessage: 'No layer',
     },
+    tooltipInterventionCount: {
+        id: 'iaso.snt_malaria.label.tooltipInterventionCount',
+        defaultMessage:
+            '{count, plural, =0 {No interventions} one {# intervention} other {# interventions}}',
+    },
+    tooltipNoData: {
+        id: 'iaso.snt_malaria.label.tooltipNoData',
+        defaultMessage: 'No data',
+    },
+    tooltipInterventionMix: {
+        id: 'iaso.snt_malaria.label.tooltipInterventionMix',
+        defaultMessage: 'Intervention mix',
+    },
+    tooltipInterventionMixVsBaseline: {
+        id: 'iaso.snt_malaria.label.tooltipInterventionMixVsBaseline',
+        defaultMessage: 'Intervention mix vs baseline',
+    },
+    tooltipVsBaseline: {
+        id: 'iaso.snt_malaria.label.tooltipVsBaseline',
+        defaultMessage: 'vs baseline',
+    },
+    tooltipIncludedInRule: {
+        id: 'iaso.snt_malaria.label.tooltipIncludedInRule',
+        defaultMessage: 'Included in rule',
+    },
+    tooltipNotIncludedInRule: {
+        id: 'iaso.snt_malaria.label.tooltipNotIncludedInRule',
+        defaultMessage: 'Not included',
+    },
+    tooltipManuallyAdded: {
+        id: 'iaso.snt_malaria.label.tooltipManuallyAdded',
+        defaultMessage: 'Added',
+    },
+    tooltipManuallyRemoved: {
+        id: 'iaso.snt_malaria.label.tooltipManuallyRemoved',
+        defaultMessage: 'Removed',
+    },
+    tooltipMeetsCriterion: {
+        id: 'iaso.snt_malaria.label.tooltipMeetsCriterion',
+        defaultMessage: 'Meets criterion {criterion}',
+    },
+    tooltipOutsideCriterion: {
+        id: 'iaso.snt_malaria.label.tooltipOutsideCriterion',
+        defaultMessage: 'Outside criterion {criterion}',
+    },
+    tooltipCriterionValueNotSet: {
+        id: 'iaso.snt_malaria.label.tooltipCriterionValueNotSet',
+        defaultMessage: 'Criterion value not set',
+    },
     clearMapLayer: {
         id: 'iaso.snt_malaria.label.clearMapLayer',
         defaultMessage: 'Clear layer',

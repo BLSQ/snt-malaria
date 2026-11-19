@@ -19,7 +19,10 @@ import {
     ScenarioImpactMetrics,
 } from '../types';
 import { hexToRgb } from './colors';
-import { computeOrgUnitCumulativeCostDeltas } from './impactCalculations';
+import {
+    computeOrgUnitCumulativeCostComparisons,
+    OrgUnitComparison,
+} from './impactCalculations';
 import { MetricConfig } from './metricConfig';
 
 const COLOR_RED = red[500];
@@ -232,15 +235,15 @@ export const getDeltaCell = (
 };
 
 /**
- * Computes comparison minus baseline for one impact field on org units
- * present in both scenarios with non-null values.
+ * One impact field's value in both scenarios, for org units present in both
+ * with non-null values.
  */
-export const computeOrgUnitImpactMetricDeltas = (
+export const computeOrgUnitImpactMetricComparisons = (
     baselineImpact: ScenarioImpactMetrics,
     comparisonImpact: ScenarioImpactMetrics,
     metricKey: ImpactMetricKey,
-): Map<number, number> => {
-    const deltas = new Map<number, number>();
+): Map<number, OrgUnitComparison> => {
+    const comparisons = new Map<number, OrgUnitComparison>();
     const baselineByOu = new Map<number, OrgUnitImpactMetrics>(
         baselineImpact.org_units.map(ou => [ou.org_unit_id, ou]),
     );
@@ -250,13 +253,13 @@ export const computeOrgUnitImpactMetricDeltas = (
         const comparisonValue = comparisonOu[metricKey]?.value;
         const baselineValue = baselineOu?.[metricKey]?.value;
         if (comparisonValue != null && baselineValue != null) {
-            deltas.set(
-                comparisonOu.org_unit_id,
-                comparisonValue - baselineValue,
-            );
+            comparisons.set(comparisonOu.org_unit_id, {
+                baseline: baselineValue,
+                comparison: comparisonValue,
+            });
         }
     }
-    return deltas;
+    return comparisons;
 };
 
 /**
@@ -265,7 +268,7 @@ export const computeOrgUnitImpactMetricDeltas = (
  * Impact metrics are checked against scenario-level aggregates (null when
  * no breakdown row contributed). The cost metric is checked by probing
  * `budget.results[].org_units_costs` directly — same source the cost
- * delta reads from in {@link computeOrgUnitImpactDifferenceDeltas}.
+ * delta reads from in {@link computeOrgUnitImpactComparisons}.
  * Scenarios still loading are skipped.
  */
 export const getAvailableMetrics = (
@@ -295,19 +298,19 @@ export const getAvailableMetrics = (
 };
 
 /**
- * Per-org-unit deltas for one baseline-vs-comparison pair, dispatched by
+ * Per-org-unit baseline and comparison values for one pair, dispatched by
  * metric: impact metrics come from the impact payloads, the cost metric
  * from cumulative budget results.
  */
-export const computeOrgUnitImpactDifferenceDeltas = (
+export const computeOrgUnitImpactComparisons = (
     metric: MetricKey,
     baselineImpact: ScenarioImpactMetrics | undefined,
     comparisonImpact: ScenarioImpactMetrics | undefined,
     baselineBudget: BudgetCalculationResponse | undefined,
     comparisonBudget: BudgetCalculationResponse | undefined,
-): Map<number, number> => {
+): Map<number, OrgUnitComparison> => {
     if (metric === MetricKey.OrgUnitTotalCost) {
-        return computeOrgUnitCumulativeCostDeltas(
+        return computeOrgUnitCumulativeCostComparisons(
             baselineBudget,
             comparisonBudget,
         );
@@ -315,7 +318,7 @@ export const computeOrgUnitImpactDifferenceDeltas = (
     if (!baselineImpact || !comparisonImpact) {
         return new Map();
     }
-    return computeOrgUnitImpactMetricDeltas(
+    return computeOrgUnitImpactMetricComparisons(
         baselineImpact,
         comparisonImpact,
         metric,

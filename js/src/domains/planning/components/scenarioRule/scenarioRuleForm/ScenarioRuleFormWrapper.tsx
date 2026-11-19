@@ -192,7 +192,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                     .filter((id): id is number => id != null),
             ).map(metricTypeId => ({
                 metricTypeId,
-                year: getDataLayerYear(scenario?.data_layer_years, metricTypeId),
+                year: getDataLayerYear(
+                    scenario?.data_layer_years,
+                    metricTypeId,
+                ),
             })),
         [matchingCriteria, scenario?.data_layer_years],
     );
@@ -218,6 +221,9 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                 name,
                 interventions,
                 intervention_overrides: interventionOverrides,
+                matching_criteria: matchingCriteria,
+                org_units_included: includedOrgUnits,
+                org_units_excluded: excludedOrgUnits,
             },
             matchedOrgUnitIds,
             matchedIdsByMetric: ruleMatches.matchedIdsByMetric,
@@ -227,6 +233,9 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         name,
         interventions,
         interventionOverrides,
+        matchingCriteria,
+        includedOrgUnits,
+        excludedOrgUnits,
         matchedOrgUnitIds,
         ruleMatches.matchedIdsByMetric,
         isAwaitingFirstResult,

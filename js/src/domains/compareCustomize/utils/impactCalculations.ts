@@ -19,24 +19,30 @@ export const getOrgUnitCumulativeCostsMap = (
     return map;
 };
 
+/** One org unit's value in the baseline and in the compared scenario. */
+export type OrgUnitComparison = { baseline: number; comparison: number };
+
 /**
- * Per-org-unit budget cost deltas: `comparison − baseline`, where each side's total is the sum of
+ * Per-org-unit cumulative budget costs in both scenarios, where each side's total is the sum of
  * that org unit's `total_cost` over every year row in `budget.results`.
  */
-export const computeOrgUnitCumulativeCostDeltas = (
+export const computeOrgUnitCumulativeCostComparisons = (
     baselineBudget?: BudgetCalculationResponse,
     comparisonBudget?: BudgetCalculationResponse,
-): Map<number, number> => {
+): Map<number, OrgUnitComparison> => {
     const baselineByOu = getOrgUnitCumulativeCostsMap(baselineBudget);
     const comparisonByOu = getOrgUnitCumulativeCostsMap(comparisonBudget);
-    const deltas = new Map<number, number>();
+    const comparisons = new Map<number, OrgUnitComparison>();
     for (const [orgUnitId, comparisonCost] of comparisonByOu) {
         const baselineCost = baselineByOu.get(orgUnitId);
         if (baselineCost !== undefined) {
-            deltas.set(orgUnitId, comparisonCost - baselineCost);
+            comparisons.set(orgUnitId, {
+                baseline: baselineCost,
+                comparison: comparisonCost,
+            });
         }
     }
-    return deltas;
+    return comparisons;
 };
 
 /** Sums the total cost of all interventions in one budget year. */

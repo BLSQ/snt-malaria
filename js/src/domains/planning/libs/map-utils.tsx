@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { scaleThreshold } from '@visx/scale';
 import { useSafeIntl } from 'bluesquare-components';
 import * as d3 from 'd3-scale';
@@ -116,43 +116,58 @@ export const getStyleForShape = (
     };
 };
 
+type FormatMessage = ReturnType<typeof useSafeIntl>['formatMessage'];
+
+export const toOrgUnitMetric = (
+    metricValue: MetricValue | undefined,
+    formatMessage: FormatMessage,
+) => {
+    if (!metricValue) {
+        return undefined;
+    }
+    if (hasNumericMetricValue(metricValue)) {
+        return {
+            label: metricValue.value,
+            value: metricValue.value.toString(),
+        };
+    }
+    if (!metricValue.string_value) {
+        return undefined;
+    }
+    const metricLabel = MESSAGES[metricValue.string_value]
+        ? formatMessage(MESSAGES[metricValue.string_value])
+        : metricValue.string_value;
+    return { value: metricValue.string_value, label: metricLabel };
+};
+
+/** Each org unit's first value; later duplicates are ignored. */
+export const indexMetricValuesByOrgUnit = (
+    metricValues: MetricValue[] | undefined,
+) => {
+    const byOrgUnitId = new Map<number, MetricValue>();
+    metricValues?.forEach(metricValue => {
+        if (!byOrgUnitId.has(metricValue.org_unit)) {
+            byOrgUnitId.set(metricValue.org_unit, metricValue);
+        }
+    });
+    return byOrgUnitId;
+};
+
 export const useGetOrgUnitMetric = (
     displayedMetricValues: MetricValue[] | undefined,
 ) => {
     const { formatMessage } = useSafeIntl();
-
+    const metricValueByOrgUnitId = useMemo(
+        () => indexMetricValuesByOrgUnit(displayedMetricValues),
+        [displayedMetricValues],
+    );
     return useCallback(
-        (orgUnitId: number) => {
-            if (!displayedMetricValues) {
-                return undefined;
-            }
-
-            const metricValue = displayedMetricValues.find(
-                m => m.org_unit === orgUnitId,
-            );
-
-            if (!metricValue) {
-                return undefined;
-            }
-
-            if (hasNumericMetricValue(metricValue)) {
-                return {
-                    label: metricValue.value,
-                    value: metricValue.value.toString(),
-                };
-            }
-
-            if (!metricValue.string_value) {
-                return undefined;
-            }
-
-            const metricLabel = MESSAGES[metricValue.string_value]
-                ? formatMessage(MESSAGES[metricValue.string_value])
-                : metricValue.string_value;
-
-            return { value: metricValue.string_value, label: metricLabel };
-        },
-        [formatMessage, displayedMetricValues],
+        (orgUnitId: number) =>
+            toOrgUnitMetric(
+                metricValueByOrgUnitId.get(orgUnitId),
+                formatMessage,
+            ),
+        [formatMessage, metricValueByOrgUnitId],
     );
 };
 
