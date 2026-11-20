@@ -1,5 +1,5 @@
 import { ComponentType } from 'react';
-import { SvgIconProps } from '@mui/material';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
 import { IntlMessage } from 'bluesquare-components';
 
 export type HomeCardConfig = {

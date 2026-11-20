@@ -1,8 +1,9 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { TollOutlined } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-import { Stack, Typography } from '@mui/material';
-import { Button } from '@mui/material';
+import TollOutlined from '@mui/icons-material/TollOutlined';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';

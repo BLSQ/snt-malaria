@@ -1,6 +1,6 @@
 import React, { FC, useMemo } from 'react';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { formatCurrencyAmount, useSafeIntl } from 'bluesquare-components';
 import {
     Bar,

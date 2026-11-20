@@ -1,5 +1,8 @@
 import React, { FC } from 'react';
-import { List, ListItem, ListItemText, Theme } from '@mui/material';
+import List from '@mui/material/List/List';
+import ListItem from '@mui/material/ListItem/ListItem';
+import ListItemText from '@mui/material/ListItemText/ListItemText';
+import type { Theme } from '@mui/material/styles';
 import { CostUnitType } from '../types';
 
 const styles = {

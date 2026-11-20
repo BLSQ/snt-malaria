@@ -1,5 +1,9 @@
 import React, { FC } from 'react';
-import { Box, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import TableCell from '@mui/material/TableCell/TableCell';
+import TableHead from '@mui/material/TableHead/TableHead';
+import TableRow from '@mui/material/TableRow/TableRow';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { InlineSearchInput } from '../../../../components/InlineSearchInput';

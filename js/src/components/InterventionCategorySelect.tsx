@@ -1,5 +1,7 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
-import { MenuItem, Select, Typography } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../domains/interventions/hooks/useGetInterventionCategories';

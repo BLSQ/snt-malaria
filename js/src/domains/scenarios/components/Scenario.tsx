@@ -1,13 +1,11 @@
 import React, { FC, useMemo } from 'react';
 import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
-import {
-    Box,
-    Card,
-    CardContent,
-    Typography,
-    Theme,
-    CardActionArea,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Card from '@mui/material/Card/Card';
+import CardActionArea from '@mui/material/CardActionArea/CardActionArea';
+import CardContent from '@mui/material/CardContent/CardContent';
+import type { Theme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 

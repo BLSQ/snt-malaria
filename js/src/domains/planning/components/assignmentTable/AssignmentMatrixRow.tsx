@@ -1,5 +1,7 @@
 import React, { FC, memo } from 'react';
-import { TableCell, TableRow, Typography } from '@mui/material';
+import TableCell from '@mui/material/TableCell/TableCell';
+import TableRow from '@mui/material/TableRow/TableRow';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../../../../constants/overrideColors';
 import { AssignmentCell } from './AssignmentCell';

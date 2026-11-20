@@ -1,8 +1,9 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import SettingsInputCompositeOutlinedIcon from '@mui/icons-material/SettingsInputCompositeOutlined';
-import { Stack, Typography } from '@mui/material';
-import { Button } from '@mui/material';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';

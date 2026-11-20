@@ -192,7 +192,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                     .filter((id): id is number => id != null),
             ).map(metricTypeId => ({
                 metricTypeId,
-                year: getDataLayerYear(scenario?.data_layer_years, metricTypeId),
+                year: getDataLayerYear(
+                    scenario?.data_layer_years,
+                    metricTypeId,
+                ),
             })),
         [matchingCriteria, scenario?.data_layer_years],
     );

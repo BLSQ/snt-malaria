@@ -1,6 +1,9 @@
 import React from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Box, Divider, IconButton, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Divider from '@mui/material/Divider/Divider';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 
 const styles: SxStyles = {

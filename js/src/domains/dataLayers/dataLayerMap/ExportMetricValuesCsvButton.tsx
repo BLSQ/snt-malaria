@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import GetAppIcon from '@mui/icons-material/GetApp';
-import { IconButton, Tooltip } from '@mui/material';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { exportMetricValuesAPIPath } from '../../../constants/api-urls';
 import { MESSAGES } from '../messages';

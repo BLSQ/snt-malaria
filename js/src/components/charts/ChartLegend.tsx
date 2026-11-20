@@ -1,5 +1,10 @@
 import React, { FC } from 'react';
-import { Box, List, ListItem, SxProps, Theme, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import List from '@mui/material/List/List';
+import ListItem from '@mui/material/ListItem/ListItem';
+import type { Theme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography/Typography';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { Payload } from 'recharts/types/component/DefaultLegendContent';
 import { SxStyles } from 'Iaso/types/general';
 

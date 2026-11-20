@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
-import { Box, SvgIconProps, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../constants/overrideColors';
 

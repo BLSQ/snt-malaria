@@ -1,6 +1,9 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import LayersIcon from '@mui/icons-material/Layers';
-import { MenuItem, Select, SelectChangeEvent, Tooltip } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { NumberInput } from '../../../../../components/NumberInput';

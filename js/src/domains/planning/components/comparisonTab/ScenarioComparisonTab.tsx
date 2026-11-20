@@ -5,7 +5,10 @@ import React, {
     useCallback,
     useMemo,
 } from 'react';
-import { Box, Card, CardHeader, Grid } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Card from '@mui/material/Card/Card';
+import CardHeader from '@mui/material/CardHeader/CardHeader';
+import Grid from '@mui/material/Grid/Grid';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { PaperFullHeight } from '../../../../components/styledComponents';

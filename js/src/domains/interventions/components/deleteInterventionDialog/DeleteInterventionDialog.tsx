@@ -6,16 +6,14 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import {
-    Alert,
-    FormControl,
-    FormControlLabel,
-    FormLabel,
-    Radio,
-    RadioGroup,
-    Stack,
-    Typography,
-} from '@mui/material';
+import Alert from '@mui/material/Alert/Alert';
+import FormControl from '@mui/material/FormControl/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel/FormLabel';
+import Radio from '@mui/material/Radio/Radio';
+import RadioGroup from '@mui/material/RadioGroup/RadioGroup';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import {
     ConfirmCancelModal,
     IntlMessage,

@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { Stack } from '@mui/material';
+import Stack from '@mui/material/Stack/Stack';
 import { InterventionCategory } from '../../../../interventions/types';
 import { MESSAGES } from '../../../../messages';
 import { findInterventionWithCategory } from '../../../libs/rule-utils';

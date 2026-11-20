@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { SvgIconComponent } from '@mui/icons-material';
 import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
+import SvgIcon from '@mui/material/SvgIcon';
 import { useSafeIntl } from 'bluesquare-components';
 import { CompositeNodeLibraryDragType } from '../dragAndDrop';
 import { MESSAGES } from '../messages';
@@ -12,7 +12,7 @@ export type NodeLibraryItem = {
     type: CompositeNodeLibraryDragType;
     label: string;
     description: string;
-    icon: SvgIconComponent;
+    icon: typeof SvgIcon;
 };
 
 export type NodeLibraryGroup = {

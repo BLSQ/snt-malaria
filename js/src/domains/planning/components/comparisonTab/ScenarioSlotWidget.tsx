@@ -1,6 +1,8 @@
 import React, { FC } from 'react';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
-import { Box, IconButton, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Typography from '@mui/material/Typography/Typography';
 import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';

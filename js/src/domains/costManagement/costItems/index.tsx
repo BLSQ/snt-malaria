@@ -5,7 +5,8 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import { Card, Typography } from '@mui/material';
+import Card from '@mui/material/Card/Card';
+import Typography from '@mui/material/Typography/Typography';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { SxStyles } from 'Iaso/types/general';

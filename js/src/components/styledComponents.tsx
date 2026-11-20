@@ -1,10 +1,8 @@
-import {
-    Paper,
-    Box,
-    AppBar as MuiAppBar,
-    Card,
-    ListSubheader,
-} from '@mui/material';
+import MuiAppBar from '@mui/material/AppBar/AppBar';
+import Box from '@mui/material/Box/Box';
+import Card from '@mui/material/Card/Card';
+import ListSubheader from '@mui/material/ListSubheader/ListSubheader';
+import Paper from '@mui/material/Paper/Paper';
 import { styled } from '@mui/material/styles';
 
 export const PaperFullHeight = styled(Paper)(({ theme }) => ({

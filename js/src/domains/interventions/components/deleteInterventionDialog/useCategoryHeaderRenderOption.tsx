@@ -1,5 +1,6 @@
 import React, { Fragment, ReactNode, useCallback, useRef } from 'react';
-import { Box, ListSubheader } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import ListSubheader from '@mui/material/ListSubheader/ListSubheader';
 import { SxStyles } from 'Iaso/types/general';
 import { optionMenuStyles } from '../../../../components/optionMenuStyles';
 

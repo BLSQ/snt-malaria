@@ -1,15 +1,13 @@
 import React from 'react';
-import {
-    CompareOutlined,
-    FormatListBulletedOutlined,
-    GroupsOutlined,
-    HomeOutlined,
-    Layers,
-    PaymentsOutlined,
-    TuneOutlined,
-    VaccinesOutlined,
-} from '@mui/icons-material';
-import { SvgIconProps } from '@mui/material';
+import CompareOutlined from '@mui/icons-material/CompareOutlined';
+import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
+import GroupsOutlined from '@mui/icons-material/GroupsOutlined';
+import HomeOutlined from '@mui/icons-material/HomeOutlined';
+import Layers from '@mui/icons-material/Layers';
+import PaymentsOutlined from '@mui/icons-material/PaymentsOutlined';
+import TuneOutlined from '@mui/icons-material/TuneOutlined';
+import VaccinesOutlined from '@mui/icons-material/VaccinesOutlined';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
 import { IMPACT } from 'Iaso/utils/featureFlags';
 import { MESSAGES as contributorsMessages } from '../domains/contributors/messages';
 import { MESSAGES as dataLayersMessages } from '../domains/dataLayers/messages';

@@ -1,12 +1,11 @@
 import React, { FC, useMemo } from 'react';
-import {
-    AccountTree,
-    Compare,
-    Layers,
-    Payments,
-    Vaccines,
-} from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
+import AccountTree from '@mui/icons-material/AccountTree';
+import Compare from '@mui/icons-material/Compare';
+import Layers from '@mui/icons-material/Layers';
+import Payments from '@mui/icons-material/Payments';
+import Vaccines from '@mui/icons-material/Vaccines';
+import Box from '@mui/material/Box/Box';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormattedMessage } from 'react-intl';
 import TopBar from 'Iaso/components/nav/TopBarComponent';

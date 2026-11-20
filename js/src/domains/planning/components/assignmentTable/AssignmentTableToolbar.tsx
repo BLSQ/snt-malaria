@@ -1,10 +1,8 @@
 import React, { FC, MouseEvent, ReactNode, useCallback } from 'react';
-import {
-    Box,
-    ToggleButton,
-    ToggleButtonGroup,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import ToggleButton from '@mui/material/ToggleButton/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup/ToggleButtonGroup';
+import Typography from '@mui/material/Typography/Typography';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { YearStepper } from '../../../../components/YearStepper';

@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import { Box, Stack } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Stack from '@mui/material/Stack/Stack';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';

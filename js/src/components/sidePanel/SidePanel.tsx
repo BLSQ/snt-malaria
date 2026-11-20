@@ -1,5 +1,7 @@
 import React, { ComponentType, FC, ReactNode } from 'react';
-import { Card, Divider, SvgIconProps } from '@mui/material';
+import Card from '@mui/material/Card/Card';
+import Divider from '@mui/material/Divider/Divider';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
 import { SxStyles } from 'Iaso/types/general';
 import { SidebarColumn } from '../styledComponents';
 import { useSidePanelContext } from './SidePanelContext';

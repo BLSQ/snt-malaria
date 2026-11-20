@@ -1,6 +1,6 @@
 import React, { FC, useMemo, useState } from 'react';
 import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { EmptyPlaceholder } from '../../../../components/EmptyPlaceholder';

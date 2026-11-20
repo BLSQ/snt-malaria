@@ -1,6 +1,8 @@
 import React, { FC, useState } from 'react';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { Box, MenuList, Popover } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import MenuList from '@mui/material/MenuList/MenuList';
+import Popover from '@mui/material/Popover/Popover';
 import { IconButton } from 'bluesquare-components';
 import { MESSAGES } from '../domains/messages';
 

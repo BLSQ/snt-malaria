@@ -1,14 +1,12 @@
 import React, { FC, useCallback, useState } from 'react';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import {
-    Box,
-    ClickAwayListener,
-    Link,
-    MenuItem,
-    MenuList,
-    Popover,
-    Theme,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import { ClickAwayListener } from '@mui/material/ClickAwayListener/ClickAwayListener';
+import Link from '@mui/material/Link/Link';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import MenuList from '@mui/material/MenuList/MenuList';
+import Popover from '@mui/material/Popover/Popover';
+import type { Theme } from '@mui/material/styles';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';

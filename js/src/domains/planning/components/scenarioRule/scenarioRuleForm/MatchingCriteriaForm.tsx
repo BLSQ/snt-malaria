@@ -1,5 +1,6 @@
 import React, { FC, ReactNode, useCallback, useMemo } from 'react';
-import { Box, Stack } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Stack from '@mui/material/Stack/Stack';
 import { FormikTouched } from 'formik';
 import { FormikErrors } from 'formik';
 import { SxStyles } from 'Iaso/types/general';

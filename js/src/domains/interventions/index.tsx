@@ -1,5 +1,6 @@
 import React, { FC, useMemo } from 'react';
-import { CategoryOutlined, VaccinesOutlined } from '@mui/icons-material';
+import CategoryOutlined from '@mui/icons-material/CategoryOutlined';
+import VaccinesOutlined from '@mui/icons-material/VaccinesOutlined';
 import { useSafeIntl } from 'bluesquare-components';
 import { TabbedPage, TabbedPageTab } from '../../components/TabbedPage';
 import { MESSAGES } from '../messages';

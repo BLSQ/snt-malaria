@@ -1,6 +1,9 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import { Card, Stack, Tooltip, Typography } from '@mui/material';
+import Card from '@mui/material/Card/Card';
+import Stack from '@mui/material/Stack/Stack';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import {
     IconButton,
     LoadingSpinner,

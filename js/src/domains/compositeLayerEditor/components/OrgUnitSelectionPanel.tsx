@@ -1,13 +1,11 @@
 import React, { FC, useMemo, useState } from 'react';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import {
-    Box,
-    Button,
-    List,
-    ToggleButton,
-    ToggleButtonGroup,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import List from '@mui/material/List/List';
+import ToggleButton from '@mui/material/ToggleButton/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup/ToggleButtonGroup';
+import Typography from '@mui/material/Typography/Typography';
 import { SearchInput, useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

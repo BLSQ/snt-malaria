@@ -1,6 +1,9 @@
 import React, { FC, ReactNode } from 'react';
 
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
+import Typography from '@mui/material/Typography/Typography';
 
 import { useSafeIntl } from 'bluesquare-components';
 

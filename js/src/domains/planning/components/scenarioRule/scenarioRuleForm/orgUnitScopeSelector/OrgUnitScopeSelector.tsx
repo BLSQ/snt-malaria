@@ -6,9 +6,11 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import { CloudOff } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
+import CloudOff from '@mui/icons-material/CloudOff';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
 import { SxProps, Theme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DelayedLoadingSpinner } from '../../../../../../components/DelayedLoadingSpinner';

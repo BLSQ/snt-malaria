@@ -1,5 +1,8 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete/Autocomplete';
+import Stack from '@mui/material/Stack/Stack';
+import TextField from '@mui/material/TextField/TextField';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { useGetDonors } from '../hooks/useGetDonors';

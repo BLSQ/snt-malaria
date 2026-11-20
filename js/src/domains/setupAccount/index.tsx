@@ -1,6 +1,11 @@
 import React, { FunctionComponent, useEffect, useMemo } from 'react';
 
-import { AppBar, Box, Grid, Paper, Toolbar, Typography } from '@mui/material';
+import AppBar from '@mui/material/AppBar/AppBar';
+import Box from '@mui/material/Box/Box';
+import Grid from '@mui/material/Grid/Grid';
+import Paper from '@mui/material/Paper/Paper';
+import Toolbar from '@mui/material/Toolbar/Toolbar';
+import Typography from '@mui/material/Typography/Typography';
 import { LangOptions, useSafeIntl } from 'bluesquare-components';
 
 import { useAppLocales } from 'Iaso/domains/app/constants';

@@ -1,5 +1,8 @@
 import React, { FC } from 'react';
-import { Box, Tab, Tabs, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Tab from '@mui/material/Tab/Tab';
+import Tabs from '@mui/material/Tabs/Tabs';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
