@@ -1,5 +1,8 @@
 import React, { FC } from 'react';
-import { Box, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
 import { alpha } from '@mui/material/styles';
 import { SxStyles } from 'Iaso/types/general';
 

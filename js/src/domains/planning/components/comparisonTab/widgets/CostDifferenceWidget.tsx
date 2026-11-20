@@ -1,7 +1,9 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import CompareArrowsOutlinedIcon from '@mui/icons-material/CompareArrowsOutlined';
-import { Box, Stack, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { green, red } from '@mui/material/colors';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     Bar,

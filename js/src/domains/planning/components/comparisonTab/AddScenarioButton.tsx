@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import { Button } from '@mui/material';
+import Button from '@mui/material/Button/Button';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';

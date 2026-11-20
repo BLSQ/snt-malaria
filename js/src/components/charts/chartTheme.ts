@@ -1,4 +1,4 @@
-import { useTheme } from '@mui/material';
+import type { useTheme } from '@mui/material/styles/useTheme';
 
 // Shared recharts axis/grid styling. Spread the returned objects onto the real
 // <CartesianGrid>/<XAxis>/<YAxis>; each chart adds its own data-specific props

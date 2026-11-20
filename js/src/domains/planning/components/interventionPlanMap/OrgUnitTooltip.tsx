@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
-import { Box, Chip, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Chip from '@mui/material/Chip/Chip';
+import Typography from '@mui/material/Typography/Typography';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { InterventionChip } from './buildEffectiveAssignments';
 

@@ -7,14 +7,12 @@ import React, {
 } from 'react';
 
 import SyncIcon from '@mui/icons-material/Sync';
-import {
-    Box,
-    Button,
-    CircularProgress,
-    IconButton,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
+import IconButton from '@mui/material/IconButton/IconButton';
 import { alpha } from '@mui/material/styles';
+import Typography from '@mui/material/Typography/Typography';
 import { LangOptions, useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import { isEqual, omit } from 'lodash';

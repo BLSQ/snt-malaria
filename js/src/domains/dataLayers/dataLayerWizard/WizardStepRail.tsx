@@ -1,6 +1,7 @@
 import React, { FC, Fragment } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
-import { Box, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 
 type StepState = 'completed' | 'active' | 'pending';

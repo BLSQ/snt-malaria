@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { Inventory2Outlined } from '@mui/icons-material';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
 import { useSafeIntl } from 'bluesquare-components';
 import { useGetCostUnitTypes } from '../../../../costManagement/costUnits/hooks/useGetCostUnitTypes';
 import { MESSAGES } from '../../../../messages';

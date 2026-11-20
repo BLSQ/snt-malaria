@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { PlaceOutlined } from '@mui/icons-material';
-import { Grid } from '@mui/material';
+import PlaceOutlined from '@mui/icons-material/PlaceOutlined';
+import Grid from '@mui/material/Grid/Grid';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ChartTooltip } from '../../../../../components/charts/ChartTooltip';

@@ -1,6 +1,8 @@
 import React, { FC } from 'react';
-import { ArrowForward } from '@mui/icons-material';
-import { Box, Link, Typography } from '@mui/material';
+import ArrowForward from '@mui/icons-material/ArrowForward';
+import Box from '@mui/material/Box/Box';
+import Link from '@mui/material/Link/Link';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormattedList, FormattedMessage } from 'react-intl';
 import { Link as RouterLink } from 'react-router-dom';

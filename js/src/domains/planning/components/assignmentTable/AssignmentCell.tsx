@@ -1,5 +1,6 @@
 import React, { FC, memo } from 'react';
-import { Box, TableCell } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import TableCell from '@mui/material/TableCell/TableCell';
 import { SxStyles } from 'Iaso/types/general';
 import { ColorDot } from '../../../../components/ColorDot';
 import { overrideColors } from '../../../../constants/overrideColors';

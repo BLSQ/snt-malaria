@@ -1,6 +1,8 @@
 import React, { FC, ReactNode } from 'react';
-import { Box, SxProps, Theme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import type { Theme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { SxStyles } from 'Iaso/types/general';
 
 const styles = {

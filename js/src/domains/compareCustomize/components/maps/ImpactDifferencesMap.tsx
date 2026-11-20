@@ -1,6 +1,9 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, SelectChangeEvent, Switch, Tooltip } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
 import { alpha } from '@mui/material/styles';
+import Switch from '@mui/material/Switch/Switch';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';

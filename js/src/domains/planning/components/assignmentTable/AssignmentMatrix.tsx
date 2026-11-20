@@ -1,5 +1,8 @@
 import React, { FC, MouseEvent, useCallback, useMemo, useState } from 'react';
-import { Table, TableBody, TableContainer, Typography } from '@mui/material';
+import Table from '@mui/material/Table/Table';
+import TableBody from '@mui/material/TableBody/TableBody';
+import TableContainer from '@mui/material/TableContainer/TableContainer';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';

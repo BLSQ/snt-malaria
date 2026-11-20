@@ -1,5 +1,7 @@
 import React, { FunctionComponent, useState } from 'react';
-import { Paper, Box, Theme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Paper from '@mui/material/Paper/Paper';
+import type { Theme } from '@mui/material/styles';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';

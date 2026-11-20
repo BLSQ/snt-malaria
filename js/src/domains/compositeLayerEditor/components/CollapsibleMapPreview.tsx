@@ -10,15 +10,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import {
-    Box,
-    Collapse,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    Tooltip,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Collapse from '@mui/material/Collapse/Collapse';
+import Dialog from '@mui/material/Dialog/Dialog';
+import DialogContent from '@mui/material/DialogContent/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle/DialogTitle';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

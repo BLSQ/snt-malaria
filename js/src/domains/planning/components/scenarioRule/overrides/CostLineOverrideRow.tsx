@@ -2,7 +2,10 @@ import React, { FC, MouseEvent, useCallback, useMemo } from 'react';
 import GroupsIcon from '@mui/icons-material/Groups';
 import TagIcon from '@mui/icons-material/Tag';
 import UndoIcon from '@mui/icons-material/Undo';
-import { Box, Button, Tooltip, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { getCurrencyAffixes, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import {

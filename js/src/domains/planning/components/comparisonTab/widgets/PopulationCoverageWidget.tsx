@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { GroupsOutlined } from '@mui/icons-material';
+import GroupsOutlined from '@mui/icons-material/GroupsOutlined';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';

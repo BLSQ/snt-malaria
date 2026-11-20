@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { VaccinesOutlined } from '@mui/icons-material';
+import VaccinesOutlined from '@mui/icons-material/VaccinesOutlined';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ChartTooltip } from '../../../../../components/charts/ChartTooltip';

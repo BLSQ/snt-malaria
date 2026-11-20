@@ -5,19 +5,17 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import LayersIcon from '@mui/icons-material/Layers';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import {
-    Box,
-    CircularProgress,
-    ClickAwayListener,
-    ListItem,
-    MenuItem,
-    MenuList,
-    Popover,
-    SxProps,
-    Tooltip,
-    Typography,
-    useTheme,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
+import { ClickAwayListener } from '@mui/material/ClickAwayListener/ClickAwayListener';
+import ListItem from '@mui/material/ListItem/ListItem';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import MenuList from '@mui/material/MenuList/MenuList';
+import Popover from '@mui/material/Popover/Popover';
+import useTheme from '@mui/material/styles/useTheme';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';

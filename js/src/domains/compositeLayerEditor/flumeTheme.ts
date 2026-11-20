@@ -1,4 +1,5 @@
-import { alpha, Theme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import type { Theme } from '@mui/material/styles';
 
 /**
  * Flume comments only allow one of eight fixed colour slots. We remap those slots onto our

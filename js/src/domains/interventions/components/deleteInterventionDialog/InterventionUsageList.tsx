@@ -1,7 +1,9 @@
 import React, { FC } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Link, Stack, Typography } from '@mui/material';
+import Link from '@mui/material/Link/Link';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ColorDot } from '../../../../components/ColorDot';

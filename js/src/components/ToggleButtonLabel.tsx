@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import { Box, SvgIconProps } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
 import { SxStyles } from 'Iaso/types/general';
 
 const styles = {

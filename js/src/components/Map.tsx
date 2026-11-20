@@ -1,5 +1,5 @@
 import React, { FC, useMemo, useState } from 'react';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { alpha } from '@mui/material/styles';
 import L from 'leaflet';
 import { MapContainer, ZoomControl, Pane } from 'react-leaflet';

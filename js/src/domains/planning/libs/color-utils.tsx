@@ -1,6 +1,6 @@
-import { hslToRgb } from '@mui/material';
 import { amber, blue, blueGrey, deepPurple, pink } from '@mui/material/colors';
 
+import { hslToRgb } from '@mui/system/colorManipulator';
 import Color from 'color';
 import { sample } from 'lodash';
 

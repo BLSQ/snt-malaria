@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     CartesianGrid,

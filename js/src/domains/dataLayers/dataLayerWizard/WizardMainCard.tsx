@@ -1,5 +1,6 @@
 import React, { FC, ReactNode } from 'react';
-import { Card, Stack } from '@mui/material';
+import Card from '@mui/material/Card/Card';
+import Stack from '@mui/material/Stack/Stack';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
 

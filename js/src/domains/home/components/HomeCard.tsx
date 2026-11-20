@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
-import { Box, Link, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Link from '@mui/material/Link/Link';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { Link as RouterLink } from 'react-router-dom';
 import { SxStyles } from 'Iaso/types/general';

@@ -1,6 +1,8 @@
 import React, { FC } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { Box, Card, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Card from '@mui/material/Card/Card';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     ChatMessage,

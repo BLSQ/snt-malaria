@@ -1,6 +1,8 @@
 import React, { FunctionComponent, useEffect } from 'react';
 
-import { Box, LinearProgress, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import LinearProgress from '@mui/material/LinearProgress/LinearProgress';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { MessageDescriptor } from 'react-intl';
 

@@ -1,6 +1,8 @@
 import React, { FC, ReactNode } from 'react';
-import { ArrowBack } from '@mui/icons-material';
-import { Box, Link, Typography } from '@mui/material';
+import ArrowBack from '@mui/icons-material/ArrowBack';
+import Box from '@mui/material/Box/Box';
+import Link from '@mui/material/Link/Link';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { Link as RouterLink } from 'react-router-dom';
 import TopBar from 'Iaso/components/nav/TopBarComponent';

@@ -1,6 +1,8 @@
 import React, { ComponentType, FC } from 'react';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Box, SvgIconProps, Tooltip } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../domains/messages';

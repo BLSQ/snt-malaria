@@ -1,6 +1,10 @@
 import React, { FC, MouseEvent, ReactNode, Ref, useCallback } from 'react';
-import { Check, Close, ExpandMore, Remove } from '@mui/icons-material';
-import { Box, Tooltip } from '@mui/material';
+import Check from '@mui/icons-material/Check';
+import Close from '@mui/icons-material/Close';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import Remove from '@mui/icons-material/Remove';
+import Box from '@mui/material/Box/Box';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { SxStyles } from 'Iaso/types/general';
 import { OrgUnitTreeNode, TreeCheckState } from './types';
 

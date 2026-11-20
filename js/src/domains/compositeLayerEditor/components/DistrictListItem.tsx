@@ -1,10 +1,8 @@
 import React, { FC } from 'react';
-import {
-    Checkbox,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-} from '@mui/material';
+import Checkbox from '@mui/material/Checkbox/Checkbox';
+import ListItemButton from '@mui/material/ListItemButton/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText/ListItemText';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 
 type Props = {

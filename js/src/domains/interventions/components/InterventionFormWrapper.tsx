@@ -1,7 +1,9 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Button, Stack, Typography } from '@mui/material';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { setNestedObjectValues } from 'formik';
 import { CardStyled } from '../../../components/CardStyled';

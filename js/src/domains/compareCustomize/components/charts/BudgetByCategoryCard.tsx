@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react';
 import PieChartOutlinedIcon from '@mui/icons-material/PieChartOutlined';
-import { Box, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     Cell,

@@ -2,19 +2,17 @@ import React, { FC, MouseEvent, useCallback } from 'react';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CloseIcon from '@mui/icons-material/Close';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import {
-    FormControl,
-    IconButton,
-    InputAdornment,
-    ListSubheader,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
-    SelectProps,
-    Theme,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import FormControl from '@mui/material/FormControl/FormControl';
+import IconButton from '@mui/material/IconButton/IconButton';
+import InputAdornment from '@mui/material/InputAdornment/InputAdornment';
+import ListSubheader from '@mui/material/ListSubheader/ListSubheader';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import type { SelectProps } from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
+import type { Theme } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 

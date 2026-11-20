@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import { Box, Link } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Link from '@mui/material/Link/Link';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Partner } from '../../../constants/contributors';

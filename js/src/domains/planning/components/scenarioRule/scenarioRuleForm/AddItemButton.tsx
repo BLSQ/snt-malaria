@@ -1,6 +1,10 @@
 import React, { FC, useCallback, useMemo, useRef, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { Box, Button, MenuItem, Popover, alpha } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Popover from '@mui/material/Popover/Popover';
+import { alpha } from '@mui/material/styles';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import {

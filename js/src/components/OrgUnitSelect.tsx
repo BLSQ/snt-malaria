@@ -1,5 +1,7 @@
 import React, { FC, useState } from 'react';
-import { MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';

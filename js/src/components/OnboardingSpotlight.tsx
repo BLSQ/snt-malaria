@@ -8,8 +8,12 @@ import React, {
 } from 'react';
 
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { Box, Button, Paper, Popper, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import Paper from '@mui/material/Paper/Paper';
 import { PopperProps } from '@mui/material/Popper';
+import Popper from '@mui/material/Popper/Popper';
+import Typography from '@mui/material/Typography/Typography';
 import { Instance as PopperInstance } from '@popperjs/core';
 
 import { SxStyles } from 'Iaso/types/general';

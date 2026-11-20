@@ -10,7 +10,11 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import { InputBase, SxProps, Theme, Tooltip, Typography } from '@mui/material';
+import InputBase from '@mui/material/InputBase/InputBase';
+import type { Theme } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../constants/overrideColors';
 import { formatBigNumber } from '../domains/planning/libs/cost-utils';

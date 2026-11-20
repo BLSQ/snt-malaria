@@ -1,5 +1,8 @@
 import React, { FC, useCallback } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';

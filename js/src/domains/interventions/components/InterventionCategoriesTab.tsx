@@ -1,7 +1,9 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { CategoryOutlined } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
-import { Button, Stack, Typography } from '@mui/material';
+import CategoryOutlined from '@mui/icons-material/CategoryOutlined';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../components/CardStyled';
 import { IconBoxed } from '../../../components/IconBoxed';

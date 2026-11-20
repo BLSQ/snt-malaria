@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { MapOutlined } from '@mui/icons-material';
-import { Box } from '@mui/material';
+import MapOutlined from '@mui/icons-material/MapOutlined';
+import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';

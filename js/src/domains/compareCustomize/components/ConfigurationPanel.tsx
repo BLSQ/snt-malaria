@@ -1,9 +1,12 @@
 import React, { FC, ReactNode, useMemo, useState } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RemoveOutlinedIcon from '@mui/icons-material/RemoveOutlined';
-import { Box, IconButton, Theme, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { blueGrey } from '@mui/material/colors';
-import { SystemStyleObject } from '@mui/system';
+import IconButton from '@mui/material/IconButton/IconButton';
+import type { Theme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography/Typography';
+import { SystemStyleObject } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';

@@ -1,6 +1,10 @@
 import React, { FC } from 'react';
 import SchemaIcon from '@mui/icons-material/Schema';
-import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import Button from '@mui/material/Button/Button';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Stack from '@mui/material/Stack/Stack';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../messages';
 

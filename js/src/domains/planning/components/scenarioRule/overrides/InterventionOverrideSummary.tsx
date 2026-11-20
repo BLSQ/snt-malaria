@@ -11,14 +11,12 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UndoIcon from '@mui/icons-material/Undo';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
-import {
-    Box,
-    Button,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { HighlightChip } from '../../../../../components/HighlightChip';

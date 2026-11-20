@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react';
-import { Inventory2Outlined } from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
+import Box from '@mui/material/Box/Box';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { pluralize } from '../../../../utils/pluralize';

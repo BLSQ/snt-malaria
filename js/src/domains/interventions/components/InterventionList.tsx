@@ -1,5 +1,9 @@
 import React, { FC } from 'react';
-import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import List from '@mui/material/List/List';
+import ListItem from '@mui/material/ListItem/ListItem';
+import ListItemText from '@mui/material/ListItemText/ListItemText';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 import { Intervention, InterventionCategory } from '../types';
 
