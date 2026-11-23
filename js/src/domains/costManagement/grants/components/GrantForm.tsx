@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import { Stack, TextField } from '@mui/material';
+import Stack from '@mui/material/Stack/Stack';
+import TextField from '@mui/material/TextField/TextField';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';

@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import { Box, Stack } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Stack from '@mui/material/Stack/Stack';
 import { SxStyles } from 'Iaso/types/general';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
 import { DataLayerMapWrapper } from '../dataLayerMap/DataLayerMapWrapper';

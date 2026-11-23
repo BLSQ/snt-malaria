@@ -1,15 +1,13 @@
 import React, { FC, ReactNode, useCallback } from 'react';
 import LayersIcon from '@mui/icons-material/Layers';
-import {
-    Box,
-    Button,
-    Card,
-    Divider,
-    Stack,
-    Tab,
-    Tabs,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import Card from '@mui/material/Card/Card';
+import Divider from '@mui/material/Divider/Divider';
+import Stack from '@mui/material/Stack/Stack';
+import Tab from '@mui/material/Tab/Tab';
+import Tabs from '@mui/material/Tabs/Tabs';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

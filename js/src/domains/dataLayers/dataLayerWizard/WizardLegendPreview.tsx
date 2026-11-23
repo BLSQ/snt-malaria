@@ -1,5 +1,8 @@
 import React, { FC, useMemo } from 'react';
-import { MenuItem, Select, Stack, Typography } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { usePreviewYearSelection } from '../../compositeLayerEditor/hooks/usePreviewYearSelection';

@@ -1,5 +1,7 @@
 import React, { FC, useMemo } from 'react';
-import { Box, Palette, useTheme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import { Palette } from '@mui/material/styles/createPalette';
+import useTheme from '@mui/material/styles/useTheme';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { OrgUnitTreeRow } from '../../../../../../components/orgUnitTree/OrgUnitTreeRow';

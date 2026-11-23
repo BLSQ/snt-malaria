@@ -1,7 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Button, Collapse, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import Collapse from '@mui/material/Collapse/Collapse';
+import Typography from '@mui/material/Typography/Typography';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { useFormikContext } from 'formik';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';

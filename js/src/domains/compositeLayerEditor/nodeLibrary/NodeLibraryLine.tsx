@@ -1,5 +1,8 @@
 import React, { FC, useCallback } from 'react';
-import { Box, ListItem, Typography, useTheme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import ListItem from '@mui/material/ListItem/ListItem';
+import type { useTheme } from '@mui/material/styles/useTheme';
+import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
 import { COMPOSITE_NODE_TYPE_DND_MIME } from '../dragAndDrop';
 import { NodeLibraryItem } from './nodeLibraryGroups';

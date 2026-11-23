@@ -1,13 +1,11 @@
 import React, { FC, useCallback } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {
-    Box,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
-    Tooltip,
-    alpha,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
+import { alpha } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';

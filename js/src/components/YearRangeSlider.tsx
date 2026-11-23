@@ -1,5 +1,6 @@
 import React, { FC, useMemo } from 'react';
-import { Box, Slider } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Slider from '@mui/material/Slider/Slider';
 import { SxStyles } from 'Iaso/types/general';
 
 type Props = {

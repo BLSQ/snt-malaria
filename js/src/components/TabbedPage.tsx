@@ -1,6 +1,8 @@
 import React, { FC, useMemo } from 'react';
-import { SvgIconComponent } from '@mui/icons-material';
-import { Box, Tab, Tabs } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import SvgIcon from '@mui/material/SvgIcon';
+import Tab from '@mui/material/Tab/Tab';
+import Tabs from '@mui/material/Tabs/Tabs';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { useQueryParamTab } from '../hooks/useQueryParamTab';
@@ -9,7 +11,7 @@ import { PageContainer } from './styledComponents';
 export type TabbedPageTab = {
     value: string;
     label: string;
-    Icon: SvgIconComponent;
+    Icon: typeof SvgIcon;
     Content: FC;
 };
 

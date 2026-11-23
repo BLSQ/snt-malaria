@@ -1,13 +1,11 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
-import {
-    Box,
-    Slider,
-    ToggleButton,
-    ToggleButtonGroup,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Slider from '@mui/material/Slider/Slider';
+import ToggleButton from '@mui/material/ToggleButton/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup/ToggleButtonGroup';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ToggleButtonLabel } from '../../../components/ToggleButtonLabel';

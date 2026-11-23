@@ -1,12 +1,10 @@
 import React, { FC } from 'react';
-import {
-    Box,
-    Checkbox,
-    FormControlLabel,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Checkbox from '@mui/material/Checkbox/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel/FormControlLabel';
+import Stack from '@mui/material/Stack/Stack';
+import TextField from '@mui/material/TextField/TextField';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';

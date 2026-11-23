@@ -6,7 +6,7 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
-import { List } from '@mui/material';
+import List from '@mui/material/List/List';
 import { useSafeIntl } from 'bluesquare-components';
 import { StickyListSubheader } from '../../../components/styledComponents';
 import { DataLayerLine } from '../../dataLayers/dataLayerList/DataLayerLine';

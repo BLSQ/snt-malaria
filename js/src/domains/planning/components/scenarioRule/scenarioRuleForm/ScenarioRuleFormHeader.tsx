@@ -1,6 +1,8 @@
 import React, { FC } from 'react';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { Button, Stack, Typography } from '@mui/material';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 
@@ -22,25 +24,21 @@ export const ScenarioRuleFormHeader: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     return (
         <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-            >
-                <IconButton
-                    onClick={onCancel}
-                    overrideIcon={ChevronLeftIcon}
-                    tooltipMessage={MESSAGES.cancel}
-                />
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                    {title}
-                </Typography>
-                <Button
-                    onClick={onSubmit}
-                    variant="contained"
-                    disabled={disabled}
-                >
-                    {submitLabel ?? formatMessage(MESSAGES.submit)}
-                </Button>
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+        >
+            <IconButton
+                onClick={onCancel}
+                overrideIcon={ChevronLeftIcon}
+                tooltipMessage={MESSAGES.cancel}
+            />
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                {title}
+            </Typography>
+            <Button onClick={onSubmit} variant="contained" disabled={disabled}>
+                {submitLabel ?? formatMessage(MESSAGES.submit)}
+            </Button>
         </Stack>
     );
 };

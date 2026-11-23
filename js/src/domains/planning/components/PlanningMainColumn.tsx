@@ -1,5 +1,6 @@
 import React, { FC, ReactElement, ReactNode } from 'react';
-import { Box, Card } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Card from '@mui/material/Card/Card';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
 import { PaperFullHeight } from '../../../components/styledComponents';

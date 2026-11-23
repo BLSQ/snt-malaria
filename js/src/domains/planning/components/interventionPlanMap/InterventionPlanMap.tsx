@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { LayerSelect } from '../../../../components/LayerSelect';

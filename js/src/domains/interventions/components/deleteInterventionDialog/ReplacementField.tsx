@@ -1,5 +1,5 @@
 import React, { FC, useCallback } from 'react';
-import { Typography } from '@mui/material';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { numericValues } from 'Iaso/domains/instances/utils/intl';

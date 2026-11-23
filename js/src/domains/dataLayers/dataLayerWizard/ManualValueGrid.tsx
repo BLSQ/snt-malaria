@@ -3,22 +3,20 @@ import AddIcon from '@mui/icons-material/Add';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import {
-    Box,
-    IconButton,
-    MenuItem,
-    Select,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import IconButton from '@mui/material/IconButton/IconButton';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import Stack from '@mui/material/Stack/Stack';
+import Table from '@mui/material/Table/Table';
+import TableBody from '@mui/material/TableBody/TableBody';
+import TableCell from '@mui/material/TableCell/TableCell';
+import TableContainer from '@mui/material/TableContainer/TableContainer';
+import TableHead from '@mui/material/TableHead/TableHead';
+import TableRow from '@mui/material/TableRow/TableRow';
+import TextField from '@mui/material/TextField/TextField';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

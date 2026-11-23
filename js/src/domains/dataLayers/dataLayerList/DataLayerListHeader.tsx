@@ -1,7 +1,12 @@
 import React, { FC, Ref } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import LayersIcon from '@mui/icons-material/Layers';
-import { Box, Link, MenuItem, Stack, SxProps, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Link from '@mui/material/Link/Link';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import * as CorePermission from 'Iaso/utils/permissions';

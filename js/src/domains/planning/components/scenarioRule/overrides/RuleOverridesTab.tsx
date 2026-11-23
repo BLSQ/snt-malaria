@@ -1,7 +1,9 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import UndoIcon from '@mui/icons-material/Undo';
-import { Box, Button, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { EmptyPlaceholder } from '../../../../../components/EmptyPlaceholder';

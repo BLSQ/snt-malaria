@@ -2,15 +2,13 @@ import React, { FC, useMemo } from 'react';
 import GroupsIcon from '@mui/icons-material/Groups';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import NumbersIcon from '@mui/icons-material/Numbers';
-import {
-    Box,
-    IconButton,
-    Stack,
-    TableCell,
-    TableRow,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Stack from '@mui/material/Stack/Stack';
+import TableCell from '@mui/material/TableCell/TableCell';
+import TableRow from '@mui/material/TableRow/TableRow';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { pluralize } from '../../../../utils/pluralize';

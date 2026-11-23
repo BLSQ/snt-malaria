@@ -1,5 +1,7 @@
 import React, { FC, ReactNode, useMemo } from 'react';
-import { CardContent, CardHeader, SxProps } from '@mui/material';
+import CardContent from '@mui/material/CardContent/CardContent';
+import CardHeader from '@mui/material/CardHeader/CardHeader';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 

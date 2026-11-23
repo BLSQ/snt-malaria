@@ -1,6 +1,8 @@
 import React, { FC, useMemo, useState } from 'react';
-import { BubbleChartOutlined } from '@mui/icons-material';
-import { Box, Typography, useTheme } from '@mui/material';
+import BubbleChartOutlined from '@mui/icons-material/BubbleChartOutlined';
+import Box from '@mui/material/Box/Box';
+import type { useTheme } from '@mui/material/styles/useTheme';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     CartesianGrid,

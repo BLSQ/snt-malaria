@@ -1,6 +1,10 @@
 import React, { FC, MouseEvent, ReactNode, useCallback, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, SvgIconProps, Tooltip, Typography, alpha } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import { alpha } from '@mui/material/styles';
+import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import {

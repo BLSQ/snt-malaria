@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Stack } from '@mui/material';
+import Stack from '@mui/material/Stack/Stack';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { MetricType } from '../../dataLayers/types/metrics';
 import { MESSAGES } from '../../messages';

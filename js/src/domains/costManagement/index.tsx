@@ -1,10 +1,8 @@
 import React, { FC, useMemo } from 'react';
-import {
-    AccountBalanceOutlined,
-    RequestQuoteOutlined,
-    SettingsOutlined,
-    StraightenOutlined,
-} from '@mui/icons-material';
+import AccountBalanceOutlined from '@mui/icons-material/AccountBalanceOutlined';
+import RequestQuoteOutlined from '@mui/icons-material/RequestQuoteOutlined';
+import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
+import StraightenOutlined from '@mui/icons-material/StraightenOutlined';
 import { useSafeIntl } from 'bluesquare-components';
 import { TabbedPage, TabbedPageTab } from '../../components/TabbedPage';
 import { MESSAGES } from '../messages';

@@ -2,7 +2,8 @@ import React, { FunctionComponent, Fragment } from 'react';
 
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Typography from '@mui/material/Typography/Typography';
 
 import { SxStyles } from 'Iaso/types/general';
 

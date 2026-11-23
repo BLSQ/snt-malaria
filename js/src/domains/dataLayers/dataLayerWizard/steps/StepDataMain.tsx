@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { Typography } from '@mui/material';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { MESSAGES } from '../../messages';

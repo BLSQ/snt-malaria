@@ -1,7 +1,10 @@
 import React, { FC, MouseEvent, useCallback, useState } from 'react';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
-import { Box, ButtonBase, Menu, MenuItem } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import ButtonBase from '@mui/material/ButtonBase/ButtonBase';
+import Menu from '@mui/material/Menu/Menu';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../../../../constants/overrideColors';

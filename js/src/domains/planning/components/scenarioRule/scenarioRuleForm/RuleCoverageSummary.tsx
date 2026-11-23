@@ -1,7 +1,9 @@
 import React, { FC, useMemo } from 'react';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
-import { Box, Stack, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DelayedLoadingSpinner } from '../../../../../components/DelayedLoadingSpinner';

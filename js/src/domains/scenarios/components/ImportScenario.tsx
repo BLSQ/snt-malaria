@@ -1,6 +1,7 @@
 import React, { FunctionComponent, useCallback, useState } from 'react';
 import { FC } from 'react';
-import { Box, MenuItem } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
 import {
     ConfirmCancelModal,
     FilesUpload,

@@ -7,15 +7,13 @@ import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
-import {
-    Box,
-    Divider,
-    MenuItem,
-    Stack,
-    ToggleButton,
-    ToggleButtonGroup,
-} from '@mui/material';
-import { Link as MuiLink } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Divider from '@mui/material/Divider/Divider';
+import MuiLink from '@mui/material/Link/Link';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Stack from '@mui/material/Stack/Stack';
+import ToggleButton from '@mui/material/ToggleButton/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup/ToggleButtonGroup';
 import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';

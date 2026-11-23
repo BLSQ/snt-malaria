@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Button, MenuItem } from '@mui/material';
+import Button from '@mui/material/Button/Button';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
 import {
     ConfirmCancelModal,
     IntlMessage,

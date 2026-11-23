@@ -1,7 +1,11 @@
 import React, { ReactNode } from 'react';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Box, MenuItem, Select, Tooltip, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { blueGrey } from '@mui/material/colors';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 

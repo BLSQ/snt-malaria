@@ -1,5 +1,6 @@
 import React, { FC, useCallback } from 'react';
-import { Box, Tooltip } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../../../../../constants/overrideColors';

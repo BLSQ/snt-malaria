@@ -1,14 +1,12 @@
 import React, { FC, Fragment, useCallback, useMemo } from 'react';
-import {
-    Box,
-    Button,
-    ClickAwayListener,
-    ListSubheader,
-    MenuItem,
-    MenuList,
-    Popover,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import { ClickAwayListener } from '@mui/material/ClickAwayListener/ClickAwayListener';
+import ListSubheader from '@mui/material/ListSubheader/ListSubheader';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import MenuList from '@mui/material/MenuList/MenuList';
+import Popover from '@mui/material/Popover/Popover';
+import Typography from '@mui/material/Typography/Typography';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 
 type Props = {

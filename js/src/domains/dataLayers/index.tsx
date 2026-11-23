@@ -8,7 +8,8 @@ import React, {
 } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import LayersIcon from '@mui/icons-material/Layers';
-import { Card, Stack } from '@mui/material';
+import Card from '@mui/material/Card/Card';
+import Stack from '@mui/material/Stack/Stack';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useGetPipelineConfig } from 'Iaso/domains/openHexa/hooks/useGetPipelineConfig';

@@ -1,6 +1,8 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Box, Grid, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Grid from '@mui/material/Grid/Grid';
+import Typography from '@mui/material/Typography/Typography';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';

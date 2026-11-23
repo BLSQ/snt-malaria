@@ -1,5 +1,7 @@
 import React, { FC, useCallback } from 'react';
-import { Box, Link, Typography } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Link from '@mui/material/Link/Link';
+import Typography from '@mui/material/Typography/Typography';
 import { FilesUpload, useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

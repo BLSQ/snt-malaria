@@ -1,5 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Box, Theme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import type { Theme } from '@mui/material/styles';
 
 import { SxStyles } from 'Iaso/types/general';
 import { ScaleDomainRange } from '../../../dataLayers/types/metrics';

@@ -1,16 +1,14 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
-import {
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableFooter,
-    TableHead,
-    TableRow,
-    Typography,
-} from '@mui/material';
+import Paper from '@mui/material/Paper/Paper';
+import Table from '@mui/material/Table/Table';
+import TableBody from '@mui/material/TableBody/TableBody';
+import TableCell from '@mui/material/TableCell/TableCell';
+import TableContainer from '@mui/material/TableContainer/TableContainer';
+import TableFooter from '@mui/material/TableFooter/TableFooter';
+import TableHead from '@mui/material/TableHead/TableHead';
+import TableRow from '@mui/material/TableRow/TableRow';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { EmptyPlaceholder } from '../../../../components/EmptyPlaceholder';

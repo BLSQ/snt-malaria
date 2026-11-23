@@ -1,7 +1,10 @@
 import React, { ChangeEvent, FC, useCallback } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, ButtonBase, SxProps, Theme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import ButtonBase from '@mui/material/ButtonBase/ButtonBase';
+import type { Theme } from '@mui/material/styles';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';

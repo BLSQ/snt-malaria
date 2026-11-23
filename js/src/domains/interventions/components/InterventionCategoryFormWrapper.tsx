@@ -1,7 +1,9 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { Button, Stack, Typography } from '@mui/material';
+import Button from '@mui/material/Button/Button';
+import Stack from '@mui/material/Stack/Stack';
+import Typography from '@mui/material/Typography/Typography';
 import { makeFullModal, useSafeIntl } from 'bluesquare-components';
 import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { CardStyled } from '../../../components/CardStyled';

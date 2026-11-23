@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';

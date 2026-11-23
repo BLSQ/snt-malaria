@@ -3,15 +3,13 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NumbersIcon from '@mui/icons-material/Numbers';
-import {
-    Box,
-    IconButton,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import IconButton from '@mui/material/IconButton/IconButton';
+import MenuItem from '@mui/material/MenuItem/MenuItem';
+import Select from '@mui/material/Select/Select';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { getCurrencyAffixes, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DropdownOptions } from 'Iaso/types/utils';

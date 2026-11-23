@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Tooltip, Typography } from '@mui/material';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import {

@@ -1,5 +1,7 @@
 import React, { FC, ReactNode } from 'react';
-import { Box, Card, CardHeader } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Card from '@mui/material/Card/Card';
+import CardHeader from '@mui/material/CardHeader/CardHeader';
 import { SxStyles } from 'Iaso/types/general';
 import { hasFeatureFlag, IMPACT } from 'Iaso/utils/featureFlags';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';

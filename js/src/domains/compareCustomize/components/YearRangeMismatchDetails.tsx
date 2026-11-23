@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Typography } from '@mui/material';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ColorDot } from '../../../components/ColorDot';

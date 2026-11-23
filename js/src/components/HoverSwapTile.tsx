@@ -1,5 +1,9 @@
 import React, { FC, MouseEvent, ReactNode, useMemo } from 'react';
-import { Box, IconButton, SxProps, Theme, Tooltip } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import IconButton from '@mui/material/IconButton/IconButton';
+import type { Theme } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip/Tooltip';
+import type { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { SxStyles } from 'Iaso/types/general';
 
 const TILE_CLASS = 'hoverSwapTile-tile';

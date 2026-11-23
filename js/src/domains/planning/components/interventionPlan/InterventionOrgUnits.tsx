@@ -1,12 +1,10 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
-import {
-    Box,
-    Button,
-    InputAdornment,
-    TextField,
-    Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Button from '@mui/material/Button/Button';
+import InputAdornment from '@mui/material/InputAdornment/InputAdornment';
+import TextField from '@mui/material/TextField/TextField';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
