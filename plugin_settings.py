@@ -3,7 +3,9 @@ import os
 
 INSTALLED_APPS = ["plugins.snt_malaria"]
 CONSTANTS = {
-    "LOGO_PATH": "",
+    "LOGO_PATH": "snt_malaria/images/logo-full.png",
+    "FAVICON_PATH": "snt_malaria/images/favicon.png",
+    "SHOW_NAME_WITH_LOGO": "no",
     "APP_TITLE": "SNT Malaria",
     "HIDE_BASIC_NAV_ITEMS": "yes",
     # Keep in sync with primaryMain in js/src/constants/theme.ts: Django auth pages can't read the JS theme.
