@@ -9,7 +9,7 @@ import React, {
 import CloudOff from '@mui/icons-material/CloudOff';
 import Box from '@mui/material/Box/Box';
 import Button from '@mui/material/Button/Button';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';

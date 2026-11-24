@@ -11,7 +11,7 @@ import Box from '@mui/material/Box/Box';
 import Card from '@mui/material/Card/Card';
 import GlobalStyles from '@mui/material/GlobalStyles/GlobalStyles';
 import type { Theme } from '@mui/material/styles';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { NodeEditor, FlumeCommentMap, FlumeNodes } from 'flume';

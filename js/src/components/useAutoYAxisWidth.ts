@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 
 // TODO(recharts upgrade): this whole helper exists only because recharts v2's
 // <YAxis> needs a numeric `width` and SVG text can't size itself via CSS. From

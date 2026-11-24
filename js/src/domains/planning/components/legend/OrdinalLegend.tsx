@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
 import { scaleOrdinal } from '@visx/scale';
 import { ScaleDomainRange } from '../../../dataLayers/types/metrics';

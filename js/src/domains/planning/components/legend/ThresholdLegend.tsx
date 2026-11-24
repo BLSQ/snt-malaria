@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
 
 import { DefaultThresholdInput } from '@visx/scale';

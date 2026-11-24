@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react';
 import AccountBalanceOutlined from '@mui/icons-material/AccountBalanceOutlined';
 import Box from '@mui/material/Box/Box';
 import { blueGrey, red } from '@mui/material/colors';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 import Typography from '@mui/material/Typography/Typography';
 import { formatCurrencyAmount, useSafeIntl } from 'bluesquare-components';
 import {
