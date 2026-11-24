@@ -6,13 +6,13 @@ import React, {
     useRef,
 } from 'react';
 import Box from '@mui/material/Box/Box';
+import Grow from '@mui/material/Grow/Grow';
 import useTheme from '@mui/material/styles/useTheme';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { SxStyles } from 'Iaso/types/general';
 import { MainColumn, SidebarColumn, SidebarLayout } from '../styledComponents';
 import {
-    CLOSE_MS,
     LIFT_MS,
-    OPEN_MS,
     PANEL_GAP,
     PANEL_WIDTH,
     FALLBACK_TOGGLE_Z_INDEX,
@@ -27,7 +27,6 @@ const LIFTED_SHADOW =
     'drop-shadow(0 12px 24px rgba(31,43,61,0.22)) drop-shadow(0 2px 6px rgba(31,43,61,0.12))';
 const FLAT_SHADOW =
     'drop-shadow(0 0 0 rgba(31,43,61,0)) drop-shadow(0 0 0 rgba(31,43,61,0))';
-const OPEN_CLIP = 'inset(0px 0px 0px 0px round 16px)';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
 const noMotion = { [`@media ${REDUCED_MOTION}`]: { transition: 'none' } };
@@ -69,10 +68,6 @@ const styles = {
         minHeight: 0,
         ...noMotion,
     },
-    clipLayer: {
-        borderRadius: '16px',
-        overflow: 'hidden',
-    },
     main: {
         position: 'relative',
         flex: 1,
@@ -92,13 +87,10 @@ const styles = {
     },
 } satisfies SxStyles;
 
-const closedClip = (origin: ToggleOrigin | null): string => {
-    if (!origin) {
-        return 'inset(0px 100% 100% 0px round 4px)';
-    }
-    const { top, left, width, height } = origin;
-    return `inset(${top}px calc(100% - ${left + width}px) calc(100% - ${top + height}px) ${left}px round 4px)`;
-};
+const transformOriginAt = (origin: ToggleOrigin | null): string =>
+    origin
+        ? `${origin.left + origin.width / 2}px ${origin.top + origin.height / 2}px`
+        : '0 0';
 
 const prefersReducedMotion = (): boolean =>
     window.matchMedia?.(REDUCED_MOTION).matches ?? false;
@@ -167,7 +159,13 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
     } = useSidePanelContext();
     const { transitions } = useTheme();
     const easing = transitions.easing.easeInOut;
-    const { easeOut, easeIn } = transitions.easing;
+    const isReducedMotion = useMediaQuery(REDUCED_MOTION);
+    const growTimeout = isReducedMotion
+        ? 0
+        : {
+              enter: transitions.duration.enteringScreen,
+              exit: transitions.duration.leavingScreen,
+          };
 
     const isDocked = mode === 'docked';
     const isOpen = isDocked || floating !== 'closed';
@@ -216,9 +214,7 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
                             styles.panel,
                             {
                                 height: hugsContent ? 'auto' : '100%',
-                                visibility: isOpen ? 'visible' : 'hidden',
                                 pointerEvents: isOpen ? 'auto' : 'none',
-                                transition: `visibility 0ms linear ${isOpen ? 0 : CLOSE_MS}ms`,
                             },
                         ]}
                     >
@@ -234,35 +230,17 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
                                 },
                             ]}
                         >
-                            <Box
-                                sx={[
-                                    styles.layer,
-                                    styles.clipLayer,
-                                    {
-                                        clipPath: isOpen
-                                            ? OPEN_CLIP
-                                            : closedClip(toggleOrigin),
-                                        opacity: isOpen ? 1 : 0,
-                                        transition: isOpen
-                                            ? `clip-path ${OPEN_MS}ms ${easeOut}, opacity 0ms`
-                                            : `clip-path ${CLOSE_MS}ms ${easeIn}, opacity 60ms linear ${CLOSE_MS - 60}ms`,
-                                    },
-                                ]}
+                            <Grow
+                                in={isOpen}
+                                appear={false}
+                                timeout={growTimeout}
+                                style={{
+                                    transformOrigin:
+                                        transformOriginAt(toggleOrigin),
+                                }}
                             >
-                                <Box
-                                    sx={[
-                                        styles.layer,
-                                        {
-                                            opacity: isOpen ? 1 : 0,
-                                            transition: isOpen
-                                                ? `opacity 160ms linear ${OPEN_MS / 2}ms`
-                                                : 'opacity 100ms linear',
-                                        },
-                                    ]}
-                                >
-                                    {panel}
-                                </Box>
-                            </Box>
+                                <Box sx={styles.layer}>{panel}</Box>
+                            </Grow>
                         </Box>
                     </Box>
                 </Box>
