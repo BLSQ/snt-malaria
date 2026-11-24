@@ -5,7 +5,7 @@ import Box from '@mui/material/Box/Box';
 import Button from '@mui/material/Button/Button';
 import type { Theme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
-import type { useTheme } from '@mui/material/styles/useTheme';
+import useTheme from '@mui/material/styles/useTheme';
 import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { createPortal } from 'react-dom';
