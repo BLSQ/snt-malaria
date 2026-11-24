@@ -25,10 +25,12 @@ import {
 } from '../domains/planning/libs/map-utils';
 import { FitBounds } from './FitBounds';
 import {
+    GetMapHoverCardActions,
     MapHover,
     MapHoverCard,
     MapHoverCardHandle,
 } from './hoverCard/MapHoverCard';
+import { MapHoverCardEvents } from './hoverCard/MapHoverCardEvents';
 import { InvalidateOnResize } from './InvalidateOnResize';
 import { MapGeoJSON } from './MapGeoJSON';
 import { MapTypeLayer } from './MapTyleLayer';
@@ -100,6 +102,8 @@ type Props = {
     /** Body of the hover card; defaults to the org unit's map label. */
     getTooltipContent?: (orgUnit: OrgUnit) => ReactNode;
     getTooltipHeaderExtra?: (orgUnit: OrgUnit) => ReactNode;
+    /** What a click on an org unit does, announced in the hover card. */
+    getTooltipActions?: GetMapHoverCardActions;
     legendConfig?: {
         units: string;
         legend_type: string; //'linear' | 'ordinal' | 'threshold';
@@ -137,6 +141,7 @@ export const Map: FC<Props> = ({
     dataKey,
     border = false,
     getTooltipContent,
+    getTooltipActions,
     getTooltipHeaderExtra,
     hideControls = false,
     disableInteractions = false,
@@ -189,11 +194,30 @@ export const Map: FC<Props> = ({
         [selectedOrgUnitIds],
     );
 
+    const fillColorById = useMemo(
+        () =>
+            Object.fromEntries(
+                leafOrgUnits.map(orgUnit => [
+                    orgUnit.id,
+                    getOrgUnitMapMisc(orgUnit.id).color,
+                ]),
+            ),
+        [leafOrgUnits, getOrgUnitMapMisc],
+    );
+
     const [map, setMap] = useState<L.Map | null>(null);
     const hoverCardRef = useRef<MapHoverCardHandle>(null);
     const handleOrgUnitHover = useCallback(
         (hover: MapHover | null) => hoverCardRef.current?.update(hover),
         [],
+    );
+    const [pinnedOrgUnitId, setPinnedOrgUnitId] = useState<number>();
+    const handleOrgUnitClick = useCallback(
+        (hover: MapHover) => {
+            hoverCardRef.current?.click(hover);
+            onOrgUnitClick(hover.orgUnit.id);
+        },
+        [onOrgUnitClick],
     );
     const getCountryRect = useCallback(() => {
         if (!map || !bounds) return undefined;
@@ -220,6 +244,16 @@ export const Map: FC<Props> = ({
         [getTooltipContent, getOrgUnitMapMisc],
     );
 
+    const hasClickAction = useMemo(
+        () =>
+            getTooltipActions &&
+            ((orgUnit: OrgUnit) => {
+                const actions = getTooltipActions(orgUnit);
+                return Boolean(actions.onClick || actions.expansion);
+            }),
+        [getTooltipActions],
+    );
+
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
             <MapContainer
@@ -244,6 +278,10 @@ export const Map: FC<Props> = ({
                 zoomDelta={defaultZoomDelta}
             >
                 <MapTypeLayer />
+                <MapHoverCardEvents
+                    hoverCardRef={hoverCardRef}
+                    shapes={leafOrgUnits}
+                />
                 <InvalidateOnResize
                     bounds={bounds}
                     boundsOptions={boundsOptions}
@@ -264,15 +302,18 @@ export const Map: FC<Props> = ({
                             key={orgUnit.id}
                             dataKey={dataKey}
                             orgUnit={orgUnit}
-                            orgUnitMapMisc={getOrgUnitMapMisc(orgUnit.id)}
-                            defaultColor={defaultColor}
+                            fillColor={
+                                fillColorById[orgUnit.id] ?? defaultColor
+                            }
                             isSelected={selectedIds?.has(orgUnit.id)}
-                            onOrgUnitClick={onOrgUnitClick}
+                            isPinned={orgUnit.id === pinnedOrgUnitId}
+                            onOrgUnitClick={handleOrgUnitClick}
                             onOrgUnitHover={
                                 disableInteractions
                                     ? undefined
                                     : handleOrgUnitHover
                             }
+                            hasClickAction={hasClickAction}
                         />
                     ))}
                 </Pane>
@@ -284,6 +325,8 @@ export const Map: FC<Props> = ({
                 <MapHoverCard
                     ref={hoverCardRef}
                     getContent={getHoverCardContent}
+                    getActions={getTooltipActions}
+                    onPinChange={setPinnedOrgUnitId}
                     getHeaderExtra={getTooltipHeaderExtra}
                     getCountryRect={getCountryRect}
                 />

@@ -822,6 +822,62 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.tooltipCriterionValueNotSet',
         defaultMessage: 'Criterion value not set',
     },
+    tooltipClose: {
+        id: 'iaso.snt_malaria.label.tooltipClose',
+        defaultMessage: 'Close',
+    },
+    tooltipClickToAddToRule: {
+        id: 'iaso.snt_malaria.label.tooltipClickToAddToRule',
+        defaultMessage: 'Click to add to rule',
+    },
+    tooltipClickToRemoveFromRule: {
+        id: 'iaso.snt_malaria.label.tooltipClickToRemoveFromRule',
+        defaultMessage: 'Click to remove from rule',
+    },
+    tooltipClickToSetThreshold: {
+        id: 'iaso.snt_malaria.label.tooltipClickToSetThreshold',
+        defaultMessage: 'Click to set as threshold',
+    },
+    tooltipClickToSetValue: {
+        id: 'iaso.snt_malaria.label.tooltipClickToSetValue',
+        defaultMessage: 'Click to set to {value}',
+    },
+    tooltipClickToAddCriterion: {
+        id: 'iaso.snt_malaria.label.tooltipClickToAddCriterion',
+        defaultMessage: 'Click to add as criterion',
+    },
+    tooltipUpdateCriterionTo: {
+        id: 'iaso.snt_malaria.label.tooltipUpdateCriterionTo',
+        defaultMessage: 'Update criterion to {value}',
+    },
+    tooltipAddCriterionAt: {
+        id: 'iaso.snt_malaria.label.tooltipAddCriterionAt',
+        defaultMessage: 'Add criterion at {value}',
+    },
+    tooltipCurrent: {
+        id: 'iaso.snt_malaria.label.tooltipCurrent',
+        defaultMessage: 'Current',
+    },
+    tooltipDistrictCount: {
+        id: 'iaso.snt_malaria.label.tooltipDistrictCount',
+        defaultMessage: '{count, plural, one {# district} other {# districts}}',
+    },
+    tooltipClickForImpactDetails: {
+        id: 'iaso.snt_malaria.label.tooltipClickForImpactDetails',
+        defaultMessage: 'Click for impact details',
+    },
+    tooltipImpactComparedToBaseline: {
+        id: 'iaso.snt_malaria.label.tooltipImpactComparedToBaseline',
+        defaultMessage: 'Impact compared to baseline',
+    },
+    tooltipBaselineImpact: {
+        id: 'iaso.snt_malaria.label.tooltipBaselineImpact',
+        defaultMessage: 'Impact in the baseline',
+    },
+    tooltipChange: {
+        id: 'iaso.snt_malaria.label.tooltipChange',
+        defaultMessage: 'Change',
+    },
     clearMapLayer: {
         id: 'iaso.snt_malaria.label.clearMapLayer',
         defaultMessage: 'Clear layer',
@@ -1894,9 +1950,9 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Coverage values set in scenario rules for this item will be reset.',
     },
-    resetMapLayer: {
-        id: 'iaso.snt_malaria.scenarioRule.resetMapLayer',
-        defaultMessage: 'Reset map',
+    showCombinedMap: {
+        id: 'iaso.snt_malaria.scenarioRule.showCombinedMap',
+        defaultMessage: 'Show combined map',
     },
     criterionShowOnMapHint: {
         id: 'iaso.snt_malaria.scenarioRule.criterionShowOnMapHint',

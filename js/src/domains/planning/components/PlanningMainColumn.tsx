@@ -5,7 +5,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
 import { PaperFullHeight } from '../../../components/styledComponents';
 import { usePlanningContext } from '../contexts/PlanningContext';
-import { ScenarioRule } from '../types/scenarioRule';
+import { RuleFormActions, ScenarioRule } from '../types/scenarioRule';
 import { InterventionAssignmentTable } from './assignmentTable/InterventionAssignmentTable';
 import { BudgetTable } from './budgeting/BudgetTable';
 import { ScenarioComparisonTab } from './comparisonTab/ScenarioComparisonTab';
@@ -31,6 +31,7 @@ type Props = {
     matchedOrgUnitIds: number[];
     matchedIdsByMetric?: Record<string, number[]>;
     previewRule?: Partial<ScenarioRule>;
+    ruleFormActions?: RuleFormActions;
     scenarioRules: ScenarioRule[];
     isBudgetLoaded: boolean;
 };
@@ -40,6 +41,7 @@ export const PlanningMainColumn: FC<Props> = ({
     matchedOrgUnitIds,
     matchedIdsByMetric,
     previewRule,
+    ruleFormActions,
     scenarioRules,
     isBudgetLoaded,
 }) => {
@@ -65,6 +67,7 @@ export const PlanningMainColumn: FC<Props> = ({
                             matchedOrgUnitIds={matchedOrgUnitIds}
                             matchedIdsByMetric={matchedIdsByMetric}
                             previewRule={previewRule}
+                            ruleFormActions={ruleFormActions}
                         />
                     )}
                     {activeTab === 'list' && (

@@ -26,6 +26,7 @@ type Props = {
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
+    isFlashing?: boolean;
 };
 
 const styles = {
@@ -52,6 +53,7 @@ export const MatchingCriterionForm: FC<Props> = ({
     onUpdateField,
     onRemove,
     getErrors,
+    isFlashing = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { activeTab, mapMetricTypeId, setMapMetricTypeId, showMetricOnMap } =
@@ -122,6 +124,7 @@ export const MatchingCriterionForm: FC<Props> = ({
                     : MESSAGES.criterionShowOnMapHint,
             )}
             isSelected={isShownOnMap}
+            isFlashing={isFlashing}
         >
             <CriterionOperatorSelect
                 value={metricTypeCriterion.operator}

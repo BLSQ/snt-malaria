@@ -101,6 +101,21 @@ export const restoreLeaves = (
     return nextExc;
 };
 
+export const toggleLeaf = (
+    leafId: number,
+    hand: Set<number>,
+    exc: Set<number>,
+    ruleIds: Set<number>,
+): { hand: Set<number>; exc: Set<number> } => {
+    const kind = leafKind(leafId, ruleIds, hand, exc);
+    if (kind === 'exc') {
+        return { hand, exc: restoreLeaves([leafId], exc) };
+    }
+    return kind === 'none'
+        ? pickLeaves([leafId], hand, exc, ruleIds)
+        : unpickLeaves([leafId], hand, exc, ruleIds);
+};
+
 export const sumAggregates = (
     ids: number[],
     aggregates: Map<number, ScopeAggregate>,
