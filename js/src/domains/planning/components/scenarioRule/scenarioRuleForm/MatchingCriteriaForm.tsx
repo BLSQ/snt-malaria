@@ -32,6 +32,7 @@ type Props = {
     ) => void;
     metricTypeCategories: MetricTypeCategory[];
     footerAction?: ReactNode;
+    flashingMetricTypeId?: number;
 };
 
 const styles = {
@@ -59,6 +60,7 @@ export const MatchingCriteriaForm: FC<Props> = ({
     onUpdateField,
     metricTypeCategories,
     footerAction,
+    flashingMetricTypeId,
 }) => {
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(mtc => mtc.items),
@@ -113,6 +115,10 @@ export const MatchingCriteriaForm: FC<Props> = ({
                         }
                         onRemove={() => onRemove(LIST_FIELD_KEY, index)}
                         getErrors={field => getChildError(field, index)}
+                        isFlashing={
+                            criterion.metric_type !== undefined &&
+                            criterion.metric_type === flashingMetricTypeId
+                        }
                     />
                 )),
             )}

@@ -25,3 +25,26 @@ export const getQuadrantPlacement = (
         : pointer.y < centerY - DEAD_ZONE_PX;
     return `${opensUp ? 'top' : 'bottom'}-${opensLeft ? 'end' : 'start'}`;
 };
+
+type Size = { width: number; height: number };
+
+/** Keeps `placement` where a card of `size` fits in the viewport, otherwise opens it the other way. */
+export const fitPlacement = (
+    placement: QuadrantPlacement,
+    pointer: Point,
+    size: Size,
+    viewport: Size,
+    offset: number,
+): QuadrantPlacement => {
+    const fitsUp = pointer.y - offset - size.height >= 0;
+    const fitsDown = pointer.y + offset + size.height <= viewport.height;
+    const fitsLeft = pointer.x - offset - size.width >= 0;
+    const fitsRight = pointer.x + offset + size.width <= viewport.width;
+    const opensUp = placement.startsWith('top')
+        ? fitsUp || !fitsDown
+        : !fitsDown && fitsUp;
+    const opensLeft = placement.endsWith('end')
+        ? fitsLeft || !fitsRight
+        : !fitsRight && fitsLeft;
+    return `${opensUp ? 'top' : 'bottom'}-${opensLeft ? 'end' : 'start'}`;
+};
