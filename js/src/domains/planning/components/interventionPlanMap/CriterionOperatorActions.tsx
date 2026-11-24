@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -12,8 +12,9 @@ import {
 } from '../scenarioRule/scenarioRuleForm/CriterionOperatorSelect';
 import {
     THRESHOLD_OPERATORS,
-    useCriterionOperatorPreview,
-} from './useCriterionOperatorPreview';
+    buildOperatorPreviewRules,
+    useCriterionPreview,
+} from './useCriterionPreview';
 
 const styles = {
     list: {
@@ -50,12 +51,15 @@ export const CriterionOperatorActions: FC<Props> = ({
     onApply,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const matchesByOperator = useCriterionOperatorPreview({
-        metricTypeId,
-        value,
+    const operatorRules = useMemo(
+        () => buildOperatorPreviewRules(metricTypeId, value),
+        [metricTypeId, value],
+    );
+    const matchesByOperator = useCriterionPreview(
+        operatorRules,
         dataLayerYears,
-        enabled: isActive,
-    });
+        isActive,
+    );
 
     useEffect(() => {
         if (!isActive) onPreview(undefined);
