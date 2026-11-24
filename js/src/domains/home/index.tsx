@@ -13,6 +13,7 @@ import { userHasOneOfPermissions } from 'Iaso/domains/users/utils';
 import { SxStyles } from 'Iaso/types/general';
 import { hasFeatureFlag, IMPACT } from 'Iaso/utils/featureFlags';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
+import logoMark from '../../../images/branding/snt-logo-mark.svg';
 import { PageContainer } from '../../components/styledComponents';
 import { SETTINGS_READ } from '../../constants/permissions';
 import { baseUrls } from '../../constants/urls';
@@ -91,6 +92,8 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
+        alignItems: 'center',
+        maxWidth: '100%',
         flexGrow: 1,
         gap: 4,
     },
@@ -100,6 +103,16 @@ const styles = {
         alignItems: 'center',
         gap: 1,
         textAlign: 'center',
+    },
+    titleRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+    },
+    logoMark: {
+        height: 80,
+        width: 'auto',
+        flexShrink: 0,
     },
     wordmark: {
         fontSize: 56,
@@ -159,23 +172,31 @@ export const Home: FC = () => {
             <PageContainer sx={styles.page}>
                 <Box sx={styles.wrapper}>
                     <Box sx={styles.titleBlock}>
-                        <Typography component="h1" sx={styles.wordmark}>
-                            <FormattedMessage
-                                {...MESSAGES.wordmark}
-                                values={{
-                                    accountName:
-                                        currentUser.account?.name ?? '',
-                                    accent: chunks => (
-                                        <Box
-                                            component="span"
-                                            sx={styles.wordmarkAccent}
-                                        >
-                                            {chunks}
-                                        </Box>
-                                    ),
-                                }}
+                        <Box sx={styles.titleRow}>
+                            <Box
+                                component="img"
+                                src={`${window.STATIC_URL}${logoMark}`}
+                                alt=""
+                                sx={styles.logoMark}
                             />
-                        </Typography>
+                            <Typography component="h1" sx={styles.wordmark}>
+                                <FormattedMessage
+                                    {...MESSAGES.wordmark}
+                                    values={{
+                                        accountName:
+                                            currentUser.account?.name ?? '',
+                                        accent: chunks => (
+                                            <Box
+                                                component="span"
+                                                sx={styles.wordmarkAccent}
+                                            >
+                                                {chunks}
+                                            </Box>
+                                        ),
+                                    }}
+                                />
+                            </Typography>
+                        </Box>
                         <Typography sx={styles.subtitle}>
                             {formatMessage(MESSAGES.subtitle)}
                         </Typography>
