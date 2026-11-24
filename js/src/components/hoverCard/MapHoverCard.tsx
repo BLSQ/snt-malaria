@@ -4,141 +4,164 @@ import React, {
     useCallback,
     useEffect,
     useImperativeHandle,
-    useMemo,
     useRef,
     useState,
 } from 'react';
+import { Box, Fade, Popper, useTheme } from '@mui/material';
+import { Instance } from '@popperjs/core';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { GetCoverage, Point, Rect, Side } from './computePlacement';
-import { FloatingLayer, FloatingLayerHandle } from './FloatingLayer';
+import { SxStyles } from 'Iaso/types/general';
+import {
+    getQuadrantPlacement,
+    Point,
+    QuadrantPlacement,
+} from './getQuadrantPlacement';
 import { HoverCard } from './HoverCard';
 
+const POINTER_OFFSET_PX = 16;
+const FADE_MS = 120;
 const HIDE_DELAY_MS = 50;
-const COVERAGE_CELL_PX = 16;
 
-export type MapHoverCardContent = {
-    body?: ReactNode;
-    headerExtra?: ReactNode;
-    hint?: string;
-};
+const styles = {
+    card: {
+        transition: `opacity ${FADE_MS}ms`,
+    },
+    switchingSideCard: {
+        opacity: 0,
+    },
+} satisfies SxStyles;
 
 export type MapHover = { orgUnit: OrgUnit; point: Point };
 
 export type MapHoverCardHandle = {
     update: (hover: MapHover | null) => void;
-    /** Call when the map's shapes move on screen, e.g. on pan or zoom. */
-    forgetCoverage: () => void;
 };
 
 type Props = {
-    getContent: (orgUnit: OrgUnit) => MapHoverCardContent;
+    getContent: (orgUnit: OrgUnit) => ReactNode;
+    getHeaderExtra?: (orgUnit: OrgUnit) => ReactNode;
+    getCountryRect: () => DOMRect | undefined;
 };
 
-const isMapShapeAt = (x: number, y: number) => {
-    const element = document.elementFromPoint(x, y);
-    return (
-        element instanceof SVGPathElement &&
-        element.classList.contains('leaflet-interactive')
-    );
-};
-
-const createMapShapeCoverage = () => {
-    const shapeByCell = new Map<number, boolean>();
-    const getCoverage: GetCoverage = (rect: Rect) => {
-        let covered = 0;
-        const firstColumn = Math.ceil(rect.left / COVERAGE_CELL_PX);
-        const firstRow = Math.ceil(rect.top / COVERAGE_CELL_PX);
-        for (
-            let column = firstColumn;
-            column * COVERAGE_CELL_PX < rect.right;
-            column += 1
-        ) {
-            for (
-                let row = firstRow;
-                row * COVERAGE_CELL_PX < rect.bottom;
-                row += 1
-            ) {
-                const key = column * 100_000 + row;
-                let isShape = shapeByCell.get(key);
-                if (isShape === undefined) {
-                    isShape = isMapShapeAt(
-                        column * COVERAGE_CELL_PX,
-                        row * COVERAGE_CELL_PX,
-                    );
-                    shapeByCell.set(key, isShape);
-                }
-                if (isShape) {
-                    covered += COVERAGE_CELL_PX * COVERAGE_CELL_PX;
-                }
-            }
-        }
-        return covered;
-    };
-    return { getCoverage, forget: () => shapeByCell.clear() };
-};
+const offsetFromPointer = ({ placement }: { placement: string }) => [
+    placement.endsWith('end') ? -POINTER_OFFSET_PX : POINTER_OFFSET_PX,
+    POINTER_OFFSET_PX,
+];
 
 export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
-    ({ getContent }, ref) => {
-        const layerRef = useRef<FloatingLayerHandle>(null);
+    ({ getContent, getHeaderExtra, getCountryRect }, ref) => {
+        const theme = useTheme();
+        const popperRef = useRef<Instance>(null);
+        const pointerRef = useRef<Point>({ x: 0, y: 0 });
+        const placementRef = useRef<QuadrantPlacement>('bottom-start');
+        const isOpenRef = useRef(false);
         const hideTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+        const switchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+        const [anchor] = useState(() => ({
+            getBoundingClientRect: () =>
+                new DOMRect(pointerRef.current.x, pointerRef.current.y, 0, 0),
+        }));
         const [orgUnit, setOrgUnit] = useState<OrgUnit>();
-        const [coverage] = useState(createMapShapeCoverage);
+        const [isOpen, setIsOpen] = useState(false);
+        const [placement, setPlacement] =
+            useState<QuadrantPlacement>('bottom-start');
+        const [isSwitchingSide, setIsSwitchingSide] = useState(false);
 
-        const update = useCallback((hover: MapHover | null) => {
-            clearTimeout(hideTimeoutRef.current);
-            if (!hover) {
-                hideTimeoutRef.current = setTimeout(
-                    () => layerRef.current?.setAnchor(null),
-                    HIDE_DELAY_MS,
-                );
-                return;
-            }
-            setOrgUnit(hover.orgUnit);
-            layerRef.current?.setAnchor(hover.point);
+        const setOpen = useCallback((open: boolean) => {
+            isOpenRef.current = open;
+            setIsOpen(open);
         }, []);
 
-        useImperativeHandle(
-            ref,
-            () => ({ update, forgetCoverage: coverage.forget }),
-            [update, coverage],
-        );
+        const switchSide = useCallback((next: QuadrantPlacement) => {
+            placementRef.current = next;
+            clearTimeout(switchTimeoutRef.current);
+            if (!isOpenRef.current) {
+                setPlacement(next);
+                return;
+            }
+            setIsSwitchingSide(true);
+            switchTimeoutRef.current = setTimeout(() => {
+                setPlacement(next);
+                setIsSwitchingSide(false);
+            }, FADE_MS);
+        }, []);
 
-        useEffect(() => {
-            window.addEventListener('scroll', coverage.forget, true);
-            window.addEventListener('resize', coverage.forget);
-            return () => {
-                window.removeEventListener('scroll', coverage.forget, true);
-                window.removeEventListener('resize', coverage.forget);
+        const update = useCallback(
+            (hover: MapHover | null) => {
                 clearTimeout(hideTimeoutRef.current);
-            };
-        }, [coverage]);
-
-        const content = useMemo(
-            () => orgUnit && getContent(orgUnit),
-            [orgUnit, getContent],
+                if (!hover) {
+                    hideTimeoutRef.current = setTimeout(
+                        () => setOpen(false),
+                        HIDE_DELAY_MS,
+                    );
+                    return;
+                }
+                pointerRef.current = hover.point;
+                const countryRect = getCountryRect();
+                const next =
+                    countryRect &&
+                    getQuadrantPlacement(
+                        hover.point,
+                        countryRect,
+                        placementRef.current,
+                    );
+                if (next && next !== placementRef.current) {
+                    switchSide(next);
+                }
+                setOrgUnit(hover.orgUnit);
+                setOpen(true);
+                popperRef.current?.update();
+            },
+            [getCountryRect, switchSide, setOpen],
         );
 
-        const renderCard = useCallback(
-            (side: Side) =>
-                orgUnit &&
-                content && (
-                    <HoverCard
-                        title={orgUnit.short_name ?? orgUnit.name}
-                        subtitle={orgUnit.parent_name}
-                        headerExtra={content.headerExtra}
-                        hint={content.hint}
-                        side={side}
-                    >
-                        {content.body}
-                    </HoverCard>
-                ),
-            [orgUnit, content],
+        useImperativeHandle(ref, () => ({ update }), [update]);
+
+        useEffect(
+            () => () => {
+                clearTimeout(hideTimeoutRef.current);
+                clearTimeout(switchTimeoutRef.current);
+            },
+            [],
         );
 
         return (
-            <FloatingLayer ref={layerRef} getCoverage={coverage.getCoverage}>
-                {renderCard}
-            </FloatingLayer>
+            <Popper
+                open={isOpen && Boolean(orgUnit)}
+                anchorEl={anchor}
+                placement={placement}
+                popperRef={popperRef}
+                modifiers={[
+                    { name: 'offset', options: { offset: offsetFromPointer } },
+                ]}
+                transition
+                style={{ zIndex: theme.zIndex.tooltip, pointerEvents: 'none' }}
+            >
+                {({ TransitionProps }) => (
+                    <Fade {...TransitionProps} timeout={FADE_MS}>
+                        <Box>
+                            <Box
+                                sx={[
+                                    styles.card,
+                                    isSwitchingSide && styles.switchingSideCard,
+                                ]}
+                            >
+                                {orgUnit && (
+                                    <HoverCard
+                                        title={
+                                            orgUnit.short_name ?? orgUnit.name
+                                        }
+                                        subtitle={orgUnit.parent_name}
+                                        headerExtra={getHeaderExtra?.(orgUnit)}
+                                    >
+                                        {getContent(orgUnit)}
+                                    </HoverCard>
+                                )}
+                            </Box>
+                        </Box>
+                    </Fade>
+                )}
+            </Popper>
         );
     },
 );

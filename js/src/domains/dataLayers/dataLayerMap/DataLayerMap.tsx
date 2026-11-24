@@ -49,21 +49,17 @@ export const DataLayerMap: FC<Props> = ({
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => {
             if (!legendConfig) {
-                return {};
+                return undefined;
             }
             const { color, label } = getOrgUnitMapMisc(orgUnit.id);
-            return {
-                body: (
-                    <HoverCardValue
-                        caption={legendConfig.name}
-                        value={
-                            getSelectedMetric(orgUnit.id) ? label : undefined
-                        }
-                        unitSymbol={legendConfig.unit_symbol}
-                        color={color}
-                    />
-                ),
-            };
+            return (
+                <HoverCardValue
+                    caption={legendConfig.name}
+                    value={getSelectedMetric(orgUnit.id) ? label : undefined}
+                    unitSymbol={legendConfig.unit_symbol}
+                    color={color}
+                />
+            );
         },
         [getSelectedMetric, getOrgUnitMapMisc, legendConfig],
     );

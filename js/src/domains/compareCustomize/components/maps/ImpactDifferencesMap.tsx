@@ -237,43 +237,35 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
                           ?.get(orgUnit.id)
                     : undefined;
             const delta = values && values.comparison - values.baseline;
-            return {
-                headerExtra: baselineScenario && selectedComparison && (
-                    <PlanTag
-                        label={formatMessage(MESSAGES.tooltipVsBaseline)}
-                        colors={[
-                            baselineScenario.color,
-                            selectedComparison.color,
-                        ]}
-                    />
-                ),
-                body: (
-                    <ImpactDifferenceTooltipBody
-                        metricLabel={metricConfig.label}
-                        change={
-                            delta === undefined
-                                ? undefined
-                                : intl.formatNumber(delta, {
-                                      ...metricConfig.format,
-                                      notation: 'standard',
-                                      signDisplay: 'exceptZero',
-                                  })
-                        }
-                        values={values}
-                        positiveIsGreen={metricConfig.positiveIsGreen}
-                    />
-                ),
-            };
+            return (
+                <ImpactDifferenceTooltipBody
+                    metricLabel={metricConfig.label}
+                    change={
+                        delta === undefined
+                            ? undefined
+                            : intl.formatNumber(delta, {
+                                  ...metricConfig.format,
+                                  notation: 'standard',
+                                  signDisplay: 'exceptZero',
+                              })
+                    }
+                    values={values}
+                    positiveIsGreen={metricConfig.positiveIsGreen}
+                />
+            );
         },
-        [
-            selectedComparisonId,
-            comparisonsByScenarioId,
-            baselineScenario,
-            selectedComparison,
-            formatMessage,
-            metricConfig,
-            intl,
-        ],
+        [selectedComparisonId, comparisonsByScenarioId, metricConfig, intl],
+    );
+    const getTooltipHeaderExtra = useCallback(
+        () =>
+            baselineScenario &&
+            selectedComparison && (
+                <PlanTag
+                    label={formatMessage(MESSAGES.tooltipVsBaseline)}
+                    colors={[baselineScenario.color, selectedComparison.color]}
+                />
+            ),
+        [baselineScenario, selectedComparison, formatMessage],
     );
     const dataKey = useMemo(
         () =>
@@ -347,6 +339,7 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
                 hideLegend={!hasData}
                 defaultColor={NO_INTERVENTION_COLOR}
                 getTooltipContent={getTooltipContent}
+                getTooltipHeaderExtra={getTooltipHeaderExtra}
                 dataKey={dataKey}
             />
             {chipOverlay}

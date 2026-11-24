@@ -1,7 +1,7 @@
 import React, {
     FC,
+    ReactNode,
     useCallback,
-    useEffect,
     useMemo,
     useRef,
     useState,
@@ -27,13 +27,11 @@ import { FitBounds } from './FitBounds';
 import {
     MapHover,
     MapHoverCard,
-    MapHoverCardContent,
     MapHoverCardHandle,
 } from './hoverCard/MapHoverCard';
 import { InvalidateOnResize } from './InvalidateOnResize';
 import { MapGeoJSON } from './MapGeoJSON';
 import { MapTypeLayer } from './MapTyleLayer';
-import { OnMapMove } from './OnMapMove';
 import { ResetZoomControl } from './ResetZoomControl';
 
 const styles = {
@@ -99,8 +97,9 @@ type Props = {
         label: string | number | undefined;
         color: string | undefined;
     };
-    /** Content of the hover card; defaults to the org unit's map label. */
-    getTooltipContent?: (orgUnit: OrgUnit) => MapHoverCardContent;
+    /** Body of the hover card; defaults to the org unit's map label. */
+    getTooltipContent?: (orgUnit: OrgUnit) => ReactNode;
+    getTooltipHeaderExtra?: (orgUnit: OrgUnit) => ReactNode;
     legendConfig?: {
         units: string;
         legend_type: string; //'linear' | 'ordinal' | 'threshold';
@@ -138,6 +137,7 @@ export const Map: FC<Props> = ({
     dataKey,
     border = false,
     getTooltipContent,
+    getTooltipHeaderExtra,
     hideControls = false,
     disableInteractions = false,
 }) => {
@@ -189,28 +189,33 @@ export const Map: FC<Props> = ({
         [selectedOrgUnitIds],
     );
 
+    const [map, setMap] = useState<L.Map | null>(null);
     const hoverCardRef = useRef<MapHoverCardHandle>(null);
     const handleOrgUnitHover = useCallback(
         (hover: MapHover | null) => hoverCardRef.current?.update(hover),
         [],
     );
-    const forgetHoverCardCoverage = useCallback(
-        () => hoverCardRef.current?.forgetCoverage(),
-        [],
-    );
-    useEffect(forgetHoverCardCoverage, [leafOrgUnits, forgetHoverCardCoverage]);
+    const getCountryRect = useCallback(() => {
+        if (!map || !bounds) return undefined;
+        const container = map.getContainer().getBoundingClientRect();
+        const topLeft = map.latLngToContainerPoint(bounds.getNorthWest());
+        const bottomRight = map.latLngToContainerPoint(bounds.getSouthEast());
+        return new DOMRect(
+            container.left + topLeft.x,
+            container.top + topLeft.y,
+            bottomRight.x - topLeft.x,
+            bottomRight.y - topLeft.y,
+        );
+    }, [map, bounds]);
     const getHoverCardContent = useCallback(
-        (orgUnit: OrgUnit): MapHoverCardContent => {
+        (orgUnit: OrgUnit) => {
             if (getTooltipContent) {
                 return getTooltipContent(orgUnit);
             }
             const { label } = getOrgUnitMapMisc(orgUnit.id);
-            return {
-                body:
-                    label != null && label !== '' ? (
-                        <Typography variant="body2">{label}</Typography>
-                    ) : undefined,
-            };
+            return label != null && label !== '' ? (
+                <Typography variant="body2">{label}</Typography>
+            ) : undefined;
         },
         [getTooltipContent, getOrgUnitMapMisc],
     );
@@ -218,6 +223,7 @@ export const Map: FC<Props> = ({
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
             <MapContainer
+                ref={setMap}
                 id={id}
                 style={{
                     height: '100%',
@@ -238,7 +244,6 @@ export const Map: FC<Props> = ({
                 zoomDelta={defaultZoomDelta}
             >
                 <MapTypeLayer />
-                <OnMapMove onMove={forgetHoverCardCoverage} />
                 <InvalidateOnResize
                     bounds={bounds}
                     boundsOptions={boundsOptions}
@@ -279,6 +284,8 @@ export const Map: FC<Props> = ({
                 <MapHoverCard
                     ref={hoverCardRef}
                     getContent={getHoverCardContent}
+                    getHeaderExtra={getTooltipHeaderExtra}
+                    getCountryRect={getCountryRect}
                 />
             )}
         </Box>

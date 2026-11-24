@@ -112,15 +112,13 @@ export const CostPerDistrictSummary: FC = () => {
             const ouc = orgUnitCosts.find(c => c.org_unit_id === orgUnit.id);
             const cost = ouc ? Math.max(getActiveCost(ouc), 0) : 0;
             const amount = formatNumber(cost, { maximumFractionDigits: 0 });
-            return {
-                body: (
-                    <HoverCardValue
-                        caption={selectedInterventionLabel ?? ''}
-                        value={withCurrency(amount, currency)}
-                        color={getOrgUnitMapMisc(orgUnit.id).color}
-                    />
-                ),
-            };
+            return (
+                <HoverCardValue
+                    caption={selectedInterventionLabel ?? ''}
+                    value={withCurrency(amount, currency)}
+                    color={getOrgUnitMapMisc(orgUnit.id).color}
+                />
+            );
         },
         [
             orgUnitCosts,

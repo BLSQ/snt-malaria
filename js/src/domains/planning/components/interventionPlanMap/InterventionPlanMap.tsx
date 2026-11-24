@@ -2,11 +2,12 @@ import React, { FC, useCallback, useMemo } from 'react';
 import Box from '@mui/material/Box/Box';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
-import { hoverCardSpacing } from '../../../../components/hoverCard/hoverCardSpacing';
-import { HoverCardValue } from '../../../../components/hoverCard/HoverCardValue';
 import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
-import { useGetMetricValues } from '../../../dataLayers/hooks/useGetMetrics';
+import {
+    flattenMetricTypes,
+    useGetMetricValues,
+} from '../../../dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../messages';
 import { getDataLayerYear } from '../../../scenarios/types';
@@ -21,9 +22,9 @@ import {
     buildPreviewAssignments,
     buildSavedAssignments,
 } from './buildEffectiveAssignments';
-import { CriterionMatchLine } from './CriterionMatchLine';
 import { getInterventionMapPresentation } from './getInterventionMapPresentation';
 import { InterventionsTooltipBody } from './InterventionsTooltipBody';
+import { MetricLayerTooltipBody } from './MetricLayerTooltipBody';
 import { RuleSelectionTooltipBody } from './RuleSelectionTooltipBody';
 import { useRuleTooltipData } from './useRuleTooltipData';
 
@@ -31,11 +32,6 @@ const styles: SxStyles = {
     mainBox: {
         overflow: 'hidden',
         position: 'relative',
-    },
-    metricLayerTooltipBody: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: hoverCardSpacing.section,
     },
     actionBox: {
         position: 'absolute',
@@ -69,7 +65,7 @@ export const InterventionPlanMap: FC<Props> = ({
     } = usePlanningContext();
 
     const metricTypes = useMemo(
-        () => metricTypeCategories?.flatMap(category => category.items) ?? [],
+        () => flattenMetricTypes(metricTypeCategories),
         [metricTypeCategories],
     );
     const selectedMetricLayer = useMemo(
@@ -156,49 +152,31 @@ export const InterventionPlanMap: FC<Props> = ({
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => {
             if (!isPreviewingRule) {
-                return {
-                    body: (
-                        <InterventionsTooltipBody
-                            interventions={assignmentDisplay.getChips(
-                                orgUnit.id,
-                            )}
-                        />
-                    ),
-                };
+                return (
+                    <InterventionsTooltipBody
+                        interventions={assignmentDisplay.getChips(orgUnit.id)}
+                    />
+                );
             }
             if (!activeMetricLayer) {
-                return {
-                    body: (
-                        <RuleSelectionTooltipBody
-                            {...getRuleSelection(orgUnit.id)}
-                        />
-                    ),
-                };
+                return (
+                    <RuleSelectionTooltipBody
+                        {...getRuleSelection(orgUnit.id)}
+                    />
+                );
             }
             const { color, label } = getOrgUnitStyle(orgUnit.id);
-            const criterionMatch = getCriterionMatch(
-                activeMetricLayer,
-                orgUnit.id,
+            return (
+                <MetricLayerTooltipBody
+                    metricType={activeMetricLayer}
+                    value={getSelectedMetric(orgUnit.id) ? label : undefined}
+                    color={color}
+                    criterionMatch={getCriterionMatch(
+                        activeMetricLayer,
+                        orgUnit.id,
+                    )}
+                />
             );
-            return {
-                body: (
-                    <Box sx={styles.metricLayerTooltipBody}>
-                        <HoverCardValue
-                            caption={activeMetricLayer.name}
-                            value={
-                                getSelectedMetric(orgUnit.id)
-                                    ? label
-                                    : undefined
-                            }
-                            unitSymbol={activeMetricLayer.unit_symbol}
-                            color={color}
-                        />
-                        {criterionMatch && (
-                            <CriterionMatchLine {...criterionMatch} />
-                        )}
-                    </Box>
-                ),
-            };
         },
         [
             isPreviewingRule,

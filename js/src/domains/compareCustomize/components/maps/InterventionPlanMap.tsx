@@ -97,18 +97,16 @@ export const InterventionPlanMap: FC<Props> = ({
     );
 
     const getTooltipContent = useCallback(
-        (orgUnit: OrgUnit) => ({
-            body: (
-                <InterventionMixTooltipBody
-                    interventions={orgUnitInterventions.get(orgUnit.id) ?? []}
-                    baselineInterventions={
-                        baselineOrgUnitInterventions &&
-                        (baselineOrgUnitInterventions.get(orgUnit.id) ?? [])
-                    }
-                    scenarioColor={titleDotColor}
-                />
-            ),
-        }),
+        (orgUnit: OrgUnit) => (
+            <InterventionMixTooltipBody
+                interventions={orgUnitInterventions.get(orgUnit.id) ?? []}
+                baselineInterventions={
+                    baselineOrgUnitInterventions &&
+                    (baselineOrgUnitInterventions.get(orgUnit.id) ?? [])
+                }
+                scenarioColor={titleDotColor}
+            />
+        ),
         [orgUnitInterventions, baselineOrgUnitInterventions, titleDotColor],
     );
 

@@ -1,8 +1,6 @@
 import React, { FC, ReactNode } from 'react';
-import AdsClickIcon from '@mui/icons-material/AdsClick';
 import { Box, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { Side } from './computePlacement';
 
 const styles = {
     card: {
@@ -43,38 +41,12 @@ const styles = {
     body: {
         padding: '0 14px 12px',
     },
-    hint: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '8px 14px',
-        backgroundColor: 'grey.100',
-        color: 'text.secondary',
-    },
-    upwardsHint: {
-        order: 1,
-        borderTop: theme => `1px solid ${theme.palette.divider}`,
-    },
-    downwardsHint: {
-        order: -1,
-        borderBottom: theme => `1px solid ${theme.palette.divider}`,
-    },
-    leftwardsHint: {
-        flexDirection: 'row-reverse',
-    },
-    hintIcon: {
-        fontSize: 16,
-    },
 } satisfies SxStyles;
 
 type Props = {
     title: string;
     subtitle?: string;
     headerExtra?: ReactNode;
-    /** Short "Click to …" line, only for surfaces where a click does something. */
-    hint?: string;
-    /** Side the card opens towards from the pointer; the hint faces the pointer. */
-    side: Side;
     children?: ReactNode;
 };
 
@@ -82,23 +54,9 @@ export const HoverCard: FC<Props> = ({
     title,
     subtitle,
     headerExtra,
-    hint,
-    side,
     children,
 }) => (
     <Box sx={styles.card}>
-        {hint && (
-            <Box
-                sx={[
-                    styles.hint,
-                    side.up ? styles.upwardsHint : styles.downwardsHint,
-                    side.left && styles.leftwardsHint,
-                ]}
-            >
-                <AdsClickIcon sx={styles.hintIcon} />
-                <Typography variant="caption">{hint}</Typography>
-            </Box>
-        )}
         <Box sx={styles.header}>
             <Box sx={styles.titles}>
                 <Typography variant="body2" sx={styles.title}>

@@ -296,18 +296,14 @@ export const CollapsibleMapPreview: FC<Props> = ({
     const getLegendTooltipContent = useCallback(
         (orgUnit: OrgUnit) => {
             const { color, label } = legendDerivedGetOrgUnitMapMisc(orgUnit.id);
-            return {
-                body: (
-                    <HoverCardValue
-                        caption={legendConfig?.name ?? ''}
-                        value={
-                            getSelectedMetric(orgUnit.id) ? label : undefined
-                        }
-                        unitSymbol={legendConfig?.unit_symbol}
-                        color={color}
-                    />
-                ),
-            };
+            return (
+                <HoverCardValue
+                    caption={legendConfig?.name ?? ''}
+                    value={getSelectedMetric(orgUnit.id) ? label : undefined}
+                    unitSymbol={legendConfig?.unit_symbol}
+                    color={color}
+                />
+            );
         },
         [legendDerivedGetOrgUnitMapMisc, getSelectedMetric, legendConfig],
     );
