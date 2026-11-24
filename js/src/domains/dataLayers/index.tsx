@@ -431,22 +431,14 @@ export const DataLayers: FC = () => {
         return layerListCard;
     };
 
-    const sidePanelLabel = (() => {
+    const sidePanelTitle = (() => {
         if (isCompositeEditorOpen) {
-            return {
-                title: formatMessage(COMPOSITE_MESSAGES.nodeLibraryTabLabel),
-            };
+            return formatMessage(COMPOSITE_MESSAGES.nodeLibraryTabLabel);
         }
         if (wizard.isOpen) {
-            return {
-                title: formatMessage(wizard.titleMessage),
-                hint: wizard.editingMetricType?.name,
-            };
+            return formatMessage(wizard.titleMessage);
         }
-        return {
-            title: formatMessage(MESSAGES.dataLayersTitle),
-            hint: displayedMetricType?.name,
-        };
+        return formatMessage(MESSAGES.dataLayersTitle);
     })();
 
     const mapColumn = (
@@ -529,8 +521,7 @@ export const DataLayers: FC = () => {
                     <SidePanelLayout
                         panel={
                             <SidePanel
-                                title={sidePanelLabel.title}
-                                hint={sidePanelLabel.hint}
+                                title={sidePanelTitle}
                                 holdKey={`${wizard.isOpen}:${wizard.activeStep}:${isCompositeEditorOpen}`}
                             >
                                 {renderSidebarColumn()}
