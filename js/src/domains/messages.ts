@@ -826,6 +826,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.tooltipClose',
         defaultMessage: 'Close',
     },
+    tooltipMove: {
+        id: 'iaso.snt_malaria.label.tooltipMove',
+        defaultMessage: 'Move',
+    },
     tooltipClickToAddToRule: {
         id: 'iaso.snt_malaria.label.tooltipClickToAddToRule',
         defaultMessage: 'Click to add to rule',
