@@ -7,7 +7,10 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import { Box, Fade, Popper, useTheme } from '@mui/material';
+import Box from '@mui/material/Box/Box';
+import Fade from '@mui/material/Fade/Fade';
+import Popper from '@mui/material/Popper/Popper';
+import useTheme from '@mui/material/styles/useTheme';
 import { Instance } from '@popperjs/core';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

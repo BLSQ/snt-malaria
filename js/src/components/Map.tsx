@@ -7,8 +7,8 @@ import React, {
     useState,
 } from 'react';
 import Box from '@mui/material/Box/Box';
-import Typography from '@mui/material/Typography/Typography';
 import { alpha } from '@mui/material/styles';
+import Typography from '@mui/material/Typography/Typography';
 import L from 'leaflet';
 import { MapContainer, ZoomControl, Pane } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';

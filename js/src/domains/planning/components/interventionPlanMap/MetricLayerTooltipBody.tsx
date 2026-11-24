@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box/Box';
 import { SxStyles } from 'Iaso/types/general';
 import { hoverCardSpacing } from '../../../../components/hoverCard/hoverCardSpacing';
 import { HoverCardValue } from '../../../../components/hoverCard/HoverCardValue';

@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
-import { Typography } from '@mui/material';
 import { green, red } from '@mui/material/colors';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 
