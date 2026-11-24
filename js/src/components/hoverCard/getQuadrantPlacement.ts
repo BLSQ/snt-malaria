@@ -7,7 +7,7 @@ export type QuadrantPlacement =
     | 'bottom-end';
 
 // How far the pointer must move past the country's centre before the card switches side.
-const DEAD_ZONE_PX = 30;
+export const DEAD_ZONE_PX = 30; // DEBUG: exported for the debug overlay
 
 /** Opens the card away from the country's centre, so it covers less of the country. */
 export const getQuadrantPlacement = (

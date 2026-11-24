@@ -13,9 +13,11 @@ import Fade from '@mui/material/Fade/Fade';
 import Popper from '@mui/material/Popper/Popper';
 import useTheme from '@mui/material/styles/useTheme';
 import { Instance } from '@popperjs/core';
+import { createPortal } from 'react-dom'; // DEBUG
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import {
+    DEAD_ZONE_PX, // DEBUG
     fitPlacement,
     getQuadrantPlacement,
     Point,
@@ -102,6 +104,8 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             useState<QuadrantPlacement>('bottom-start');
         const [isSwitchingSide, setIsSwitchingSide] = useState(false);
         const [card, setCard] = useState<HTMLDivElement | null>(null);
+        const [debugRect, setDebugRect] = useState<DOMRect>(); // DEBUG
+        const [debugPlannedRect, setDebugPlannedRect] = useState<DOMRect>(); // DEBUG
 
         const setOpen = useCallback((open: boolean) => {
             isOpenRef.current = open;
@@ -140,6 +144,16 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
         const placeCard = useCallback(() => {
             const countryRect = getCountryRect();
             if (!countryRect) return;
+            // DEBUG: only re-render when the box actually moved
+            setDebugRect(current =>
+                current &&
+                current.x === countryRect.x &&
+                current.y === countryRect.y &&
+                current.width === countryRect.width &&
+                current.height === countryRect.height
+                    ? current
+                    : countryRect,
+            );
             const next = fitPlacement(
                 getQuadrantPlacement(
                     pointerRef.current,
@@ -154,6 +168,21 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             if (next !== placementRef.current) {
                 switchSide(next);
             }
+            // DEBUG: the expanded size fitPlacement checked, on the chosen side
+            const { x, y } = pointerRef.current;
+            const { width, height } = plannedSizeRef.current;
+            setDebugPlannedRect(
+                new DOMRect(
+                    next.endsWith('end')
+                        ? x - POINTER_OFFSET_PX - width
+                        : x + POINTER_OFFSET_PX,
+                    next.startsWith('top')
+                        ? y - POINTER_OFFSET_PX - height
+                        : y + POINTER_OFFSET_PX,
+                    width,
+                    height,
+                ),
+            );
         }, [getCountryRect, switchSide]);
 
         const showAt = useCallback(
@@ -285,54 +314,171 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             return () => observer.disconnect();
         }, [card, placeCard]);
 
+        // DEBUG: country bounding box, quadrant axes and dead zones
+        const debugOverlay =
+            debugRect &&
+            createPortal(
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: debugRect.left,
+                        top: debugRect.top,
+                        width: debugRect.width,
+                        height: debugRect.height,
+                        border: '2px dashed red',
+                        pointerEvents: 'none',
+                        zIndex: 2000,
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: `calc(50% - ${DEAD_ZONE_PX}px)`,
+                            width: DEAD_ZONE_PX * 2,
+                            background: 'rgba(255,0,0,0.12)',
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            top: `calc(50% - ${DEAD_ZONE_PX}px)`,
+                            height: DEAD_ZONE_PX * 2,
+                            background: 'rgba(0,0,255,0.12)',
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: '50%',
+                            borderLeft: '1px solid red',
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            top: '50%',
+                            borderTop: '1px solid blue',
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 4,
+                            left: 4,
+                            padding: '2px 6px',
+                            background: 'rgba(255,255,255,0.85)',
+                            font: '12px monospace',
+                        }}
+                    >
+                        {placement}
+                        {isPinned ? ' (pinned)' : ''}
+                    </div>
+                </div>,
+                document.body,
+            );
+
+        // DEBUG: planned expanded outline
+        const debugPlannedOverlay =
+            debugPlannedRect &&
+            isOpen &&
+            createPortal(
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: debugPlannedRect.left,
+                        top: debugPlannedRect.top,
+                        width: debugPlannedRect.width,
+                        height: debugPlannedRect.height,
+                        outline: '2px dashed #00a000',
+                        pointerEvents: 'none',
+                        zIndex: 2001,
+                    }}
+                >
+                    <span
+                        style={{
+                            position: 'absolute',
+                            bottom: -18,
+                            right: 0,
+                            padding: '0 4px',
+                            background: 'rgba(255,255,255,0.85)',
+                            color: '#00a000',
+                            font: '11px monospace',
+                        }}
+                    >
+                        planned {Math.round(debugPlannedRect.width)}×
+                        {Math.round(debugPlannedRect.height)}
+                    </span>
+                </div>,
+                document.body,
+            );
+
         return (
-            <Popper
-                open={isOpen && Boolean(orgUnit)}
-                anchorEl={anchor}
-                placement={placement}
-                popperRef={popperRef}
-                modifiers={[
-                    { name: 'offset', options: { offset: offsetFromPointer } },
-                    { name: 'flip', enabled: false },
-                ]}
-                transition
-                style={{
-                    zIndex: theme.zIndex.tooltip,
-                    pointerEvents: isPinned ? 'auto' : 'none',
-                }}
-            >
-                {({ TransitionProps }) => (
-                    <Fade {...TransitionProps} timeout={FADE_MS}>
-                        <Box>
-                            <Box
-                                ref={setCard}
-                                sx={[
-                                    styles.card,
-                                    isSwitchingSide && styles.switchingSideCard,
-                                ]}
-                            >
-                                {orgUnit && (
-                                    <HoverCard
-                                        title={
-                                            orgUnit.short_name ?? orgUnit.name
-                                        }
-                                        subtitle={orgUnit.parent_name}
-                                        headerExtra={getHeaderExtra?.(orgUnit)}
-                                        hint={actions?.hint}
-                                        expansion={actions?.expansion}
-                                        isExpanded={isPinned}
-                                        onClose={unpin}
-                                        onMoveStart={moveFromHandle}
-                                        side={toSide(placement)}
-                                    >
-                                        {getContent(orgUnit)}
-                                    </HoverCard>
-                                )}
+            <>
+                {debugOverlay}
+                {debugPlannedOverlay}
+                <Popper
+                    open={isOpen && Boolean(orgUnit)}
+                    anchorEl={anchor}
+                    placement={placement}
+                    popperRef={popperRef}
+                    modifiers={[
+                        {
+                            name: 'offset',
+                            options: { offset: offsetFromPointer },
+                        },
+                        { name: 'flip', enabled: false },
+                    ]}
+                    transition
+                    style={{
+                        zIndex: theme.zIndex.tooltip,
+                        pointerEvents: isPinned ? 'auto' : 'none',
+                    }}
+                >
+                    {({ TransitionProps }) => (
+                        <Fade {...TransitionProps} timeout={FADE_MS}>
+                            <Box>
+                                <Box
+                                    ref={setCard}
+                                    sx={[
+                                        styles.card,
+                                        isSwitchingSide &&
+                                            styles.switchingSideCard,
+                                    ]}
+                                >
+                                    {orgUnit && (
+                                        <HoverCard
+                                            title={
+                                                orgUnit.short_name ??
+                                                orgUnit.name
+                                            }
+                                            subtitle={orgUnit.parent_name}
+                                            headerExtra={getHeaderExtra?.(
+                                                orgUnit,
+                                            )}
+                                            hint={actions?.hint}
+                                            expansion={actions?.expansion}
+                                            isExpanded={isPinned}
+                                            onClose={unpin}
+                                            onMoveStart={moveFromHandle}
+                                            side={toSide(placement)}
+                                        >
+                                            {getContent(orgUnit)}
+                                        </HoverCard>
+                                    )}
+                                </Box>
                             </Box>
-                        </Box>
-                    </Fade>
-                )}
-            </Popper>
+                        </Fade>
+                    )}
+                </Popper>
+            </>
         );
     },
 );
