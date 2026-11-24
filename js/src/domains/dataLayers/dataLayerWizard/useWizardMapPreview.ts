@@ -48,6 +48,7 @@ export const useWizardMapPreview = (
 
     const legendConfig: MapLegendConfig = useMemo(
         () => ({
+            name: values.name,
             units: values.units,
             unit_symbol: values.unit_symbol,
             legend_type: values.legend_type,
@@ -60,6 +61,7 @@ export const useWizardMapPreview = (
                 : { domain: [], range: [] }) as ScaleDomainRange,
         }),
         [
+            values.name,
             values.units,
             values.unit_symbol,
             values.legend_type,

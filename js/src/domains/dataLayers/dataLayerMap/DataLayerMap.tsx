@@ -1,6 +1,7 @@
 import React, { FC, useCallback } from 'react';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { HoverCardValue } from '../../../components/hoverCard/HoverCardValue';
 import { Map as SNTMap } from '../../../components/Map';
 import { mapTheme } from '../../../constants/map-theme';
 import {
@@ -11,7 +12,7 @@ import { MetricType, MetricValue } from '../types/metrics';
 
 export type MapLegendConfig = Pick<
     MetricType,
-    'units' | 'unit_symbol' | 'legend_type' | 'legend_config'
+    'name' | 'units' | 'unit_symbol' | 'legend_type' | 'legend_config'
 >;
 
 type Props = {
@@ -45,6 +46,24 @@ export const DataLayerMap: FC<Props> = ({
         [getSelectedMetric, legendConfig],
     );
 
+    const getTooltipContent = useCallback(
+        (orgUnit: OrgUnit) => {
+            if (!legendConfig) {
+                return undefined;
+            }
+            const { color, label } = getOrgUnitMapMisc(orgUnit.id);
+            return (
+                <HoverCardValue
+                    caption={legendConfig.name}
+                    value={getSelectedMetric(orgUnit.id) ? label : undefined}
+                    unitSymbol={legendConfig.unit_symbol}
+                    color={color}
+                />
+            );
+        },
+        [getSelectedMetric, getOrgUnitMapMisc, legendConfig],
+    );
+
     return (
         <SNTMap
             id={'data-layer-map'}
@@ -52,6 +71,7 @@ export const DataLayerMap: FC<Props> = ({
             orgUnits={orgUnits}
             legendConfig={legendConfig}
             getOrgUnitMapMisc={getOrgUnitMapMisc}
+            getTooltipContent={getTooltipContent}
         />
     );
 };

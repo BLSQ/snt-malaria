@@ -1,5 +1,10 @@
-import { useEffect } from 'react';
-import { useQuery, useQueryClient, UseQueryResult } from 'react-query';
+import { useEffect, useRef } from 'react';
+import {
+    useQueries,
+    useQuery,
+    useQueryClient,
+    UseQueryResult,
+} from 'react-query';
 import { Form } from 'Iaso/domains/forms/types/forms';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
@@ -118,4 +123,40 @@ export const usePrefetchMetricValues = (paramsList: MetricValuesParams[]) => {
             queryClient.prefetchQuery(getMetricValuesQuery(params));
         });
     }, [paramsList, queryClient]);
+};
+
+/** Metric values for several metric types, keyed by metric type id. */
+export const useGetMetricValuesByMetricType = (
+    paramsList: (MetricValuesParams & { metricTypeId: number })[],
+): Record<number, MetricValue[] | undefined> => {
+    const results = useQueries(
+        paramsList.map(params => getMetricValuesQuery(params)),
+    );
+    const dataList = results.map(
+        result => result.data as MetricValue[] | undefined,
+    );
+    const latestRef = useRef<{
+        paramsList: typeof paramsList;
+        dataList: (MetricValue[] | undefined)[];
+        byMetricType: Record<number, MetricValue[] | undefined>;
+    }>();
+    let latest = latestRef.current;
+    if (
+        !latest ||
+        latest.paramsList !== paramsList ||
+        dataList.some((data, index) => data !== latest?.dataList[index])
+    ) {
+        latest = {
+            paramsList,
+            dataList,
+            byMetricType: Object.fromEntries(
+                paramsList.map(({ metricTypeId }, index) => [
+                    metricTypeId,
+                    dataList[index],
+                ]),
+            ),
+        };
+        latestRef.current = latest;
+    }
+    return latest.byMetricType;
 };

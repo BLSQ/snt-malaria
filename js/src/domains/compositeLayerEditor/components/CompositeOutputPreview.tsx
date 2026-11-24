@@ -68,6 +68,7 @@ export const CompositeOutputPreview: FC<Props> = ({
             legendConfig={
                 data
                     ? {
+                          name: formatMessage(MESSAGES.outputNodeLabel),
                           legend_type: data.legend_type,
                           legend_config: data.legend_config,
                           units: data.units,

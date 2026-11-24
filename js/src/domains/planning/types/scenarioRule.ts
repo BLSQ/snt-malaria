@@ -42,7 +42,13 @@ export type MetricTypeCriterion = {
 export type ScenarioRulePreview = {
     rule: Pick<
         ScenarioRule,
-        'color' | 'name' | 'interventions' | 'intervention_overrides'
+        | 'color'
+        | 'name'
+        | 'interventions'
+        | 'intervention_overrides'
+        | 'matching_criteria'
+        | 'org_units_included'
+        | 'org_units_excluded'
     >;
     matchedOrgUnitIds: number[];
     /** Org units matched by each metric's criteria alone, keyed by metric type id. */

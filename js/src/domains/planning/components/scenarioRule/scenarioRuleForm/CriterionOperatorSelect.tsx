@@ -28,7 +28,7 @@ const operatorOptions: {
     { value: EQUAL_OPERATOR, symbol: '=', label: MESSAGES.operatorEqual },
 ];
 
-const getOperatorSymbol = (operator: string) =>
+export const getOperatorSymbol = (operator: string) =>
     operatorOptions.find(option => option.value === operator)?.symbol ??
     operator;
 

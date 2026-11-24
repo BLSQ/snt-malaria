@@ -1,8 +1,10 @@
 import React, { FC } from 'react';
-import { GeoJSON, Tooltip as LeafletTooltip } from 'react-leaflet';
+import { LeafletMouseEvent } from 'leaflet';
+import { GeoJSON } from 'react-leaflet';
 import { GeoJson } from 'Iaso/components/maps/types';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { mapTheme } from '../constants/map-theme';
+import { MapHover } from './hoverCard/MapHoverCard';
 
 type Props = {
     dataKey?: string;
@@ -15,7 +17,7 @@ type Props = {
     /** Undefined when no selection is active. */
     isSelected?: boolean;
     onOrgUnitClick: (orgUnitId: number) => void;
-    RenderTooltip?: (props: { orgUnit: OrgUnit }) => React.ReactNode;
+    onOrgUnitHover?: (hover: MapHover | null) => void;
 };
 
 export const MapGeoJSON: FC<Props> = ({
@@ -25,38 +27,35 @@ export const MapGeoJSON: FC<Props> = ({
     defaultColor,
     isSelected,
     onOrgUnitClick,
-    RenderTooltip,
-}) => (
-    <GeoJSON
-        key={dataKey ? `${orgUnit.id}-${dataKey}` : orgUnit.id}
-        data={orgUnit.geo_json as unknown as GeoJson}
-        style={{
-            color: mapTheme.borderColor,
-            weight: mapTheme.shapeWeight,
-            fillColor: orgUnitMapMisc?.color ?? defaultColor,
-            fillOpacity:
-                isSelected === false
-                    ? mapTheme.paleFillOpacity
-                    : mapTheme.fillOpacity,
-        }}
-        eventHandlers={{
-            click: () => onOrgUnitClick(orgUnit.id),
-        }}
-    >
-        <LeafletTooltip pane="popupPane">
-            {RenderTooltip ? (
-                RenderTooltip({ orgUnit })
-            ) : (
-                <>
-                    <b>{orgUnit.short_name}</b>
-                    {orgUnitMapMisc.label && (
-                        <>
-                            <br />
-                            {orgUnitMapMisc.label}
-                        </>
-                    )}
-                </>
-            )}
-        </LeafletTooltip>
-    </GeoJSON>
-);
+    onOrgUnitHover,
+}) => {
+    const handleHover = (event: LeafletMouseEvent) =>
+        onOrgUnitHover?.({
+            orgUnit,
+            point: {
+                x: event.originalEvent.clientX,
+                y: event.originalEvent.clientY,
+            },
+        });
+    return (
+        <GeoJSON
+            key={dataKey ? `${orgUnit.id}-${dataKey}` : orgUnit.id}
+            data={orgUnit.geo_json as unknown as GeoJson}
+            style={{
+                color: mapTheme.borderColor,
+                weight: mapTheme.shapeWeight,
+                fillColor: orgUnitMapMisc?.color ?? defaultColor,
+                fillOpacity:
+                    isSelected === false
+                        ? mapTheme.paleFillOpacity
+                        : mapTheme.fillOpacity,
+            }}
+            eventHandlers={{
+                click: () => onOrgUnitClick(orgUnit.id),
+                mouseover: handleHover,
+                mousemove: handleHover,
+                mouseout: () => onOrgUnitHover?.(null),
+            }}
+        />
+    );
+};

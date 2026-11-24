@@ -4,7 +4,10 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
-import { useGetMetricValues } from '../../../dataLayers/hooks/useGetMetrics';
+import {
+    flattenMetricTypes,
+    useGetMetricValues,
+} from '../../../dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../messages';
 import { getDataLayerYear } from '../../../scenarios/types';
@@ -20,7 +23,10 @@ import {
     buildSavedAssignments,
 } from './buildEffectiveAssignments';
 import { getInterventionMapPresentation } from './getInterventionMapPresentation';
-import { OrgUnitTooltip } from './OrgUnitTooltip';
+import { InterventionsTooltipBody } from './InterventionsTooltipBody';
+import { MetricLayerTooltipBody } from './MetricLayerTooltipBody';
+import { RuleSelectionTooltipBody } from './RuleSelectionTooltipBody';
+import { useRuleTooltipData } from './useRuleTooltipData';
 
 const styles: SxStyles = {
     mainBox: {
@@ -58,12 +64,13 @@ export const InterventionPlanMap: FC<Props> = ({
         setMapMetricTypeId,
     } = usePlanningContext();
 
+    const metricTypes = useMemo(
+        () => flattenMetricTypes(metricTypeCategories),
+        [metricTypeCategories],
+    );
     const selectedMetricLayer = useMemo(
-        () =>
-            metricTypeCategories
-                ?.flatMap(category => category.items)
-                .find(metricType => metricType.id === mapMetricTypeId),
-        [metricTypeCategories, mapMetricTypeId],
+        () => metricTypes.find(metricType => metricType.id === mapMetricTypeId),
+        [metricTypes, mapMetricTypeId],
     );
     const handleLayerChange = useCallback(
         (metricType?: MetricType) => setMapMetricTypeId(metricType?.id),
@@ -134,19 +141,52 @@ export const InterventionPlanMap: FC<Props> = ({
         ],
     );
 
-    const renderTooltip = useCallback(
-        (props: { orgUnit: OrgUnit }) => (
-            <OrgUnitTooltip
-                orgUnit={props.orgUnit}
-                chips={assignmentDisplay.getChips(props.orgUnit.id)}
-                metricLabel={
-                    activeMetricLayer
-                        ? getOrgUnitStyle(props.orgUnit.id)?.label
-                        : undefined
-                }
-            />
-        ),
-        [assignmentDisplay, activeMetricLayer, getOrgUnitStyle],
+    const { getRuleSelection, getCriterionMatch } = useRuleTooltipData({
+        previewRule,
+        matchedOrgUnitIds,
+        matchedIdsByMetric,
+        metricTypes,
+        dataLayerYears: scenario?.data_layer_years,
+    });
+
+    const getTooltipContent = useCallback(
+        (orgUnit: OrgUnit) => {
+            if (!isPreviewingRule) {
+                return (
+                    <InterventionsTooltipBody
+                        interventions={assignmentDisplay.getChips(orgUnit.id)}
+                    />
+                );
+            }
+            if (!activeMetricLayer) {
+                return (
+                    <RuleSelectionTooltipBody
+                        {...getRuleSelection(orgUnit.id)}
+                    />
+                );
+            }
+            const { color, label } = getOrgUnitStyle(orgUnit.id);
+            return (
+                <MetricLayerTooltipBody
+                    metricType={activeMetricLayer}
+                    value={getSelectedMetric(orgUnit.id) ? label : undefined}
+                    color={color}
+                    criterionMatch={getCriterionMatch(
+                        activeMetricLayer,
+                        orgUnit.id,
+                    )}
+                />
+            );
+        },
+        [
+            isPreviewingRule,
+            assignmentDisplay,
+            activeMetricLayer,
+            getSelectedMetric,
+            getOrgUnitStyle,
+            getRuleSelection,
+            getCriterionMatch,
+        ],
     );
 
     return (
@@ -161,7 +201,7 @@ export const InterventionPlanMap: FC<Props> = ({
                     legendConfig={mapPresentation.legendConfig}
                     hideLegend={mapPresentation.hideLegend}
                     dataKey={mapPresentation.mapDataKey}
-                    RenderTooltip={renderTooltip}
+                    getTooltipContent={getTooltipContent}
                 />
             )}
             {metricTypeCategories && isPreviewingRule && (

@@ -20,6 +20,7 @@ import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
+import { HoverCardValue } from '../../../components/hoverCard/HoverCardValue';
 import { Map as SNTMap } from '../../../components/Map';
 import { mapTheme } from '../../../constants/map-theme';
 import { MetricType, MetricValue } from '../../dataLayers/types/metrics';
@@ -55,7 +56,7 @@ export type LegendConfigLike = Pick<
     MetricType,
     'legend_type' | 'legend_config'
 > &
-    Partial<Pick<MetricType, 'units' | 'unit_symbol'>>;
+    Partial<Pick<MetricType, 'name' | 'units' | 'unit_symbol'>>;
 
 const styles = {
     toggle: {
@@ -292,6 +293,25 @@ export const CollapsibleMapPreview: FC<Props> = ({
     const getOrgUnitMapMisc =
         getOrgUnitMapMiscProp ?? legendDerivedGetOrgUnitMapMisc;
 
+    const getLegendTooltipContent = useCallback(
+        (orgUnit: OrgUnit) => {
+            const { color, label } = legendDerivedGetOrgUnitMapMisc(orgUnit.id);
+            return (
+                <HoverCardValue
+                    caption={legendConfig?.name ?? ''}
+                    value={getSelectedMetric(orgUnit.id) ? label : undefined}
+                    unitSymbol={legendConfig?.unit_symbol}
+                    color={color}
+                />
+            );
+        },
+        [legendDerivedGetOrgUnitMapMisc, getSelectedMetric, legendConfig],
+    );
+    const getTooltipContent =
+        legendConfig && !getOrgUnitMapMiscProp
+            ? getLegendTooltipContent
+            : undefined;
+
     const toggle = () => {
         setHasToggled(true);
         setExpanded(prev => {
@@ -420,6 +440,7 @@ export const CollapsibleMapPreview: FC<Props> = ({
                                     orgUnits={orgUnits}
                                     legendConfig={legendConfig as MetricType}
                                     getOrgUnitMapMisc={getOrgUnitMapMisc}
+                                    getTooltipContent={getTooltipContent}
                                     selectedOrgUnitIds={selectedOrgUnitIds}
                                     onOrgUnitClick={onOrgUnitClick}
                                 />
