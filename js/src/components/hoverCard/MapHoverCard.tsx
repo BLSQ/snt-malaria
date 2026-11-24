@@ -202,6 +202,7 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             (hover: MapHover | null) => {
                 if (isPinnedRef.current) return;
                 if (hover) {
+                    if (unpinPinnedCard !== unpinThisCard) unpinPinnedCard?.();
                     showAt(hover);
                     return;
                 }
@@ -211,7 +212,7 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
                     HIDE_DELAY_MS,
                 );
             },
-            [showAt, setOpen],
+            [showAt, setOpen, unpinThisCard],
         );
 
         const click = useCallback(
