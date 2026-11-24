@@ -81,6 +81,7 @@ class UnmatchedInterventionMixSerializer(serializers.Serializer):
 class ImpactProviderMetaSerializer(serializers.Serializer):
     provider_key = serializers.CharField()
     metric_annotations = serializers.DictField(child=serializers.CharField())
+    version = serializers.CharField(allow_null=True)
 
 
 class ScenarioImpactSerializer(ImpactMetricsSerializer):

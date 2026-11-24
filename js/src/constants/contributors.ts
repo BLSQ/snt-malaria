@@ -49,22 +49,24 @@ export const leadDeveloper: DevelopmentPartner = {
     ],
 };
 
+export const swisstphPartner: DevelopmentPartner = {
+    id: 'swisstph',
+    name: 'Swiss TPH',
+    url: 'https://www.swisstph.ch/en/',
+    logo: swisstphLogo,
+    logoPadding: '8px 14px',
+    description: MESSAGES.swisstphDescription,
+    people: [
+        'Roland Goers',
+        'Billy Bauzile',
+        'Myroslava Volosko',
+        'Christian Selinger',
+        'Emilie Pothin',
+    ],
+};
+
 export const collaboratingDevelopers: DevelopmentPartner[] = [
-    {
-        id: 'swisstph',
-        name: 'Swiss TPH',
-        url: 'https://www.swisstph.ch/en/',
-        logo: swisstphLogo,
-        logoPadding: '8px 14px',
-        description: MESSAGES.swisstphDescription,
-        people: [
-            'Roland Goers',
-            'Billy Bauzile',
-            'Myroslava Volosko',
-            'Christian Selinger',
-            'Emilie Pothin',
-        ],
-    },
+    swisstphPartner,
     {
         id: 'idm',
         name: MESSAGES.idmName,

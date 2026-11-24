@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 14:34+0000\n"
+"POT-Creation-Date: 2026-11-18 14:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -215,10 +215,12 @@ msgid "Settings - Write"
 msgstr "Configuration - Écriture"
 
 #: plugins/snt_malaria/providers/impact/swisstph.py
+#: plugins/snt_malaria/providers/impact/swisstph_emulator.py
 msgid "All malaria cases (uncomplicated + severe)"
 msgstr "Tous les cas de paludisme (simples + graves)"
 
 #: plugins/snt_malaria/providers/impact/swisstph.py
+#: plugins/snt_malaria/providers/impact/swisstph_emulator.py
 msgid "All uncomplicated malaria cases"
 msgstr "Tous les cas de paludisme simples"
 
