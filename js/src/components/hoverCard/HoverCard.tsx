@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react';
 import AdsClickIcon from '@mui/icons-material/AdsClick';
 import CloseIcon from '@mui/icons-material/Close';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import Box from '@mui/material/Box/Box';
 import IconButton from '@mui/material/IconButton/IconButton';
 import Typography from '@mui/material/Typography/Typography';
@@ -102,6 +103,17 @@ const styles = {
     closeIcon: {
         fontSize: 18,
     },
+    movableHeader: {
+        cursor: 'grab',
+        touchAction: 'none',
+        userSelect: 'none',
+        '&:active': { cursor: 'grabbing' },
+    },
+    moveIcon: {
+        fontSize: 18,
+        margin: '3px 4px 3px -2px',
+        color: 'text.secondary',
+    },
     expandable: {
         display: 'grid',
         gridTemplateRows: '0fr',
@@ -160,6 +172,8 @@ type Props = {
     expansion?: HoverCardExpansion;
     isExpanded: boolean;
     onClose: () => void;
+    /** Starts moving the expanded card from its title bar. */
+    onMoveStart?: (event: React.PointerEvent) => void;
     /** Side the card opens towards from the pointer; the action area faces the pointer. */
     side: Side;
     children?: ReactNode;
@@ -173,6 +187,7 @@ export const HoverCard: FC<Props> = ({
     expansion,
     isExpanded,
     onClose,
+    onMoveStart,
     side,
     children,
 }) => {
@@ -194,8 +209,26 @@ export const HoverCard: FC<Props> = ({
                             sx={[
                                 styles.actionHeader,
                                 styles.expandedActionHeader,
+                                Boolean(onMoveStart) && styles.movableHeader,
                             ]}
+                            title={
+                                onMoveStart
+                                    ? formatMessage(MESSAGES.tooltipMove)
+                                    : undefined
+                            }
+                            onPointerDown={event => {
+                                if (
+                                    event.target instanceof Element &&
+                                    event.target.closest('button')
+                                ) {
+                                    return;
+                                }
+                                onMoveStart?.(event);
+                            }}
                         >
+                            {onMoveStart && (
+                                <DragIndicatorIcon sx={styles.moveIcon} />
+                            )}
                             <Typography
                                 variant="caption"
                                 sx={styles.actionHeaderText}

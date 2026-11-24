@@ -89,6 +89,7 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
         const unpinRef = useRef<() => void>();
         const hideTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
         const switchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+        const stopMovingRef = useRef<() => void>();
         const [anchor] = useState(() => ({
             getBoundingClientRect: () =>
                 new DOMRect(pointerRef.current.x, pointerRef.current.y, 0, 0),
@@ -167,8 +168,31 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             [placeCard, setOpen],
         );
 
+        const moveFromHandle = useCallback((event: React.PointerEvent) => {
+            event.preventDefault();
+            const start = { x: event.clientX, y: event.clientY };
+            const anchorStart = pointerRef.current;
+            const move = (moveEvent: PointerEvent) => {
+                pointerRef.current = {
+                    x: anchorStart.x + moveEvent.clientX - start.x,
+                    y: anchorStart.y + moveEvent.clientY - start.y,
+                };
+                popperRef.current?.forceUpdate();
+            };
+            const stop = () => {
+                window.removeEventListener('pointermove', move);
+                window.removeEventListener('pointerup', stop);
+                stopMovingRef.current = undefined;
+            };
+            stopMovingRef.current?.();
+            stopMovingRef.current = stop;
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', stop);
+        }, []);
+
         const unpin = useCallback(() => {
             if (!isPinnedRef.current) return;
+            stopMovingRef.current?.();
             setPinned(undefined);
             setOpen(false);
         }, [setPinned, setOpen]);
@@ -232,6 +256,7 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             () => () => {
                 clearTimeout(hideTimeoutRef.current);
                 clearTimeout(switchTimeoutRef.current);
+                stopMovingRef.current?.();
                 if (unpinPinnedCard === unpinThisCard) {
                     unpinPinnedCard = undefined;
                 }
@@ -296,6 +321,7 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
                                         expansion={actions?.expansion}
                                         isExpanded={isPinned}
                                         onClose={unpin}
+                                        onMoveStart={moveFromHandle}
                                         side={toSide(placement)}
                                     >
                                         {getContent(orgUnit)}

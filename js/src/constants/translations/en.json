@@ -328,6 +328,7 @@
     "iaso.snt_malaria.label.tooltipOutsideCriterion": "Outside criterion {criterion}",
     "iaso.snt_malaria.label.tooltipCriterionValueNotSet": "Criterion value not set",
     "iaso.snt_malaria.label.tooltipClose": "Close",
+    "iaso.snt_malaria.label.tooltipMove": "Move",
     "iaso.snt_malaria.label.tooltipClickToAddToRule": "Click to add to rule",
     "iaso.snt_malaria.label.tooltipClickToRemoveFromRule": "Click to remove from rule",
     "iaso.snt_malaria.label.tooltipClickToSetThreshold": "Click to set as threshold",
