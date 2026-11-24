@@ -152,7 +152,7 @@ export const InterventionPlanMap: FC<Props> = ({
         dataLayerYears: scenario?.data_layer_years,
     });
 
-    const { getRuleActions, operatorPreviewIds } = useRuleMapActions({
+    const { getRuleActions, criterionPreviewIds } = useRuleMapActions({
         ruleFormActions,
         activeMetricLayer,
         getOrgUnitMetric: getSelectedMetric,
@@ -216,7 +216,7 @@ export const InterventionPlanMap: FC<Props> = ({
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitStyle}
                     selectedOrgUnitIds={
-                        operatorPreviewIds ??
+                        criterionPreviewIds ??
                         mapPresentation.highlightedOrgUnitIds
                     }
                     legendConfig={mapPresentation.legendConfig}

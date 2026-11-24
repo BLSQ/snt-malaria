@@ -13,6 +13,10 @@ import {
 } from '../../types/scenarioRule';
 import { EQUAL_OPERATOR } from '../scenarioRule/scenarioRuleForm/CriterionOperatorSelect';
 import { CriterionOperatorActions } from './CriterionOperatorActions';
+import {
+    buildValuePreviewRules,
+    useCriterionPreview,
+} from './useCriterionPreview';
 
 type Args = {
     ruleFormActions?: RuleFormActions;
@@ -38,11 +42,29 @@ export const useRuleMapActions = ({
     const { formatMessage } = useSafeIntl();
     const formatMetricValue = useFormatMetricValue();
     const [hoveredOperatorIds, setHoveredOperatorIds] = useState<number[]>();
-    const [appliedOperatorIds, setAppliedOperatorIds] = useState<number[]>();
+    const [appliedCriterionIds, setAppliedCriterionIds] = useState<number[]>();
 
     useEffect(
-        () => setAppliedOperatorIds(undefined),
+        () => setAppliedCriterionIds(undefined),
         [matchedIdsByMetric, activeMetricLayer],
+    );
+
+    const isOrdinalLayer =
+        activeMetricLayer?.legend_type === LegendTypes.ORDINAL;
+    const ordinalValueRules = useMemo(
+        () =>
+            activeMetricLayer && isOrdinalLayer
+                ? buildValuePreviewRules(
+                      activeMetricLayer.id,
+                      activeMetricLayer.legend_config.domain.map(String),
+                  )
+                : {},
+        [activeMetricLayer, isOrdinalLayer],
+    );
+    const matchesByOrdinalValue = useCriterionPreview(
+        ordinalValueRules,
+        dataLayerYears,
+        Boolean(ruleFormActions) && isOrdinalLayer,
     );
 
     const matchedIds = useMemo(
@@ -87,18 +109,22 @@ export const useRuleMapActions = ({
                     ...criterion,
                 });
 
-            if (activeMetricLayer.legend_type === LegendTypes.ORDINAL) {
+            if (isOrdinalLayer) {
                 return {
                     hint: currentCriterion
                         ? formatMessage(MESSAGES.tooltipClickToSetValue, {
                               value: String(metric.label),
                           })
                         : formatMessage(MESSAGES.tooltipClickToAddCriterion),
-                    onClick: () =>
+                    onClick: () => {
+                        setAppliedCriterionIds(
+                            matchesByOrdinalValue?.[metric.value],
+                        );
                         setCriterion({
                             operator: EQUAL_OPERATOR,
                             string_value: metric.value,
-                        }),
+                        });
+                    },
                 };
             }
 
@@ -133,7 +159,7 @@ export const useRuleMapActions = ({
                             onPreview={setHoveredOperatorIds}
                             onApply={(operator, matches) => {
                                 setHoveredOperatorIds(undefined);
-                                setAppliedOperatorIds(matches);
+                                setAppliedCriterionIds(matches);
                                 setCriterion({
                                     operator,
                                     value,
@@ -152,6 +178,8 @@ export const useRuleMapActions = ({
             getOrgUnitMetric,
             matchedIds,
             currentCriterion,
+            isOrdinalLayer,
+            matchesByOrdinalValue,
             dataLayerYears,
             formatMessage,
             formatMetricValue,
@@ -160,6 +188,6 @@ export const useRuleMapActions = ({
 
     return {
         getRuleActions,
-        operatorPreviewIds: hoveredOperatorIds ?? appliedOperatorIds,
+        criterionPreviewIds: hoveredOperatorIds ?? appliedCriterionIds,
     };
 };
