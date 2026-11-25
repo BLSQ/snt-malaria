@@ -32,11 +32,11 @@ class OpenHexaDataLayerSerializer(serializers.Serializer):
 
 
 class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
-    """Upsert the ``MetricType`` shell for one OpenHexa data layer.
+    """Create the ``MetricType`` shell for one OpenHexa data layer, or reuse the existing one.
 
-    The metadata is re-read from the OpenHexa metadata file (the source of truth); the client
-    only picks the ``code`` and may override the legend colours. The values themselves are
-    loaded by the ``import_openhexa_data_layer`` task the view launches afterwards.
+    A new layer's metadata is read from the OpenHexa metadata file; the client only picks the
+    ``code`` and may override the legend colours. An existing layer is left untouched. The values
+    are loaded by the ``import_openhexa_data_layer`` task the view launches afterwards.
     """
 
     code = serializers.CharField()
@@ -54,53 +54,45 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
         if not isinstance(definition, dict):
             raise serializers.ValidationError({"code": _("This data layer is not defined in OpenHexa.")})
 
-        layer = build_data_layer(data["code"], definition)
-        if layer.get("error"):
-            raise serializers.ValidationError({"code": layer["error"]})
-
-        existing = MetricType.objects.filter(account=account, code=layer["code"]).first()
+        existing = MetricType.objects.filter(account=account, code=data["code"]).first()
         if existing and existing.origin != MetricType.MetricTypeOrigin.OPENHEXA:
             raise serializers.ValidationError(
                 {"code": _("A layer with this data key already exists and is not managed by OpenHexa.")}
             )
-
-        data["layer"] = layer
         data["existing"] = existing
+        if existing:
+            return data
+
+        layer = build_data_layer(data["code"], definition)
+        if layer.get("error"):
+            raise serializers.ValidationError({"code": layer["error"]})
+        data["layer"] = layer
         return data
 
     def save(self):
+        # Re-importing an existing layer ("Refresh from OpenHexa") only reloads its values;
+        # its metadata and legend may have been edited by the user since the first import.
+        existing = self.validated_data["existing"]
+        if existing:
+            return existing
+
         account = self.context["request"].user.iaso_profile.account
         layer = self.validated_data["layer"]
-        existing = self.validated_data["existing"]
-        # A "Refresh from OpenHexa" only re-pulls values + metadata; keep the legend colours
-        # the user may have edited (the create dialog seeds them from the file, edits go
-        # through PATCH /api/metrictypes/). An explicit legend_config in the payload wins.
-        legend_config = (
-            self.validated_data.get("legend_config")
-            or (existing.legend_config if existing else None)
-            or layer["legend_config"]
-        )
-
-        metric_type, created = MetricType.objects.update_or_create(
+        return MetricType.objects.create(
             account=account,
             code=layer["code"],
-            defaults={
-                "name": layer["name"],
-                "description": layer["description"],
-                "source": layer["source"],
-                "units": layer["units"],
-                "unit_symbol": layer["unit_symbol"],
-                "category": layer["category"],
-                "legend_type": layer["legend_type"],
-                "legend_config": legend_config,
-                "metric_kind": layer["metric_kind"],
-                "origin": MetricType.MetricTypeOrigin.OPENHEXA,
-            },
+            name=layer["name"],
+            description=layer["description"],
+            source=layer["source"],
+            units=layer["units"],
+            unit_symbol=layer["unit_symbol"],
+            category=layer["category"],
+            legend_type=layer["legend_type"],
+            legend_config=self.validated_data.get("legend_config") or layer["legend_config"],
+            metric_kind=layer["metric_kind"],
+            origin=MetricType.MetricTypeOrigin.OPENHEXA,
+            is_complete=False,
         )
-        if created:
-            metric_type.is_complete = False
-            metric_type.save(update_fields=["is_complete"])
-        return metric_type
 
 
 class CancelOpenHexaImportSerializer(serializers.Serializer):

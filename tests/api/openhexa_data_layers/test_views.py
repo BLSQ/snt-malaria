@@ -308,22 +308,33 @@ class ImportOpenHexaDataLayerTestCase(SNTMalariaAPITestCase):
         self.assertTrue(Task.objects.filter(name="import_openhexa_data_layer", launcher=self.user).exists())
 
     @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
-    def test_reimport_updates_the_existing_openhexa_layer(self, _mock_fetch):
-        MetricType.objects.create(
+    def test_reimport_keeps_the_existing_layer_metadata_and_launches_task(self, _mock_fetch):
+        """Refreshing an existing OpenHexa layer only reloads its values, not its name/legend/etc."""
+        legend_config = {"domain": [1], "range": ["#000000", "#FFFFFF"]}
+        existing = MetricType.objects.create(
             account=self.account,
             code="INCIDENCE_CRUDE",
-            name="stale",
+            name="User-edited name",
+            category="User category",
             legend_type="threshold",
+            legend_config=legend_config,
             origin=MetricType.MetricTypeOrigin.OPENHEXA,
         )
         self.client.force_authenticate(self.user)
         response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
+        self.assertEqual(response.json()["metric_type_id"], existing.id)
         self.assertEqual(MetricType.objects.filter(account=self.account, code="INCIDENCE_CRUDE").count(), 1)
-        self.assertEqual(
-            MetricType.objects.get(account=self.account, code="INCIDENCE_CRUDE").name, "Crude incidence (DHIS2)"
-        )
+        existing.refresh_from_db()
+        self.assertEqual(existing.name, "User-edited name")
+        self.assertEqual(existing.category, "User category")
+        self.assertEqual(existing.legend_config, legend_config)
+        self.assertTrue(existing.is_complete)
+
+        from iaso.models import Task
+
+        self.assertTrue(Task.objects.filter(name="import_openhexa_data_layer", launcher=self.user).exists())
 
     @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
     def test_rejects_when_code_belongs_to_a_non_openhexa_layer(self, _mock_fetch):
