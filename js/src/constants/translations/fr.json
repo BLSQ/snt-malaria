@@ -411,7 +411,7 @@
     "iaso.snt_malaria.scenarioRule.scopeClearFilter": "Effacer le filtre",
     "iaso.snt_malaria.scenarioRule.scopeLoadErrorTitle": "Impossible de charger les unités d'organisation",
     "iaso.snt_malaria.scenarioRule.scopeLoadErrorDescription": "La version de la source n'a pas pu être atteinte.",
-    "iaso.snt_malaria.label.hideSidebar": "Détacher le panneau latéral",
+    "iaso.snt_malaria.label.hideSidebar": "Masquer le panneau latéral",
     "iaso.snt_malaria.label.parentOrgUnit": "Parent",
     "iaso.snt_malaria.label.showLegend": "Afficher la légende",
     "iaso.snt_malaria.label.showSidebar": "Afficher le panneau latéral",

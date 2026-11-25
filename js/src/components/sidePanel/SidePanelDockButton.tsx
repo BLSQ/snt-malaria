@@ -6,7 +6,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../domains/messages';
 import { DockSidePanelIcon, UndockSidePanelIcon } from './icons';
-import { useSidePanelContext } from './SidePanelContext';
+import { useSidePanelActions, useSidePanelContext } from './SidePanelContext';
 
 const styles = {
     button: {
@@ -24,20 +24,18 @@ const styles = {
 } satisfies SxStyles;
 
 export const SidePanelDockButton: FC = () => {
-    const { mode, phase, canUndock, dock, undock } = useSidePanelContext();
+    const { mode, phase, canUndock } = useSidePanelContext();
+    const { dock, undock } = useSidePanelActions();
     const { formatMessage } = useSafeIntl();
     const isFloating = mode === 'undocked' || phase === 'lifting';
 
     const handleClick = useCallback(() => {
-        if (phase) {
-            return;
-        }
         if (isFloating) {
             dock();
         } else {
             undock();
         }
-    }, [phase, isFloating, dock, undock]);
+    }, [isFloating, dock, undock]);
 
     if (!canUndock) {
         return null;

@@ -1,5 +1,9 @@
 import React, { FC, ReactNode } from 'react';
-import { SidePanelContext, SidePanelMode } from './SidePanelContext';
+import {
+    SidePanelActionsContext,
+    SidePanelMode,
+    SidePanelStateContext,
+} from './SidePanelContext';
 import { useSidePanelState } from './useSidePanelState';
 
 type Props = {
@@ -13,10 +17,12 @@ export const SidePanelProvider: FC<Props> = ({
     defaultMode,
     children,
 }) => {
-    const value = useSidePanelState({ storageKey, defaultMode });
+    const { state, actions } = useSidePanelState({ storageKey, defaultMode });
     return (
-        <SidePanelContext.Provider value={value}>
-            {children}
-        </SidePanelContext.Provider>
+        <SidePanelActionsContext.Provider value={actions}>
+            <SidePanelStateContext.Provider value={state}>
+                {children}
+            </SidePanelStateContext.Provider>
+        </SidePanelActionsContext.Provider>
     );
 };

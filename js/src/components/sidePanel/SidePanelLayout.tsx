@@ -13,23 +13,24 @@ import { SxStyles } from 'Iaso/types/general';
 import { MainColumn, SidebarColumn, SidebarLayout } from '../styledComponents';
 import {
     LIFT_MS,
+    noMotion,
     PANEL_GAP,
     PANEL_WIDTH,
     FALLBACK_TOGGLE_Z_INDEX,
     PANEL_Z_INDEX,
+    REDUCED_MOTION,
     SCRIM_Z_INDEX,
     SLIDE_MS,
 } from './constants';
-import { ToggleOrigin, useSidePanelContext } from './SidePanelContext';
+import {
+    ToggleOrigin,
+    useSidePanelActions,
+    useSidePanelContext,
+} from './SidePanelContext';
 import { SidePanelToggle } from './SidePanelToggle';
 
 const LIFTED_SHADOW =
     'drop-shadow(0 12px 24px rgba(31,43,61,0.22)) drop-shadow(0 2px 6px rgba(31,43,61,0.12))';
-const FLAT_SHADOW =
-    'drop-shadow(0 0 0 rgba(31,43,61,0)) drop-shadow(0 0 0 rgba(31,43,61,0))';
-const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
-
-const noMotion = { [`@media ${REDUCED_MOTION}`]: { transition: 'none' } };
 
 const styles = {
     root: {
@@ -92,10 +93,11 @@ const transformOriginAt = (origin: ToggleOrigin | null): string =>
         ? `${origin.left + origin.width / 2}px ${origin.top + origin.height / 2}px`
         : '0 0';
 
-const prefersReducedMotion = (): boolean =>
-    window.matchMedia?.(REDUCED_MOTION).matches ?? false;
-
-const usePanelHeightTransition = (hugsContent: boolean, easing: string) => {
+const usePanelHeightTransition = (
+    hugsContent: boolean,
+    easing: string,
+    isReducedMotion: boolean,
+) => {
     const panelElement = useRef<HTMLElement | null>(null);
     const lastHeight = useRef<number>(0);
     const observer = useRef<ResizeObserver>();
@@ -104,8 +106,8 @@ const usePanelHeightTransition = (hugsContent: boolean, easing: string) => {
         observer.current?.disconnect();
         panelElement.current = element;
         if (element) {
-            observer.current = new ResizeObserver(() => {
-                lastHeight.current = element.getBoundingClientRect().height;
+            observer.current = new ResizeObserver(([entry]) => {
+                lastHeight.current = entry.borderBoxSize[0].blockSize;
             });
             observer.current.observe(element);
         }
@@ -114,7 +116,7 @@ const usePanelHeightTransition = (hugsContent: boolean, easing: string) => {
     useLayoutEffect(() => {
         const element = panelElement.current;
         const from = lastHeight.current;
-        if (!element || !from || prefersReducedMotion()) {
+        if (!element || !from || isReducedMotion) {
             return undefined;
         }
         const to = element.getBoundingClientRect().height;
@@ -134,7 +136,7 @@ const usePanelHeightTransition = (hugsContent: boolean, easing: string) => {
             window.clearTimeout(timer);
             reset();
         };
-    }, [hugsContent, easing]);
+    }, [hugsContent, easing, isReducedMotion]);
 
     return observe;
 };
@@ -146,17 +148,9 @@ type Props = {
 };
 
 export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
-    const {
-        mode,
-        phase,
-        floating,
-        canUndock,
-        hasHeaderToggle,
-        toggleOrigin,
-        panelRef,
-        closeFloating,
-        onBlurPanel,
-    } = useSidePanelContext();
+    const { mode, phase, floating, canUndock, hasHeaderToggle, toggleOrigin } =
+        useSidePanelContext();
+    const { panelRef, closeFloating, onBlurPanel } = useSidePanelActions();
     const { transitions } = useTheme();
     const easing = transitions.easing.easeInOut;
     const isReducedMotion = useMediaQuery(REDUCED_MOTION);
@@ -174,7 +168,11 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
     const hugsContent = !isDocked && !phase;
     const showScrim = !isDocked && floating === 'pinned' && !phase;
 
-    const observeHeight = usePanelHeightTransition(hugsContent, easing);
+    const observeHeight = usePanelHeightTransition(
+        hugsContent,
+        easing,
+        isReducedMotion,
+    );
     const setPanelElement = useCallback(
         (element: HTMLElement | null) => {
             panelRef(element);
@@ -222,9 +220,7 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
                             sx={[
                                 styles.layer,
                                 {
-                                    filter: isLifted
-                                        ? LIFTED_SHADOW
-                                        : FLAT_SHADOW,
+                                    filter: isLifted ? LIFTED_SHADOW : 'none',
                                     transform: `translateY(${isLifted ? -2 : 0}px)`,
                                     transition: `filter ${LIFT_MS}ms ${easing}, transform ${LIFT_MS}ms ${easing}`,
                                 },

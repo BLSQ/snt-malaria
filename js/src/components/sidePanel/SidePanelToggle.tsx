@@ -5,16 +5,16 @@ import { alpha } from '@mui/material/styles';
 import useTheme from '@mui/material/styles/useTheme';
 import Typography from '@mui/material/Typography/Typography';
 import { SxStyles } from 'Iaso/types/general';
-import { SLIDE_MS } from './constants';
+import { noMotion, SLIDE_MS } from './constants';
 import { ShowSidePanelIcon } from './icons';
-import { useSidePanelContext } from './SidePanelContext';
+import { useSidePanelActions, useSidePanelContext } from './SidePanelContext';
 
 const styles = {
     wrapper: {
         display: 'inline-flex',
         flexShrink: 0,
         overflow: 'hidden',
-        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+        ...noMotion,
     },
     inner: {
         display: 'flex',
@@ -62,16 +62,9 @@ type Props = {
 };
 
 export const SidePanelToggle: FC<Props> = ({ fallback = false }) => {
-    const {
-        mode,
-        phase,
-        floating,
-        label,
-        registerToggle,
-        openFloating,
-        closeFloating,
-        onEnterToggle,
-    } = useSidePanelContext();
+    const { mode, phase, floating, label } = useSidePanelContext();
+    const { registerToggle, openFloating, closeFloating, onEnterToggle } =
+        useSidePanelActions();
     const { transitions } = useTheme();
     const buttonRef = useRef<HTMLButtonElement>(null);
 

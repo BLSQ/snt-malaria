@@ -1,12 +1,10 @@
-import { useEffect, useRef } from 'react';
-import { useSidePanelContext } from './SidePanelContext';
+import { useEffect } from 'react';
+import { useSidePanelActions } from './SidePanelContext';
 
 export const useSidePanelHold = (key: unknown): void => {
-    const { hold } = useSidePanelContext();
-    const holdRef = useRef(hold);
-    holdRef.current = hold;
+    const { hold } = useSidePanelActions();
 
     useEffect(() => {
-        holdRef.current();
-    }, [key]);
+        hold();
+    }, [hold, key]);
 };

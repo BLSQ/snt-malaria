@@ -6,3 +6,7 @@ export const PEEK_CLOSE_DELAY_MS = 250;
 export const SCRIM_Z_INDEX = 1150;
 export const PANEL_Z_INDEX = 1160;
 export const FALLBACK_TOGGLE_Z_INDEX = 1001;
+export const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+export const noMotion = {
+    [`@media ${REDUCED_MOTION}`]: { transition: 'none' },
+};

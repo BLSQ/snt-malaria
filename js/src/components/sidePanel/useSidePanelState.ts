@@ -8,17 +8,18 @@ import {
 } from 'react';
 import useTheme from '@mui/material/styles/useTheme';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { safeRead, safeWrite } from '../../utils/safeStorage';
 import { LIFT_MS, PEEK_CLOSE_DELAY_MS, SLIDE_MS } from './constants';
 import {
-    SidePanelContextValue,
+    SidePanelActions,
     SidePanelFloating,
     SidePanelLabel,
+    SidePanelLabelSlot,
     SidePanelMode,
     SidePanelPhase,
+    SidePanelState,
     ToggleOrigin,
 } from './SidePanelContext';
-
-export const BASE_LABEL_KEY = 'base';
 
 const OVERLAY_SELECTOR = '.MuiPopover-root, .MuiPopper-root, .MuiModal-root';
 
@@ -28,20 +29,8 @@ type Options = {
 };
 
 const readStoredMode = (storageKey: string): SidePanelMode | null => {
-    try {
-        const stored = window.localStorage.getItem(storageKey);
-        return stored === 'docked' || stored === 'undocked' ? stored : null;
-    } catch {
-        return null;
-    }
-};
-
-const storeMode = (storageKey: string, mode: SidePanelMode) => {
-    try {
-        window.localStorage.setItem(storageKey, mode);
-    } catch {
-        // Storage unavailable: the mode just isn't remembered.
-    }
+    const stored = safeRead(storageKey);
+    return stored === 'docked' || stored === 'undocked' ? stored : null;
 };
 
 const isTypingIn = (element: HTMLElement | null): boolean => {
@@ -55,7 +44,7 @@ const isTypingIn = (element: HTMLElement | null): boolean => {
 };
 
 const measureOrigin = (
-    toggle: HTMLElement | null,
+    toggle: HTMLElement | undefined,
     panel: HTMLElement | null,
 ): ToggleOrigin | null => {
     if (!toggle || !panel) {
@@ -71,10 +60,35 @@ const measureOrigin = (
     };
 };
 
+const isSameOrigin = (a: ToggleOrigin | null, b: ToggleOrigin): boolean =>
+    Boolean(
+        a &&
+        a.top === b.top &&
+        a.left === b.left &&
+        a.width === b.width &&
+        a.height === b.height,
+    );
+
+const isPeeking = ({
+    floating,
+    phase,
+}: {
+    floating: SidePanelFloating;
+    phase: SidePanelPhase;
+}): boolean => floating === 'peek' && !phase;
+
+const lastKey = <K>(map: Map<K, unknown>): K | undefined => {
+    let last: K | undefined;
+    map.forEach((_value, key) => {
+        last = key;
+    });
+    return last;
+};
+
 export const useSidePanelState = ({
     storageKey,
     defaultMode = 'docked',
-}: Options): SidePanelContextValue => {
+}: Options): { state: SidePanelState; actions: SidePanelActions } => {
     const theme = useTheme();
     const canUndock = useMediaQuery(theme.breakpoints.up('md'));
     const [storedMode, setStoredMode] = useState<SidePanelMode>(
@@ -83,10 +97,12 @@ export const useSidePanelState = ({
     const [phase, setPhase] = useState<SidePanelPhase>(null);
     const [floating, setFloating] = useState<SidePanelFloating>('closed');
     const [toggleOrigin, setToggleOrigin] = useState<ToggleOrigin | null>(null);
-    const [labels, setLabels] = useState<Record<string, SidePanelLabel>>({});
+    const [labels, setLabels] = useState<
+        Partial<Record<SidePanelLabelSlot, SidePanelLabel>>
+    >({});
+    const [hasHeaderToggle, setHasHeaderToggle] = useState(false);
 
     const toggleElements = useRef(new Map<HTMLElement, boolean>());
-    const [hasHeaderToggle, setHasHeaderToggle] = useState(false);
     const panelElement = useRef<HTMLElement | null>(null);
     const phaseTimer = useRef<number>();
     const closeTimer = useRef<number>();
@@ -94,6 +110,8 @@ export const useSidePanelState = ({
     const isHeld = useRef(false);
 
     const mode: SidePanelMode = canUndock ? storedMode : 'docked';
+    const current = useRef({ mode, phase, floating });
+    current.current = { mode, phase, floating };
 
     const clearCloseTimer = useCallback(() => {
         window.clearTimeout(closeTimer.current);
@@ -109,20 +127,21 @@ export const useSidePanelState = ({
     useEffect(() => clearTimers, [clearTimers]);
 
     const updateOrigin = useCallback(() => {
-        const elements = [...toggleElements.current.keys()];
         const origin = measureOrigin(
-            elements[elements.length - 1] ?? null,
+            lastKey(toggleElements.current),
             panelElement.current,
         );
         if (origin) {
-            setToggleOrigin(origin);
+            setToggleOrigin(previous =>
+                isSameOrigin(previous, origin) ? previous : origin,
+            );
         }
     }, []);
 
     const setMode = useCallback(
         (next: SidePanelMode) => {
             setStoredMode(next);
-            storeMode(storageKey, next);
+            safeWrite(storageKey, next);
         },
         [storageKey],
     );
@@ -157,6 +176,9 @@ export const useSidePanelState = ({
     );
 
     const undock = useCallback(() => {
+        if (current.current.phase) {
+            return;
+        }
         clearTimers();
         pointerInside.current = true;
         setPhase('lifting');
@@ -172,6 +194,9 @@ export const useSidePanelState = ({
     }, [clearTimers, scheduleClose, setMode]);
 
     const dock = useCallback(() => {
+        if (current.current.phase) {
+            return;
+        }
         clearTimers();
         isHeld.current = false;
         setPhase('docking');
@@ -184,36 +209,33 @@ export const useSidePanelState = ({
     }, [clearTimers, setMode]);
 
     const hold = useCallback(() => {
-        if (mode === 'undocked' && floating !== 'closed') {
+        const { mode: currentMode, floating: currentFloating } =
+            current.current;
+        if (currentMode === 'undocked' && currentFloating !== 'closed') {
             clearCloseTimer();
             isHeld.current = true;
         }
-    }, [mode, floating, clearCloseTimer]);
+    }, [clearCloseTimer]);
 
     const reveal = useCallback(() => {
-        if (mode === 'undocked' && floating === 'closed') {
+        const { mode: currentMode, floating: currentFloating } =
+            current.current;
+        if (currentMode === 'undocked' && currentFloating === 'closed') {
             openFloating(true);
             isHeld.current = true;
         }
-    }, [mode, floating, openFloating]);
+    }, [openFloating]);
 
     const setLabel = useCallback(
-        (key: string, label: SidePanelLabel | null) =>
-            setLabels(current => {
-                const next = { ...current };
-                delete next[key];
-                return label ? { ...next, [key]: label } : next;
-            }),
+        (slot: SidePanelLabelSlot, label: SidePanelLabel | null) =>
+            setLabels(previous => ({
+                ...previous,
+                [slot]: label ?? undefined,
+            })),
         [],
     );
 
-    const label = useMemo(() => {
-        const overrides = Object.keys(labels).filter(
-            key => key !== BASE_LABEL_KEY,
-        );
-        const key = overrides[overrides.length - 1] ?? BASE_LABEL_KEY;
-        return labels[key] ?? null;
-    }, [labels]);
+    const label = labels.override ?? labels.base ?? null;
 
     const panelRef = useCallback((element: HTMLElement | null) => {
         panelElement.current = element;
@@ -238,38 +260,54 @@ export const useSidePanelState = ({
 
     const onEnterToggle = useCallback(() => {
         clearCloseTimer();
-        if (mode === 'undocked' && !phase && floating === 'closed') {
+        const {
+            mode: currentMode,
+            phase: currentPhase,
+            floating: currentFloating,
+        } = current.current;
+        if (
+            currentMode === 'undocked' &&
+            !currentPhase &&
+            currentFloating === 'closed'
+        ) {
             openFloating(true);
         }
-    }, [clearCloseTimer, mode, phase, floating, openFloating]);
+    }, [clearCloseTimer, openFloating]);
 
-    const isPeeking = floating === 'peek' && !phase;
-    const isPeekingRef = useRef(isPeeking);
-    isPeekingRef.current = isPeeking;
     const tracksPointer = mode === 'undocked' || phase === 'lifting';
 
     useEffect(() => {
         if (!tracksPointer) {
             return undefined;
         }
-        const isInside = (target: EventTarget | null): boolean =>
-            target instanceof Element &&
-            (Boolean(panelElement.current?.contains(target)) ||
-                [...toggleElements.current.keys()].some(toggle =>
-                    toggle.contains(target),
-                ) ||
-                Boolean(target.closest(OVERLAY_SELECTOR)));
+        const isInside = (target: EventTarget | null): boolean => {
+            if (!(target instanceof Element)) {
+                return false;
+            }
+            if (panelElement.current?.contains(target)) {
+                return true;
+            }
+            let inToggle = false;
+            toggleElements.current.forEach((_fallback, toggle) => {
+                inToggle = inToggle || toggle.contains(target);
+            });
+            return inToggle || Boolean(target.closest(OVERLAY_SELECTOR));
+        };
         const updatePointer = (inside: boolean) => {
             const wasInside = pointerInside.current;
             pointerInside.current = inside;
             if (inside) {
                 isHeld.current = false;
                 clearCloseTimer();
-            } else if (wasInside && isPeekingRef.current && !isHeld.current) {
+            } else if (
+                wasInside &&
+                isPeeking(current.current) &&
+                !isHeld.current
+            ) {
                 scheduleClose(PEEK_CLOSE_DELAY_MS);
             }
         };
-        const onPointerMove = (event: PointerEvent) =>
+        const onPointerOver = (event: PointerEvent) =>
             updatePointer(isInside(event.target));
         const onPointerLeaveWindow = (event: MouseEvent) => {
             if (!event.relatedTarget) {
@@ -282,11 +320,11 @@ export const useSidePanelState = ({
             }
         };
         const options = { capture: true, passive: true };
-        document.addEventListener('pointermove', onPointerMove, options);
+        document.addEventListener('pointerover', onPointerOver, options);
         document.addEventListener('pointerdown', onPointerDown, options);
         document.addEventListener('mouseout', onPointerLeaveWindow, options);
         return () => {
-            document.removeEventListener('pointermove', onPointerMove, options);
+            document.removeEventListener('pointerover', onPointerOver, options);
             document.removeEventListener('pointerdown', onPointerDown, options);
             document.removeEventListener(
                 'mouseout',
@@ -302,7 +340,7 @@ export const useSidePanelState = ({
                 event.relatedTarget as Node | null,
             );
             if (
-                isPeeking &&
+                isPeeking(current.current) &&
                 !isHeld.current &&
                 !pointerInside.current &&
                 !focusStaysInPanel
@@ -310,10 +348,10 @@ export const useSidePanelState = ({
                 scheduleClose(PEEK_CLOSE_DELAY_MS);
             }
         },
-        [isPeeking, scheduleClose],
+        [scheduleClose],
     );
 
-    return useMemo(
+    const state = useMemo(
         () => ({
             mode,
             phase,
@@ -322,6 +360,20 @@ export const useSidePanelState = ({
             hasHeaderToggle,
             toggleOrigin,
             label,
+        }),
+        [
+            mode,
+            phase,
+            floating,
+            canUndock,
+            hasHeaderToggle,
+            toggleOrigin,
+            label,
+        ],
+    );
+
+    const actions = useMemo(
+        () => ({
             dock,
             undock,
             openFloating,
@@ -335,13 +387,6 @@ export const useSidePanelState = ({
             onBlurPanel,
         }),
         [
-            mode,
-            phase,
-            floating,
-            canUndock,
-            hasHeaderToggle,
-            toggleOrigin,
-            label,
             dock,
             undock,
             openFloating,
@@ -355,4 +400,6 @@ export const useSidePanelState = ({
             onBlurPanel,
         ],
     );
+
+    return { state, actions };
 };

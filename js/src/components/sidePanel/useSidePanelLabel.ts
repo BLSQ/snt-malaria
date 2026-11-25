@@ -1,17 +1,19 @@
-import { useEffect, useId } from 'react';
-import { SidePanelLabel, useSidePanelContext } from './SidePanelContext';
+import { useEffect } from 'react';
+import {
+    SidePanelLabel,
+    SidePanelLabelSlot,
+    useSidePanelActions,
+} from './SidePanelContext';
 
 export const useSidePanelLabel = (
     { title, hint }: SidePanelLabel,
-    key?: string,
+    slot: SidePanelLabelSlot = 'override',
 ): void => {
-    const { setLabel } = useSidePanelContext();
-    const generatedKey = useId();
-    const labelKey = key ?? generatedKey;
+    const { setLabel } = useSidePanelActions();
 
     useEffect(() => {
-        setLabel(labelKey, { title, hint });
-    }, [setLabel, labelKey, title, hint]);
+        setLabel(slot, { title, hint });
+    }, [setLabel, slot, title, hint]);
 
-    useEffect(() => () => setLabel(labelKey, null), [setLabel, labelKey]);
+    useEffect(() => () => setLabel(slot, null), [setLabel, slot]);
 };

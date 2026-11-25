@@ -21,10 +21,11 @@ import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { CardStyled } from '../../components/CardStyled';
 import { IconBoxed } from '../../components/IconBoxed';
 import { SidePanel } from '../../components/sidePanel/SidePanel';
-import { SidePanelContext } from '../../components/sidePanel/SidePanelContext';
+import { useSidePanelActions } from '../../components/sidePanel/SidePanelContext';
 import { SidePanelDockButton } from '../../components/sidePanel/SidePanelDockButton';
 import { SidePanelLayout } from '../../components/sidePanel/SidePanelLayout';
-import { useSidePanelState } from '../../components/sidePanel/useSidePanelState';
+import { SidePanelProvider } from '../../components/sidePanel/SidePanelProvider';
+import { useSidePanelHold } from '../../components/sidePanel/useSidePanelHold';
 import {
     PageContainer,
     PaperFullHeight,
@@ -88,7 +89,7 @@ type DataLayersParams = {
     displayOrgUnitId?: number;
 };
 
-export const DataLayers: FC = () => {
+const DataLayersPage: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
@@ -208,10 +209,7 @@ export const DataLayers: FC = () => {
         [compositeLayerByMetricType],
     );
 
-    const sidePanel = useSidePanelState({
-        storageKey: 'snt_malaria.dataLayers.sidePanelMode',
-    });
-    const { reveal: revealSidePanel } = sidePanel;
+    const { reveal: revealSidePanel } = useSidePanelActions();
 
     // Only meaningful while the composite editor is open, and only when there is an AI key.
     const [sidebarTab, setSidebarTab] =
@@ -431,6 +429,10 @@ export const DataLayers: FC = () => {
         return layerListCard;
     };
 
+    useSidePanelHold(
+        `${wizard.isOpen}:${wizard.activeStep}:${isCompositeEditorOpen}`,
+    );
+
     const sidePanelTitle = (() => {
         if (isCompositeEditorOpen) {
             return formatMessage(COMPOSITE_MESSAGES.nodeLibraryTabLabel);
@@ -509,45 +511,46 @@ export const DataLayers: FC = () => {
     };
 
     return (
-        <SidePanelContext.Provider value={sidePanel}>
-            <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
-                {isLoadingMetricLayers && <LoadingSpinner />}
-                <TopBar
-                    title={formatMessage(MESSAGES.dataLayersTitle)}
-                    disableShadow
-                    sx={{ zIndex: 401 }}
+        <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
+            {isLoadingMetricLayers && <LoadingSpinner />}
+            <TopBar
+                title={formatMessage(MESSAGES.dataLayersTitle)}
+                disableShadow
+                sx={{ zIndex: 401 }}
+            />
+            <PageContainer>
+                <SidePanelLayout
+                    panel={
+                        <SidePanel title={sidePanelTitle}>
+                            {renderSidebarColumn()}
+                        </SidePanel>
+                    }
+                >
+                    <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
+                </SidePanelLayout>
+                <DiscardWizardModal
+                    open={wizard.discardOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={wizard.discardMessage}
+                    onConfirm={wizard.confirmDiscard}
+                    onCancel={wizard.cancelDiscard}
                 />
-                <PageContainer>
-                    <SidePanelLayout
-                        panel={
-                            <SidePanel
-                                title={sidePanelTitle}
-                                holdKey={`${wizard.isOpen}:${wizard.activeStep}:${isCompositeEditorOpen}`}
-                            >
-                                {renderSidebarColumn()}
-                            </SidePanel>
-                        }
-                    >
-                        <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
-                    </SidePanelLayout>
-                    <DiscardWizardModal
-                        open={wizard.discardOpen}
-                        titleMessage={wizard.titleMessage}
-                        message={wizard.discardMessage}
-                        onConfirm={wizard.confirmDiscard}
-                        onCancel={wizard.cancelDiscard}
-                    />
-                    <DiscardWizardModal
-                        id="data-layer-wizard-back-graph"
-                        open={wizard.backConfirmOpen}
-                        titleMessage={wizard.titleMessage}
-                        message={MESSAGES.wizardBackGraphConfirm}
-                        onConfirm={wizard.confirmBack}
-                        onCancel={wizard.cancelBack}
-                    />
-                </PageContainer>
-                {onboarding.element}
-            </DataLayerComparisonProvider>
-        </SidePanelContext.Provider>
+                <DiscardWizardModal
+                    id="data-layer-wizard-back-graph"
+                    open={wizard.backConfirmOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={MESSAGES.wizardBackGraphConfirm}
+                    onConfirm={wizard.confirmBack}
+                    onCancel={wizard.cancelBack}
+                />
+            </PageContainer>
+            {onboarding.element}
+        </DataLayerComparisonProvider>
     );
 };
+
+export const DataLayers: FC = () => (
+    <SidePanelProvider storageKey="snt_malaria.dataLayers.sidePanelMode">
+        <DataLayersPage />
+    </SidePanelProvider>
+);
