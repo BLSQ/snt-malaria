@@ -2,6 +2,7 @@ import React, {
     FC,
     ReactNode,
     useCallback,
+    useEffect,
     useMemo,
     useRef,
     useState,
@@ -25,6 +26,7 @@ import {
 } from '../domains/planning/libs/map-utils';
 import { FitBounds } from './FitBounds';
 import {
+    GetMapHoverCardActions,
     MapHover,
     MapHoverCard,
     MapHoverCardHandle,
@@ -100,6 +102,8 @@ type Props = {
     /** Body of the hover card; defaults to the org unit's map label. */
     getTooltipContent?: (orgUnit: OrgUnit) => ReactNode;
     getTooltipHeaderExtra?: (orgUnit: OrgUnit) => ReactNode;
+    /** What a click on an org unit does, announced in the hover card. */
+    getTooltipActions?: GetMapHoverCardActions;
     legendConfig?: {
         units: string;
         legend_type: string; //'linear' | 'ordinal' | 'threshold';
@@ -137,6 +141,7 @@ export const Map: FC<Props> = ({
     dataKey,
     border = false,
     getTooltipContent,
+    getTooltipActions,
     getTooltipHeaderExtra,
     hideControls = false,
     disableInteractions = false,
@@ -195,6 +200,14 @@ export const Map: FC<Props> = ({
         (hover: MapHover | null) => hoverCardRef.current?.update(hover),
         [],
     );
+    const [pinnedOrgUnitId, setPinnedOrgUnitId] = useState<number>();
+    const handleOrgUnitClick = useCallback(
+        (hover: MapHover) => {
+            hoverCardRef.current?.click(hover);
+            onOrgUnitClick(hover.orgUnit.id);
+        },
+        [onOrgUnitClick],
+    );
     const getCountryRect = useCallback(() => {
         if (!map || !bounds) return undefined;
         const container = map.getContainer().getBoundingClientRect();
@@ -219,6 +232,26 @@ export const Map: FC<Props> = ({
         },
         [getTooltipContent, getOrgUnitMapMisc],
     );
+
+    const getTooltipActionsRef = useRef(getTooltipActions);
+    getTooltipActionsRef.current = getTooltipActions;
+    const hasClickAction = useCallback((orgUnit: OrgUnit) => {
+        const actions = getTooltipActionsRef.current?.(orgUnit);
+        return Boolean(actions?.onClick || actions?.expansion);
+    }, []);
+
+    useEffect(() => {
+        if (!map) return undefined;
+        const unpin = () => hoverCardRef.current?.unpin();
+        map.on('movestart click', unpin);
+        return () => {
+            map.off('movestart click', unpin);
+        };
+    }, [map]);
+
+    useEffect(() => {
+        hoverCardRef.current?.unpin();
+    }, [leafOrgUnits]);
 
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
@@ -264,15 +297,19 @@ export const Map: FC<Props> = ({
                             key={orgUnit.id}
                             dataKey={dataKey}
                             orgUnit={orgUnit}
-                            orgUnitMapMisc={getOrgUnitMapMisc(orgUnit.id)}
-                            defaultColor={defaultColor}
+                            fillColor={
+                                getOrgUnitMapMisc(orgUnit.id).color ??
+                                defaultColor
+                            }
                             isSelected={selectedIds?.has(orgUnit.id)}
-                            onOrgUnitClick={onOrgUnitClick}
+                            isPinned={orgUnit.id === pinnedOrgUnitId}
+                            onOrgUnitClick={handleOrgUnitClick}
                             onOrgUnitHover={
                                 disableInteractions
                                     ? undefined
                                     : handleOrgUnitHover
                             }
+                            hasClickAction={hasClickAction}
                         />
                     ))}
                 </Pane>
@@ -284,6 +321,8 @@ export const Map: FC<Props> = ({
                 <MapHoverCard
                     ref={hoverCardRef}
                     getContent={getHoverCardContent}
+                    getActions={getTooltipActions}
+                    onPinChange={setPinnedOrgUnitId}
                     getHeaderExtra={getTooltipHeaderExtra}
                     getCountryRect={getCountryRect}
                 />

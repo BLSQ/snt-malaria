@@ -16,7 +16,7 @@ import {
     getMapStyleForOrgUnit,
     useGetOrgUnitMetric,
 } from '../../libs/map-utils';
-import { ScenarioRule } from '../../types/scenarioRule';
+import { RuleFormActions, ScenarioRule } from '../../types/scenarioRule';
 import { buildAssignmentDisplay } from './buildAssignmentDisplay';
 import {
     buildPreviewAssignments,
@@ -26,6 +26,7 @@ import { getInterventionMapPresentation } from './getInterventionMapPresentation
 import { InterventionsTooltipBody } from './InterventionsTooltipBody';
 import { MetricLayerTooltipBody } from './MetricLayerTooltipBody';
 import { RuleSelectionTooltipBody } from './RuleSelectionTooltipBody';
+import { useRuleMapActions } from './useRuleMapActions';
 import { useRuleTooltipData } from './useRuleTooltipData';
 
 const styles: SxStyles = {
@@ -46,12 +47,14 @@ type Props = {
     matchedOrgUnitIds?: number[];
     matchedIdsByMetric?: Record<string, number[]>;
     previewRule?: Partial<ScenarioRule>;
+    ruleFormActions?: RuleFormActions;
 };
 
 export const InterventionPlanMap: FC<Props> = ({
     matchedOrgUnitIds,
     matchedIdsByMetric,
     previewRule,
+    ruleFormActions,
 }) => {
     const {
         orgUnits,
@@ -149,6 +152,16 @@ export const InterventionPlanMap: FC<Props> = ({
         dataLayerYears: scenario?.data_layer_years,
     });
 
+    const { getTooltipActions, criterionPreviewIds } = useRuleMapActions({
+        ruleFormActions: isPreviewingRule ? ruleFormActions : undefined,
+        activeMetricLayer,
+        getOrgUnitMetric: getSelectedMetric,
+        previewRule,
+        matchedOrgUnitIds,
+        matchedIdsByMetric,
+        dataLayerYears: scenario?.data_layer_years,
+    });
+
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => {
             if (!isPreviewingRule) {
@@ -197,11 +210,15 @@ export const InterventionPlanMap: FC<Props> = ({
                     border
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitStyle}
-                    selectedOrgUnitIds={mapPresentation.highlightedOrgUnitIds}
+                    selectedOrgUnitIds={
+                        criterionPreviewIds ??
+                        mapPresentation.highlightedOrgUnitIds
+                    }
                     legendConfig={mapPresentation.legendConfig}
                     hideLegend={mapPresentation.hideLegend}
                     dataKey={mapPresentation.mapDataKey}
                     getTooltipContent={getTooltipContent}
+                    getTooltipActions={getTooltipActions}
                 />
             )}
             {metricTypeCategories && isPreviewingRule && (

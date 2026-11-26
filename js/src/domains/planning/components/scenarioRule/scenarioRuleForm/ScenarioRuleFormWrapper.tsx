@@ -11,7 +11,9 @@ import { uniq } from 'lodash';
 import { createPortal } from 'react-dom';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardStyled } from '../../../../../components/CardStyled';
+import { useFlash } from '../../../../../hooks/useFlash';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
+import { useSetFieldValueAndState } from '../../../../../hooks/useSetFieldValueAndState';
 import { usePrefetchMetricValues } from '../../../../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../../../../messages';
 import { getDataLayerYear } from '../../../../scenarios/types';
@@ -27,9 +29,15 @@ import {
     getRuleDisplayName,
     parseOrgUnitIds,
     resolveRuleOrgUnitIds,
+    upsertCriterion,
 } from '../../../libs/rule-utils';
-import { ScenarioRule, ScenarioRulePreview } from '../../../types/scenarioRule';
+import {
+    RuleFormActions,
+    ScenarioRule,
+    ScenarioRulePreview,
+} from '../../../types/scenarioRule';
 import { RuleOverridesTab } from '../overrides/RuleOverridesTab';
+import { toggleLeaf } from './orgUnitScopeSelector/scopeTreeUtils';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
 import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
@@ -184,6 +192,56 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         ],
     );
 
+    const setFieldValueAndState = useSetFieldValueAndState(formik);
+    const [flashingMetricTypeId, flashMetricType] = useFlash<number>();
+    const [isScopeFlashing, flashScope] = useFlash<boolean>();
+    const ruleFormActions = useMemo<RuleFormActions>(
+        () => ({
+            toggleOrgUnit: ruleMatches.isLoading
+                ? undefined
+                : orgUnitId => {
+                      const { hand, exc } = toggleLeaf(
+                          orgUnitId,
+                          new Set(parseOrgUnitIds(includedOrgUnits)),
+                          new Set(parseOrgUnitIds(excludedOrgUnits)),
+                          new Set(
+                              matchingCriteria.length > 0
+                                  ? ruleMatches.ruleMatchedIds
+                                  : [],
+                          ),
+                      );
+                      setFieldValueAndState(
+                          'org_units_included',
+                          Array.from(hand).join(','),
+                      );
+                      setFieldValueAndState(
+                          'org_units_excluded',
+                          Array.from(exc).join(','),
+                      );
+                      flashScope(true);
+                  },
+            setCriterion: criterion => {
+                setFieldValueAndState(
+                    'matching_criteria',
+                    upsertCriterion(matchingCriteria, criterion),
+                );
+                if (criterion.metric_type !== undefined) {
+                    flashMetricType(criterion.metric_type);
+                }
+            },
+        }),
+        [
+            ruleMatches.isLoading,
+            ruleMatches.ruleMatchedIds,
+            includedOrgUnits,
+            excludedOrgUnits,
+            matchingCriteria,
+            setFieldValueAndState,
+            flashMetricType,
+            flashScope,
+        ],
+    );
+
     const criteriaMetricValuesParams = useMemo(
         () =>
             uniq(
@@ -227,6 +285,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             },
             matchedOrgUnitIds,
             matchedIdsByMetric: ruleMatches.matchedIdsByMetric,
+            actions: ruleFormActions,
         });
     }, [
         color,
@@ -238,6 +297,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         excludedOrgUnits,
         matchedOrgUnitIds,
         ruleMatches.matchedIdsByMetric,
+        ruleFormActions,
         isAwaitingFirstResult,
     ]);
 
@@ -268,6 +328,8 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                 <ScenarioRuleForm
                     ruleMatches={ruleMatches}
                     notice={notice}
+                    flashingMetricTypeId={flashingMetricTypeId}
+                    isScopeFlashing={isScopeFlashing}
                     matchedOrgUnitIds={
                         isAwaitingFirstResult ? undefined : matchedOrgUnitIds
                     }

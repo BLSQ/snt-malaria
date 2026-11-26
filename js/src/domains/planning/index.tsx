@@ -247,6 +247,7 @@ export const Planning: FC = () => {
                             }
                             matchedIdsByMetric={rulePreview?.matchedIdsByMetric}
                             previewRule={rulePreview?.rule}
+                            ruleFormActions={rulePreview?.actions}
                             scenarioRules={scenarioRules || []}
                             isBudgetLoaded={
                                 Boolean(orgUnits) && !isLoadingBudget

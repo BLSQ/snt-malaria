@@ -1,6 +1,6 @@
 import { sortBy } from 'lodash';
 import { InterventionCategory } from '../../interventions/types';
-import { ScenarioRule } from '../types/scenarioRule';
+import { MetricTypeCriterion, ScenarioRule } from '../types/scenarioRule';
 
 export const findInterventionWithCategory = (
     interventionCategories: InterventionCategory[],
@@ -67,4 +67,17 @@ export const resolveRuleOrgUnitIds = ({
     const resolved = new Set(ruleMatchedIds.filter(id => !excluded.has(id)));
     includedIds.forEach(id => resolved.add(id));
     return [...resolved];
+};
+
+export const upsertCriterion = (
+    criteria: MetricTypeCriterion[],
+    criterion: MetricTypeCriterion,
+): MetricTypeCriterion[] => {
+    const index = criteria.findIndex(
+        existing => existing.metric_type === criterion.metric_type,
+    );
+    if (index === -1) {
+        return [...criteria, criterion];
+    }
+    return criteria.map((existing, i) => (i === index ? criterion : existing));
 };

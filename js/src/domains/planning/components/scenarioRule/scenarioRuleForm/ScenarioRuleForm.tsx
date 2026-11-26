@@ -1,5 +1,5 @@
 import React, { FC, ReactNode, useCallback } from 'react';
-import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import JoinInnerOutlinedIcon from '@mui/icons-material/JoinInnerOutlined';
 import Alert from '@mui/material/Alert/Alert';
 import Box from '@mui/material/Box/Box';
 import Button from '@mui/material/Button/Button';
@@ -41,7 +41,7 @@ const styles = {
             overflowWrap: 'anywhere',
         },
     },
-    resetMapLayerButton: {
+    showCombinedMapButton: {
         flex: '0 0 auto',
         whiteSpace: 'nowrap',
         px: 0.75,
@@ -73,12 +73,16 @@ type Props = {
     ruleMatches: RuleMatchedOrgUnits;
     matchedOrgUnitIds?: number[];
     notice?: ReactNode;
+    flashingMetricTypeId?: number;
+    isScopeFlashing?: boolean;
 };
 
 export const ScenarioRuleForm: FC<Props> = ({
     ruleMatches,
     matchedOrgUnitIds,
     notice,
+    flashingMetricTypeId,
+    isScopeFlashing,
 }) => {
     const { formatMessage } = useSafeIntl();
     const {
@@ -88,7 +92,7 @@ export const ScenarioRuleForm: FC<Props> = ({
         setMapMetricTypeId,
     } = usePlanningContext();
 
-    const handleResetMapLayer = useCallback(
+    const handleShowCombinedMap = useCallback(
         () => setMapMetricTypeId(undefined),
         [setMapMetricTypeId],
     );
@@ -179,17 +183,18 @@ export const ScenarioRuleForm: FC<Props> = ({
                         errors={errors.matching_criteria}
                         touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
+                        flashingMetricTypeId={flashingMetricTypeId}
                         footerAction={
                             mapMetricTypeId !== undefined &&
                             values.matching_criteria.length > 0 && (
                                 <Button
                                     variant="text"
                                     size="small"
-                                    startIcon={<VisibilityOffOutlinedIcon />}
-                                    onClick={handleResetMapLayer}
-                                    sx={styles.resetMapLayerButton}
+                                    startIcon={<JoinInnerOutlinedIcon />}
+                                    onClick={handleShowCombinedMap}
+                                    sx={styles.showCombinedMapButton}
                                 >
-                                    {formatMessage(MESSAGES.resetMapLayer)}
+                                    {formatMessage(MESSAGES.showCombinedMap)}
                                 </Button>
                             )
                         }
@@ -202,6 +207,7 @@ export const ScenarioRuleForm: FC<Props> = ({
                     />
                     <OrgUnitScopeSelector
                         interventionTypeId={interventionTypeId}
+                        isFlashing={isScopeFlashing}
                         matchingCriteria={values.matching_criteria}
                         ruleMatches={ruleMatches}
                         excludedIds={parseOrgUnitIds(values.org_units_excluded)}

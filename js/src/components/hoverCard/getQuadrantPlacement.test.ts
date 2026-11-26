@@ -1,4 +1,4 @@
-import { getQuadrantPlacement } from './getQuadrantPlacement';
+import { fitPlacement, getQuadrantPlacement } from './getQuadrantPlacement';
 
 const country = new DOMRect(0, 0, 1000, 800);
 
@@ -38,6 +38,47 @@ describe('getQuadrantPlacement', () => {
         const largeCountry = new DOMRect(0, 0, 4000, 3200);
         expect(
             getQuadrantPlacement({ x: 2050, y: 1650 }, largeCountry, 'top-end'),
+        ).toBe('bottom-start');
+    });
+});
+
+describe('fitPlacement', () => {
+    const viewport = { width: 1000, height: 800 };
+    const size = { width: 340, height: 300 };
+
+    it('keeps the placement when the card fits', () => {
+        expect(
+            fitPlacement(
+                'bottom-start',
+                { x: 100, y: 100 },
+                size,
+                viewport,
+                16,
+            ),
+        ).toBe('bottom-start');
+    });
+
+    it('opens the other way where the card does not fit', () => {
+        expect(
+            fitPlacement(
+                'bottom-start',
+                { x: 900, y: 700 },
+                size,
+                viewport,
+                16,
+            ),
+        ).toBe('top-end');
+    });
+
+    it('keeps the placement when neither side fits', () => {
+        expect(
+            fitPlacement(
+                'bottom-start',
+                { x: 500, y: 400 },
+                { width: 340, height: 500 },
+                viewport,
+                16,
+            ),
         ).toBe('bottom-start');
     });
 });

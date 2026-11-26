@@ -12,9 +12,11 @@ import {
     hoverSwapTileTrigger,
 } from '../../../../../components/HoverSwapTile';
 import { MESSAGES } from '../../../../messages';
+import { flashingStyles, flashTransition } from './styles';
 
 const CARD_ACTION_CLASS = 'ruleItemAction';
 const TILE_SIZE = 32;
+const ACTION_FIELDS = `& .${CARD_ACTION_CLASS} .MuiInputBase-root`;
 
 // Events from portaled children (e.g. an open dropdown menu) bubble through the React tree too.
 const isCardBodyEvent = ({ target, currentTarget }: MouseEvent<HTMLElement>) =>
@@ -36,10 +38,14 @@ const styles = {
         borderColor: 'divider',
         borderRadius: 2,
         backgroundColor: 'background.paper',
+        transition: flashTransition(),
+        [ACTION_FIELDS]: {
+            transition: flashTransition(),
+        },
     },
     clickableCard: {
         cursor: 'pointer',
-        transition: 'border-color 150ms',
+        transition: flashTransition(150),
         '&:hover': {
             borderColor: theme => alpha(theme.palette.primary.main, 0.6),
         },
@@ -47,6 +53,16 @@ const styles = {
     selectedCard: {
         borderColor: 'primary.main',
         '&:hover': { borderColor: 'primary.main' },
+    },
+    flashingCard: {
+        ...flashingStyles,
+        [ACTION_FIELDS]: {
+            borderColor: 'primary.main',
+            backgroundColor: 'primary.light',
+        },
+        [`${ACTION_FIELDS} .MuiOutlinedInput-notchedOutline`]: {
+            borderColor: 'primary.main',
+        },
     },
     leading: { mr: '-2px', display: 'inline-flex' },
     iconTile: {
@@ -93,6 +109,7 @@ type Props = {
     onClick?: () => void;
     clickHint?: string;
     isSelected?: boolean;
+    isFlashing?: boolean;
     children?: ReactNode;
 };
 
@@ -104,6 +121,7 @@ export const RuleItemCard: FC<Props> = ({
     onClick,
     clickHint,
     isSelected = false,
+    isFlashing = false,
     children,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -154,6 +172,7 @@ export const RuleItemCard: FC<Props> = ({
                     styles.card,
                     Boolean(onClick) && styles.clickableCard,
                     isSelected && styles.selectedCard,
+                    isFlashing && styles.flashingCard,
                 ]}
                 onClick={handleClick}
                 onMouseOver={handleMouseOver}

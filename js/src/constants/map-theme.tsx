@@ -7,8 +7,10 @@ export const mapTheme = {
     shapeWeight: 1,
     selectedShapeColor: 'black',
     selectedShapeWeight: 3,
+    pinnedShapeOpacity: 0.6,
     activeShapeColor: theme.palette.secondary.main,
     activeShapeWeight: 4,
     fillOpacity: 0.8,
     paleFillOpacity: 0.2,
+    hoverFillOpacityStep: 0.2,
 };

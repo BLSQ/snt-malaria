@@ -16,6 +16,7 @@ import {
 } from '../../utils/interventionGroups';
 import { InterventionMixTooltipBody } from './InterventionMixTooltipBody';
 import { LabelChip } from './LabelChip';
+import { useImpactDetailsExpansion } from './useImpactDetailsExpansion';
 
 const styles = {
     root: {
@@ -96,6 +97,8 @@ export const InterventionPlanMap: FC<Props> = ({
         [baselineInterventionAssignments],
     );
 
+    const getTooltipActions = useImpactDetailsExpansion({ scenarioId });
+
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => (
             <InterventionMixTooltipBody
@@ -124,6 +127,20 @@ export const InterventionPlanMap: FC<Props> = ({
         [orgUnitInterventions, selectedColor],
     );
 
+    const groupByOrgUnitId = useMemo(
+        () =>
+            new Map(
+                [...interventionGroups]
+                    .reverse()
+                    .flatMap(group =>
+                        group.orgUnitIds.map(
+                            orgUnitId => [orgUnitId, group] as const,
+                        ),
+                    ),
+            ),
+        [interventionGroups],
+    );
+
     const getOrgUnitMapMisc = useCallback(
         (orgUnitId: number) => {
             if (!highlightedOrgUnits.has(orgUnitId)) {
@@ -134,17 +151,14 @@ export const InterventionPlanMap: FC<Props> = ({
                 return { color: selectedColor, label: '' };
             }
 
-            const { color, label } =
-                interventionGroups.find(g =>
-                    g.orgUnitIds.includes(orgUnitId),
-                ) ?? {};
+            const { color, label } = groupByOrgUnitId.get(orgUnitId) ?? {};
             return { color, label };
         },
         [
             highlightedOrgUnits,
             selectedInterventionId,
             selectedColor,
-            interventionGroups,
+            groupByOrgUnitId,
         ],
     );
 
@@ -173,6 +187,7 @@ export const InterventionPlanMap: FC<Props> = ({
                     interventionAssignments.length <= 0
                 }
                 getTooltipContent={getTooltipContent}
+                getTooltipActions={getTooltipActions}
             />
             <Box sx={styles.overlay}>
                 <LabelChip color={titleDotColor} label={titleText} />
