@@ -152,8 +152,8 @@ export const InterventionPlanMap: FC<Props> = ({
         dataLayerYears: scenario?.data_layer_years,
     });
 
-    const { getRuleActions, criterionPreviewIds } = useRuleMapActions({
-        ruleFormActions,
+    const { getTooltipActions, criterionPreviewIds } = useRuleMapActions({
+        ruleFormActions: isPreviewingRule ? ruleFormActions : undefined,
         activeMetricLayer,
         getOrgUnitMetric: getSelectedMetric,
         previewRule,
@@ -202,11 +202,6 @@ export const InterventionPlanMap: FC<Props> = ({
         ],
     );
 
-    const getTooltipActions = useCallback(
-        (orgUnit: OrgUnit) => getRuleActions(orgUnit.id),
-        [getRuleActions],
-    );
-
     return (
         <Box height="100%" width="100%" sx={styles.mainBox}>
             {orgUnits && (
@@ -223,9 +218,7 @@ export const InterventionPlanMap: FC<Props> = ({
                     hideLegend={mapPresentation.hideLegend}
                     dataKey={mapPresentation.mapDataKey}
                     getTooltipContent={getTooltipContent}
-                    getTooltipActions={
-                        isPreviewingRule ? getTooltipActions : undefined
-                    }
+                    getTooltipActions={getTooltipActions}
                 />
             )}
             {metricTypeCategories && isPreviewingRule && (

@@ -25,7 +25,6 @@ const buildPreviewRules = (
         ]),
     ) as ScenarioRulePreviewRequest;
 
-/** One single-criterion rule per operator at `value`, keyed by operator. */
 export const buildOperatorPreviewRules = (
     metricTypeId: number,
     value: number,
@@ -40,7 +39,6 @@ export const buildOperatorPreviewRules = (
         ),
     );
 
-/** One "equal to" rule per ordinal value, keyed by value. */
 export const buildValuePreviewRules = (
     metricTypeId: number,
     values: string[],

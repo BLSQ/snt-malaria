@@ -184,11 +184,7 @@ export const ImpactDetailsTable: FC<Props> = ({
                             styles.highlightedRow,
                     ]}
                 >
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={styles.ellipsis}
-                    >
+                    <Typography variant="caption" color="text.secondary" noWrap>
                         {metricConfig[row.metric].label}
                     </Typography>
                     {renderValue(row.metric, row.baseline, !scenario)}

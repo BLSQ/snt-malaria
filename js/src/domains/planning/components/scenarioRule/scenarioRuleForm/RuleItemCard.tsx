@@ -40,7 +40,7 @@ const styles = {
         backgroundColor: 'background.paper',
         transition: flashTransition(),
         [ACTION_FIELDS]: {
-            transition: 'border-color 400ms, background-color 400ms',
+            transition: flashTransition(),
         },
     },
     clickableCard: {
@@ -109,7 +109,6 @@ type Props = {
     onClick?: () => void;
     clickHint?: string;
     isSelected?: boolean;
-    /** Briefly highlights the card after it was changed from elsewhere. */
     isFlashing?: boolean;
     children?: ReactNode;
 };

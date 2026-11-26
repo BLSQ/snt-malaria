@@ -1,18 +1,16 @@
 import { useCallback } from 'react';
-import { FormikErrors } from 'formik';
-import { ScenarioRuleFormValues } from '../domains/planning/hooks/useScenarioRuleFormState';
 
 type useSetFieldValueAndStateProps = {
     setFieldTouched: (
-        field: string | null,
+        field: string,
         isTouched?: boolean | undefined,
         shouldValidate?: boolean | undefined,
-    ) => Promise<void | FormikErrors<ScenarioRuleFormValues>>;
+    ) => Promise<unknown>;
     setFieldValue: (
-        field: string | null,
+        field: string,
         value: any,
         shouldValidate?: boolean | undefined,
-    ) => Promise<void | FormikErrors<ScenarioRuleFormValues>>;
+    ) => Promise<unknown>;
 };
 
 export const useSetFieldValueAndState = ({
@@ -20,7 +18,7 @@ export const useSetFieldValueAndState = ({
     setFieldValue,
 }: useSetFieldValueAndStateProps) =>
     useCallback(
-        (field: string | null, value: any) => {
+        (field: string, value: any) => {
             setFieldTouched(field, true, false);
             setFieldValue(field, value);
         },
@@ -36,7 +34,7 @@ export const useSetChildFieldValueAndState = ({
         setFieldValue,
     });
     return useCallback(
-        (key: string, index: number, field: string | null, value: any) =>
+        (key: string, index: number, field: string, value: any) =>
             setFieldValueAndState(`${key}[${index}].${field}`, value),
         [setFieldValueAndState],
     );

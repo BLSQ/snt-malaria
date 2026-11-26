@@ -228,7 +228,7 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
         s => s.id === selectedComparisonId,
     );
     const hasData = deltaMap.size > 0;
-    const getImpactDetails = useImpactDetailsExpansion({
+    const getTooltipActions = useImpactDetailsExpansion({
         scenarioId: selectedComparisonId,
         highlightedMetric: selectedMetric,
     });
@@ -271,10 +271,6 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
                 />
             ),
         [baselineScenario, selectedComparison, formatMessage],
-    );
-    const getTooltipActions = useCallback(
-        (orgUnit: OrgUnit) => getImpactDetails(orgUnit.id),
-        [getImpactDetails],
     );
     const dataKey = useMemo(
         () =>

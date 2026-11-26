@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import Box from '@mui/material/Box/Box';
 import ButtonBase from '@mui/material/ButtonBase/ButtonBase';
 import Typography from '@mui/material/Typography/Typography';
@@ -31,9 +31,6 @@ const styles = {
     label: {
         flex: '1 1 auto',
         minWidth: 0,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
     },
     meta: {
         flex: '0 0 auto',
@@ -46,42 +43,52 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
+    id: string;
     symbol: string;
     label: string;
     meta?: string;
     isCurrent?: boolean;
-    onClick: () => void;
-    onHoverChange: (isHovered: boolean) => void;
+    onClick: (id: string) => void;
+    onHover: (id: string) => void;
 };
 
 export const HoverCardActionRow: FC<Props> = ({
+    id,
     symbol,
     label,
     meta,
     isCurrent = false,
     onClick,
-    onHoverChange,
-}) => (
-    <ButtonBase
-        sx={[styles.row, isCurrent && styles.currentRow]}
-        onClick={onClick}
-        onMouseEnter={() => onHoverChange(true)}
-        onMouseLeave={() => onHoverChange(false)}
-    >
-        <Box component="span" sx={styles.symbol}>
-            {symbol}
-        </Box>
-        <Typography variant="body2" component="span" sx={styles.label}>
-            {label}
-        </Typography>
-        {meta && (
+    onHover,
+}) => {
+    const handleClick = useCallback(() => onClick(id), [onClick, id]);
+    const handleMouseEnter = useCallback(() => onHover(id), [onHover, id]);
+    return (
+        <ButtonBase
+            sx={[styles.row, isCurrent && styles.currentRow]}
+            onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+        >
+            <Box component="span" sx={styles.symbol}>
+                {symbol}
+            </Box>
             <Typography
-                variant="caption"
+                variant="body2"
                 component="span"
-                sx={[styles.meta, isCurrent && styles.currentMeta]}
+                noWrap
+                sx={styles.label}
             >
-                {meta}
+                {label}
             </Typography>
-        )}
-    </ButtonBase>
-);
+            {meta && (
+                <Typography
+                    variant="caption"
+                    component="span"
+                    sx={[styles.meta, isCurrent && styles.currentMeta]}
+                >
+                    {meta}
+                </Typography>
+            )}
+        </ButtonBase>
+    );
+};

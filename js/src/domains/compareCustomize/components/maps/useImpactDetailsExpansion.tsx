@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
-import { MapHoverCardActions } from '../../../../components/hoverCard/MapHoverCard';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { GetMapHoverCardActions } from '../../../../components/hoverCard/MapHoverCard';
 import { MESSAGES } from '../../../messages';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { MetricKey } from '../../types';
@@ -17,7 +18,7 @@ export const useImpactDetailsExpansion = ({
 }: {
     scenarioId: number | undefined;
     highlightedMetric?: MetricKey;
-}): ((orgUnitId: number) => MapHoverCardActions) => {
+}): GetMapHoverCardActions => {
     const { formatMessage } = useSafeIntl();
     const {
         scenarios,
@@ -38,29 +39,27 @@ export const useImpactDetailsExpansion = ({
         ? undefined
         : scenarios.find(({ id }) => id === scenarioId);
 
-    const baselineSource = useMemo(
-        () =>
-            baselineScenarioId === undefined
+    const indexScenario = useCallback(
+        (id: number | undefined) =>
+            id === undefined
                 ? undefined
                 : indexOrgUnitMetrics(
-                      impactsByScenarioId.get(baselineScenarioId),
-                      budgetsByScenarioId.get(baselineScenarioId),
+                      impactsByScenarioId.get(id),
+                      budgetsByScenarioId.get(id),
                   ),
-        [baselineScenarioId, impactsByScenarioId, budgetsByScenarioId],
+        [impactsByScenarioId, budgetsByScenarioId],
+    );
+    const baselineSource = useMemo(
+        () => indexScenario(baselineScenarioId),
+        [indexScenario, baselineScenarioId],
     );
     const scenarioSource = useMemo(
-        () =>
-            isBaseline || scenarioId === undefined
-                ? undefined
-                : indexOrgUnitMetrics(
-                      impactsByScenarioId.get(scenarioId),
-                      budgetsByScenarioId.get(scenarioId),
-                  ),
-        [isBaseline, scenarioId, impactsByScenarioId, budgetsByScenarioId],
+        () => (isBaseline ? undefined : indexScenario(scenarioId)),
+        [indexScenario, isBaseline, scenarioId],
     );
 
     return useCallback(
-        (orgUnitId: number) => {
+        ({ id: orgUnitId }: OrgUnit) => {
             if (!baselineScenario || (!isBaseline && !scenario)) return {};
             return {
                 hint: formatMessage(MESSAGES.tooltipClickForImpactDetails),

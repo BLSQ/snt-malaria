@@ -80,6 +80,10 @@ export const OrgUnitFilterControl: FC<Props> = ({
         (next: OrgUnitSelection) => onChange({ ...next, expanded }),
         [onChange, expanded],
     );
+    const handleOrgUnitClick = useCallback(
+        (orgUnitId: number) => update(toggleOrgUnit(selection, orgUnitId)),
+        [update, selection],
+    );
     const updateExpanded = useCallback(
         (next: boolean) => onChange({ ...selection, expanded: next }),
         [onChange, selection],
@@ -142,9 +146,7 @@ export const OrgUnitFilterControl: FC<Props> = ({
                 defaultExpanded={expanded}
                 onExpandedChange={updateExpanded}
                 onResize={onResize}
-                onOrgUnitClick={orgUnitId =>
-                    update(toggleOrgUnit(selection, orgUnitId))
-                }
+                onOrgUnitClick={handleOrgUnitClick}
                 dialogSidePanel={
                     <OrgUnitSelectionPanel
                         value={selection}

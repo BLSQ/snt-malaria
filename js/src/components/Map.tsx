@@ -2,6 +2,7 @@ import React, {
     FC,
     ReactNode,
     useCallback,
+    useEffect,
     useMemo,
     useRef,
     useState,
@@ -30,7 +31,6 @@ import {
     MapHoverCard,
     MapHoverCardHandle,
 } from './hoverCard/MapHoverCard';
-import { MapHoverCardEvents } from './hoverCard/MapHoverCardEvents';
 import { InvalidateOnResize } from './InvalidateOnResize';
 import { MapGeoJSON } from './MapGeoJSON';
 import { MapTypeLayer } from './MapTyleLayer';
@@ -194,17 +194,6 @@ export const Map: FC<Props> = ({
         [selectedOrgUnitIds],
     );
 
-    const fillColorById = useMemo(
-        () =>
-            Object.fromEntries(
-                leafOrgUnits.map(orgUnit => [
-                    orgUnit.id,
-                    getOrgUnitMapMisc(orgUnit.id).color,
-                ]),
-            ),
-        [leafOrgUnits, getOrgUnitMapMisc],
-    );
-
     const [map, setMap] = useState<L.Map | null>(null);
     const hoverCardRef = useRef<MapHoverCardHandle>(null);
     const handleOrgUnitHover = useCallback(
@@ -244,15 +233,25 @@ export const Map: FC<Props> = ({
         [getTooltipContent, getOrgUnitMapMisc],
     );
 
-    const hasClickAction = useMemo(
-        () =>
-            getTooltipActions &&
-            ((orgUnit: OrgUnit) => {
-                const actions = getTooltipActions(orgUnit);
-                return Boolean(actions.onClick || actions.expansion);
-            }),
-        [getTooltipActions],
-    );
+    const getTooltipActionsRef = useRef(getTooltipActions);
+    getTooltipActionsRef.current = getTooltipActions;
+    const hasClickAction = useCallback((orgUnit: OrgUnit) => {
+        const actions = getTooltipActionsRef.current?.(orgUnit);
+        return Boolean(actions?.onClick || actions?.expansion);
+    }, []);
+
+    useEffect(() => {
+        if (!map) return undefined;
+        const unpin = () => hoverCardRef.current?.unpin();
+        map.on('movestart click', unpin);
+        return () => {
+            map.off('movestart click', unpin);
+        };
+    }, [map]);
+
+    useEffect(() => {
+        hoverCardRef.current?.unpin();
+    }, [leafOrgUnits]);
 
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
@@ -278,10 +277,6 @@ export const Map: FC<Props> = ({
                 zoomDelta={defaultZoomDelta}
             >
                 <MapTypeLayer />
-                <MapHoverCardEvents
-                    hoverCardRef={hoverCardRef}
-                    shapes={leafOrgUnits}
-                />
                 <InvalidateOnResize
                     bounds={bounds}
                     boundsOptions={boundsOptions}
@@ -303,7 +298,8 @@ export const Map: FC<Props> = ({
                             dataKey={dataKey}
                             orgUnit={orgUnit}
                             fillColor={
-                                fillColorById[orgUnit.id] ?? defaultColor
+                                getOrgUnitMapMisc(orgUnit.id).color ??
+                                defaultColor
                             }
                             isSelected={selectedIds?.has(orgUnit.id)}
                             isPinned={orgUnit.id === pinnedOrgUnitId}

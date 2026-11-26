@@ -40,7 +40,8 @@ export type MetricTypeCriterion = {
 };
 
 export type RuleFormActions = {
-    toggleOrgUnit: (orgUnitId: number) => void;
+    /** Unset while the rule's matches are reloading. */
+    toggleOrgUnit?: (orgUnitId: number) => void;
     /** Replaces the criterion on the same metric type, or adds it. */
     setCriterion: (criterion: MetricTypeCriterion) => void;
 };

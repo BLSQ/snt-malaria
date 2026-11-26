@@ -101,7 +101,6 @@ type Props = {
     handpickedIds: number[];
     onChangeExcluded: (ids: number[]) => void;
     onChangeHandpicked: (ids: number[]) => void;
-    /** Briefly highlights the tree after it was changed from elsewhere. */
     isFlashing?: boolean;
 };
 

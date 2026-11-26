@@ -41,7 +41,11 @@ const styles = {
     },
 } satisfies SxStyles;
 
-let unpinPinnedCard: (() => void) | undefined;
+let unpinActiveCard: (() => void) | undefined;
+
+const unpinOtherCard = (unpin: () => void) => {
+    if (unpinActiveCard !== unpin) unpinActiveCard?.();
+};
 
 export type MapHoverCardActions = {
     hint?: string;
@@ -86,7 +90,6 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
         const plannedSizeRef = useRef({ width: 0, height: 0 });
         const isOpenRef = useRef(false);
         const isPinnedRef = useRef(false);
-        const unpinRef = useRef<() => void>();
         const hideTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
         const switchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
         const stopMovingRef = useRef<() => void>();
@@ -94,7 +97,6 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             getBoundingClientRect: () =>
                 new DOMRect(pointerRef.current.x, pointerRef.current.y, 0, 0),
         }));
-        const [unpinThisCard] = useState(() => () => unpinRef.current?.());
         const [orgUnit, setOrgUnit] = useState<OrgUnit>();
         const [isOpen, setIsOpen] = useState(false);
         const [isPinned, setIsPinned] = useState(false);
@@ -110,17 +112,11 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
 
         const setPinned = useCallback(
             (pinnedOrgUnit: OrgUnit | undefined) => {
-                if (pinnedOrgUnit) {
-                    if (unpinPinnedCard !== unpinThisCard) unpinPinnedCard?.();
-                    unpinPinnedCard = unpinThisCard;
-                } else if (unpinPinnedCard === unpinThisCard) {
-                    unpinPinnedCard = undefined;
-                }
                 isPinnedRef.current = Boolean(pinnedOrgUnit);
                 setIsPinned(Boolean(pinnedOrgUnit));
                 onPinChange?.(pinnedOrgUnit?.id);
             },
-            [onPinChange, unpinThisCard],
+            [onPinChange],
         );
 
         const switchSide = useCallback((next: QuadrantPlacement) => {
@@ -182,12 +178,14 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             const stop = () => {
                 window.removeEventListener('pointermove', move);
                 window.removeEventListener('pointerup', stop);
+                window.removeEventListener('pointercancel', stop);
                 stopMovingRef.current = undefined;
             };
             stopMovingRef.current?.();
             stopMovingRef.current = stop;
             window.addEventListener('pointermove', move);
             window.addEventListener('pointerup', stop);
+            window.addEventListener('pointercancel', stop);
         }, []);
 
         const unpin = useCallback(() => {
@@ -196,13 +194,12 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
             setPinned(undefined);
             setOpen(false);
         }, [setPinned, setOpen]);
-        unpinRef.current = unpin;
 
         const update = useCallback(
             (hover: MapHover | null) => {
                 if (isPinnedRef.current) return;
                 if (hover) {
-                    if (unpinPinnedCard !== unpinThisCard) unpinPinnedCard?.();
+                    unpinOtherCard(unpin);
                     showAt(hover);
                     return;
                 }
@@ -212,13 +209,14 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
                     HIDE_DELAY_MS,
                 );
             },
-            [showAt, setOpen, unpinThisCard],
+            [showAt, setOpen, unpin],
         );
 
         const click = useCallback(
             (hover: MapHover) => {
                 const actions = getActions?.(hover.orgUnit);
                 if (actions?.expansion) {
+                    unpinOtherCard(unpin);
                     showAt(hover);
                     setPinned(hover.orgUnit);
                     return;
@@ -236,21 +234,20 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
         ]);
 
         useEffect(() => {
-            window.addEventListener('scroll', unpin, true);
-            window.addEventListener('resize', unpin);
-            return () => {
-                window.removeEventListener('scroll', unpin, true);
-                window.removeEventListener('resize', unpin);
-            };
-        }, [unpin]);
-
-        useEffect(() => {
             if (!isPinned) return undefined;
+            unpinActiveCard = unpin;
             const handleKeyDown = (event: KeyboardEvent) => {
                 if (event.key === 'Escape') unpin();
             };
+            window.addEventListener('scroll', unpin, true);
+            window.addEventListener('resize', unpin);
             window.addEventListener('keydown', handleKeyDown);
-            return () => window.removeEventListener('keydown', handleKeyDown);
+            return () => {
+                if (unpinActiveCard === unpin) unpinActiveCard = undefined;
+                window.removeEventListener('scroll', unpin, true);
+                window.removeEventListener('resize', unpin);
+                window.removeEventListener('keydown', handleKeyDown);
+            };
         }, [isPinned, unpin]);
 
         useEffect(
@@ -258,17 +255,18 @@ export const MapHoverCard = forwardRef<MapHoverCardHandle, Props>(
                 clearTimeout(hideTimeoutRef.current);
                 clearTimeout(switchTimeoutRef.current);
                 stopMovingRef.current?.();
-                if (unpinPinnedCard === unpinThisCard) {
-                    unpinPinnedCard = undefined;
-                }
             },
-            [unpinThisCard],
+            [],
         );
 
         const actions = useMemo(
             () => orgUnit && getActions?.(orgUnit),
             [orgUnit, getActions],
         );
+
+        useEffect(() => {
+            if (isPinned && !actions?.expansion) unpin();
+        }, [isPinned, actions, unpin]);
 
         useEffect(() => {
             if (!card) return undefined;

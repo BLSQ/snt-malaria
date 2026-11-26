@@ -1,4 +1,4 @@
-import { upsertCriterion } from './rule-map-actions';
+import { upsertCriterion } from './rule-utils';
 
 describe('upsertCriterion', () => {
     it('replaces the criterion on the same metric type', () => {

@@ -97,7 +97,7 @@ export const InterventionPlanMap: FC<Props> = ({
         [baselineInterventionAssignments],
     );
 
-    const getImpactDetails = useImpactDetailsExpansion({ scenarioId });
+    const getTooltipActions = useImpactDetailsExpansion({ scenarioId });
 
     const getTooltipContent = useCallback(
         (orgUnit: OrgUnit) => (
@@ -111,10 +111,6 @@ export const InterventionPlanMap: FC<Props> = ({
             />
         ),
         [orgUnitInterventions, baselineOrgUnitInterventions, titleDotColor],
-    );
-    const getTooltipActions = useCallback(
-        (orgUnit: OrgUnit) => getImpactDetails(orgUnit.id),
-        [getImpactDetails],
     );
 
     const highlightedOrgUnits = useMemo(

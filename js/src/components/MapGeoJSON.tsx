@@ -6,6 +6,18 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { mapTheme } from '../constants/map-theme';
 import { MapHover } from './hoverCard/MapHoverCard';
 
+const defaultOutline = {
+    color: mapTheme.borderColor,
+    weight: mapTheme.shapeWeight,
+    opacity: 1,
+};
+
+const pinnedOutline = {
+    color: mapTheme.selectedShapeColor,
+    weight: mapTheme.selectedShapeWeight,
+    opacity: mapTheme.pinnedShapeOpacity,
+};
+
 type Props = {
     dataKey?: string;
     orgUnit: OrgUnit;
@@ -15,7 +27,6 @@ type Props = {
     isPinned?: boolean;
     onOrgUnitClick: (hover: MapHover) => void;
     onOrgUnitHover?: (hover: MapHover | null) => void;
-    /** Hovered org units with a click action get a stronger fill. */
     hasClickAction?: (orgUnit: OrgUnit) => boolean;
 };
 
@@ -39,13 +50,7 @@ const MapGeoJSONComponent: FC<Props> = ({
                 ? mapTheme.paleFillOpacity
                 : mapTheme.fillOpacity;
         return {
-            color: isPinned
-                ? mapTheme.selectedShapeColor
-                : mapTheme.borderColor,
-            weight: isPinned
-                ? mapTheme.selectedShapeWeight
-                : mapTheme.shapeWeight,
-            opacity: isPinned ? mapTheme.pinnedShapeOpacity : 1,
+            ...(isPinned ? pinnedOutline : defaultOutline),
             fillColor,
             fillOpacity: isHoverFilled
                 ? Math.min(1, fillOpacity + mapTheme.hoverFillOpacityStep)

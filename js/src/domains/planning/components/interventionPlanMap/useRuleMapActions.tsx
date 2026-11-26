@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
-import { MapHoverCardActions } from '../../../../components/hoverCard/MapHoverCard';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { GetMapHoverCardActions } from '../../../../components/hoverCard/MapHoverCard';
 import { LegendTypes } from '../../../../constants/legend';
 import { useFormatMetricValue } from '../../../../hooks/useFormatMetricValue';
 import { MetricType } from '../../../dataLayers/types/metrics';
@@ -11,7 +12,10 @@ import {
     RuleFormActions,
     ScenarioRule,
 } from '../../types/scenarioRule';
-import { EQUAL_OPERATOR } from '../scenarioRule/scenarioRuleForm/CriterionOperatorSelect';
+import {
+    EQUAL_OPERATOR,
+    Operator,
+} from '../scenarioRule/scenarioRuleForm/CriterionOperatorSelect';
 import { CriterionOperatorActions } from './CriterionOperatorActions';
 import {
     buildValuePreviewRules,
@@ -30,6 +34,12 @@ type Args = {
     dataLayerYears?: Record<string, number>;
 };
 
+type AppliedCriterion = {
+    ids?: number[];
+    layer: MetricType;
+    matchedIdsByMetric?: Record<string, number[]>;
+};
+
 export const useRuleMapActions = ({
     ruleFormActions,
     activeMetricLayer,
@@ -42,12 +52,12 @@ export const useRuleMapActions = ({
     const { formatMessage } = useSafeIntl();
     const formatMetricValue = useFormatMetricValue();
     const [hoveredOperatorIds, setHoveredOperatorIds] = useState<number[]>();
-    const [appliedCriterionIds, setAppliedCriterionIds] = useState<number[]>();
-
-    useEffect(
-        () => setAppliedCriterionIds(undefined),
-        [matchedIdsByMetric, activeMetricLayer],
-    );
+    const [applied, setApplied] = useState<AppliedCriterion>();
+    const appliedCriterionIds =
+        applied?.layer === activeMetricLayer &&
+        applied?.matchedIdsByMetric === matchedIdsByMetric
+            ? applied?.ids
+            : undefined;
 
     const isOrdinalLayer =
         activeMetricLayer?.legend_type === LegendTypes.ORDINAL;
@@ -80,34 +90,55 @@ export const useRuleMapActions = ({
         [activeMetricLayer, previewRule?.matching_criteria],
     );
 
-    const getRuleActions = useCallback(
-        (orgUnitId: number): MapHoverCardActions => {
+    const applyCriterion = useCallback(
+        (
+            criterion: Pick<
+                MetricTypeCriterion,
+                'operator' | 'value' | 'string_value'
+            >,
+            matches?: number[],
+        ) => {
+            if (!ruleFormActions || !activeMetricLayer) return;
+            setHoveredOperatorIds(undefined);
+            setApplied({
+                ids: matches,
+                layer: activeMetricLayer,
+                matchedIdsByMetric,
+            });
+            ruleFormActions.setCriterion({
+                ...defaultMatchingCriteria,
+                metric_type: activeMetricLayer.id,
+                ...criterion,
+            });
+        },
+        [ruleFormActions, activeMetricLayer, matchedIdsByMetric],
+    );
+
+    const applyThreshold = useCallback(
+        (operator: Operator, value: number, matches?: number[]) =>
+            applyCriterion({ operator, value, string_value: '' }, matches),
+        [applyCriterion],
+    );
+
+    const getTooltipActions = useCallback<GetMapHoverCardActions>(
+        ({ id: orgUnitId }: OrgUnit) => {
             if (!ruleFormActions) return {};
             if (!activeMetricLayer) {
+                const { toggleOrgUnit } = ruleFormActions;
+                if (!toggleOrgUnit) return {};
                 return {
                     hint: formatMessage(
                         matchedIds.has(orgUnitId)
                             ? MESSAGES.tooltipClickToRemoveFromRule
                             : MESSAGES.tooltipClickToAddToRule,
                     ),
-                    onClick: () => ruleFormActions.toggleOrgUnit(orgUnitId),
+                    onClick: () => toggleOrgUnit(orgUnitId),
                 };
             }
             const metric = getOrgUnitMetric(orgUnitId);
             if (!metric || activeMetricLayer.is_complete === false) {
                 return {};
             }
-            const setCriterion = (
-                criterion: Pick<
-                    MetricTypeCriterion,
-                    'operator' | 'value' | 'string_value'
-                >,
-            ) =>
-                ruleFormActions.setCriterion({
-                    ...defaultMatchingCriteria,
-                    metric_type: activeMetricLayer.id,
-                    ...criterion,
-                });
 
             if (isOrdinalLayer) {
                 return {
@@ -116,15 +147,14 @@ export const useRuleMapActions = ({
                               value: String(metric.label),
                           })
                         : formatMessage(MESSAGES.tooltipClickToAddCriterion),
-                    onClick: () => {
-                        setAppliedCriterionIds(
+                    onClick: () =>
+                        applyCriterion(
+                            {
+                                operator: EQUAL_OPERATOR,
+                                string_value: metric.value,
+                            },
                             matchesByOrdinalValue?.[metric.value],
-                        );
-                        setCriterion({
-                            operator: EQUAL_OPERATOR,
-                            string_value: metric.value,
-                        });
-                    },
+                        ),
                 };
             }
 
@@ -157,16 +187,8 @@ export const useRuleMapActions = ({
                             isActive={isExpanded}
                             side={side}
                             onPreview={setHoveredOperatorIds}
-                            onApply={(operator, matches) => {
-                                setHoveredOperatorIds(undefined);
-                                setAppliedCriterionIds(matches);
-                                setCriterion({
-                                    operator,
-                                    value,
-                                    string_value: '',
-                                });
-                                close();
-                            }}
+                            onApply={applyThreshold}
+                            onClose={close}
                         />
                     ),
                 },
@@ -183,11 +205,13 @@ export const useRuleMapActions = ({
             dataLayerYears,
             formatMessage,
             formatMetricValue,
+            applyCriterion,
+            applyThreshold,
         ],
     );
 
     return {
-        getRuleActions,
+        getTooltipActions: ruleFormActions ? getTooltipActions : undefined,
         criterionPreviewIds: hoveredOperatorIds ?? appliedCriterionIds,
     };
 };

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box/Box';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -36,8 +36,8 @@ type Props = {
     isActive: boolean;
     side: Side;
     onPreview: (orgUnitIds: number[] | undefined) => void;
-    /** `matches` are the org units the operator matches, when known. */
-    onApply: (operator: Operator, matches?: number[]) => void;
+    onApply: (operator: Operator, value: number, matches?: number[]) => void;
+    onClose: () => void;
 };
 
 export const CriterionOperatorActions: FC<Props> = ({
@@ -49,6 +49,7 @@ export const CriterionOperatorActions: FC<Props> = ({
     side,
     onPreview,
     onApply,
+    onClose,
 }) => {
     const { formatMessage } = useSafeIntl();
     const operatorRules = useMemo(
@@ -62,11 +63,28 @@ export const CriterionOperatorActions: FC<Props> = ({
     );
 
     useEffect(() => {
-        if (!isActive) onPreview(undefined);
+        if (!isActive) return undefined;
+        return () => onPreview(undefined);
     }, [isActive, onPreview]);
 
+    const handleApply = useCallback(
+        (operator: string) => {
+            onApply(operator as Operator, value, matchesByOperator?.[operator]);
+            onClose();
+        },
+        [onApply, onClose, value, matchesByOperator],
+    );
+    const handlePreview = useCallback(
+        (operator: string) => onPreview(matchesByOperator?.[operator]),
+        [onPreview, matchesByOperator],
+    );
+    const clearPreview = useCallback(() => onPreview(undefined), [onPreview]);
+
     return (
-        <Box sx={[styles.list, side.up && styles.upwardsList]}>
+        <Box
+            sx={[styles.list, side.up && styles.upwardsList]}
+            onMouseLeave={clearPreview}
+        >
             {THRESHOLD_OPERATORS.map(operator => {
                 const option = getOperatorOption(operator);
                 const matches = matchesByOperator?.[operator];
@@ -85,14 +103,13 @@ export const CriterionOperatorActions: FC<Props> = ({
                 return (
                     <HoverCardActionRow
                         key={operator}
+                        id={operator}
                         symbol={option?.symbol ?? operator}
                         label={option ? formatMessage(option.label) : operator}
                         meta={meta}
                         isCurrent={isCurrent}
-                        onClick={() => onApply(operator, matches)}
-                        onHoverChange={isHovered =>
-                            onPreview(isHovered ? matches : undefined)
-                        }
+                        onClick={handleApply}
+                        onHover={handlePreview}
                     />
                 );
             })}

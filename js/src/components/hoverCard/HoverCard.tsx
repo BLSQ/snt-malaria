@@ -92,9 +92,6 @@ const styles = {
     actionHeaderText: {
         flex: '1 1 auto',
         minWidth: 0,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
     },
     closeButton: {
         padding: '3px',
@@ -139,7 +136,6 @@ export const toSide = (placement: string): Side => ({
 });
 
 type HoverCardExpansionState = {
-    /** The card's side, so the most used row can sit next to the pointer. */
     side: Side;
     isExpanded: boolean;
     close: () => void;
@@ -151,7 +147,6 @@ export type HoverCardExpansion = {
     content: (state: HoverCardExpansionState) => ReactNode;
 };
 
-/** How much the card grows when its expansion opens. */
 export const getExpansionGrowth = (element: HTMLElement) => {
     const collapsed = element.querySelector(
         `[${EXPANDABLE_ATTRIBUTE}="collapsed"]`,
@@ -167,14 +162,11 @@ type Props = {
     title: string;
     subtitle?: string;
     headerExtra?: ReactNode;
-    /** Short "Click to …" line, only for surfaces where a click does something. */
     hint?: string;
     expansion?: HoverCardExpansion;
     isExpanded: boolean;
     onClose: () => void;
-    /** Starts moving the expanded card from its title bar. */
     onMoveStart?: (event: React.PointerEvent) => void;
-    /** Side the card opens towards from the pointer; the action area faces the pointer. */
     side: Side;
     children?: ReactNode;
 };
@@ -192,6 +184,7 @@ export const HoverCard: FC<Props> = ({
     children,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const closeLabel = formatMessage(MESSAGES.tooltipClose);
     const showsExpansion = isExpanded && expansion;
     return (
         <Box sx={[styles.card, Boolean(showsExpansion) && styles.expandedCard]}>
@@ -231,6 +224,7 @@ export const HoverCard: FC<Props> = ({
                             )}
                             <Typography
                                 variant="caption"
+                                noWrap
                                 sx={styles.actionHeaderText}
                             >
                                 {expansion.title}
@@ -238,10 +232,8 @@ export const HoverCard: FC<Props> = ({
                             <IconButton
                                 sx={styles.closeButton}
                                 onClick={onClose}
-                                title={formatMessage(MESSAGES.tooltipClose)}
-                                aria-label={formatMessage(
-                                    MESSAGES.tooltipClose,
-                                )}
+                                title={closeLabel}
+                                aria-label={closeLabel}
                             >
                                 <CloseIcon sx={styles.closeIcon} />
                             </IconButton>
@@ -256,6 +248,7 @@ export const HoverCard: FC<Props> = ({
                             <AdsClickIcon sx={styles.hintIcon} />
                             <Typography
                                 variant="caption"
+                                noWrap
                                 sx={styles.actionHeaderText}
                             >
                                 {hint}
