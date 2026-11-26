@@ -1,22 +1,28 @@
 import React, { FC, ReactNode } from 'react';
-import { SidePanelContext } from './SidePanelContext';
+import {
+    SidePanelActionsContext,
+    SidePanelMode,
+    SidePanelStateContext,
+} from './SidePanelContext';
 import { useSidePanelState } from './useSidePanelState';
 
 type Props = {
-    defaultOpen?: boolean;
-    locked?: boolean;
+    storageKey: string;
+    defaultMode?: SidePanelMode;
     children: ReactNode;
 };
 
 export const SidePanelProvider: FC<Props> = ({
-    defaultOpen = true,
-    locked = false,
+    storageKey,
+    defaultMode,
     children,
 }) => {
-    const value = useSidePanelState(defaultOpen, locked);
+    const { state, actions } = useSidePanelState({ storageKey, defaultMode });
     return (
-        <SidePanelContext.Provider value={value}>
-            {children}
-        </SidePanelContext.Provider>
+        <SidePanelActionsContext.Provider value={actions}>
+            <SidePanelStateContext.Provider value={state}>
+                {children}
+            </SidePanelStateContext.Provider>
+        </SidePanelActionsContext.Provider>
     );
 };

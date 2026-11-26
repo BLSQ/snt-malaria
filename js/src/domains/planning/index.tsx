@@ -1,5 +1,4 @@
 import React, { FC, ReactNode, useCallback, useMemo, useState } from 'react';
-import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import {
     LoadingSpinner,
     useRedirectToReplace,
@@ -9,11 +8,8 @@ import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SidePanel } from '../../components/sidePanel/SidePanel';
-import {
-    MainColumn,
-    PageContainer,
-    SidebarLayout,
-} from '../../components/styledComponents';
+import { SidePanelLayout } from '../../components/sidePanel/SidePanelLayout';
+import { PageContainer } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
 import { useOnboarding } from '../../hooks/useOnboarding';
 
@@ -27,7 +23,6 @@ import { InterventionPlanHeader } from './components/interventionPlan/Interventi
 import { PlanningMainColumn } from './components/PlanningMainColumn';
 import { ScenarioRuleAIChatColumn } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChatColumn';
 import { useScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/useScenarioRuleAIChat';
-import { ScenarioRulesActions } from './components/scenarioRule/scenarioRuleList/ScenarioRulesHeader';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
@@ -205,56 +200,54 @@ export const Planning: FC = () => {
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
-                <SidebarLayout>
-                    {showAIChat && hasAiApiKey && (
-                        <ScenarioRuleAIChatColumn
-                            messages={aiChatMessages}
-                            isLoading={isAiChatLoading}
-                            onSendMessage={sendAiChatMessage}
-                            onRevert={revertAiChatMessage}
-                            pendingAttachments={aiChatPendingAttachments}
-                            onAttachFiles={onAiChatAttachFiles}
-                            onRemoveAttachment={onAiChatRemoveAttachment}
-                        />
-                    )}
-                    <SidePanel
-                        icon={SettingsInputComponentOutlinedIcon}
-                        actions={
-                            <ScenarioRulesActions
+                <SidePanelLayout
+                    before={
+                        showAIChat &&
+                        hasAiApiKey && (
+                            <ScenarioRuleAIChatColumn
+                                messages={aiChatMessages}
+                                isLoading={isAiChatLoading}
+                                onSendMessage={sendAiChatMessage}
+                                onRevert={revertAiChatMessage}
+                                pendingAttachments={aiChatPendingAttachments}
+                                onAttachFiles={onAiChatAttachFiles}
+                                onRemoveAttachment={onAiChatRemoveAttachment}
+                            />
+                        )
+                    }
+                    panel={
+                        <SidePanel
+                            title={formatMessage(MESSAGES.interventionTitle)}
+                            hint={formatMessage(MESSAGES.scenarioRulesCount, {
+                                count: scenarioRules?.length ?? 0,
+                            })}
+                        >
+                            <ScenarioRulesPanel
+                                onPreviewScenarioRule={setRulePreview}
+                                scenarioId={scenarioId}
+                                rules={scenarioRules || []}
+                                isLoading={isFetchingRules}
+                                createRuleRef={tour.anchorRefs[0]}
                                 hasAiApiKey={hasAiApiKey}
                                 showAIChat={showAIChat}
                                 onToggleAIChat={toggleAIChat}
                             />
+                        </SidePanel>
+                    }
+                >
+                    <PlanningMainColumn
+                        renderHeader={renderPlanHeader}
+                        matchedOrgUnitIds={
+                            rulePreview?.matchedOrgUnitIds ??
+                            NO_MATCHED_ORG_UNITS
                         }
-                    >
-                        <ScenarioRulesPanel
-                            onPreviewScenarioRule={setRulePreview}
-                            scenarioId={scenarioId}
-                            rules={scenarioRules || []}
-                            isLoading={isFetchingRules}
-                            createRuleRef={tour.anchorRefs[0]}
-                            hasAiApiKey={hasAiApiKey}
-                            showAIChat={showAIChat}
-                            onToggleAIChat={toggleAIChat}
-                        />
-                    </SidePanel>
-                    <MainColumn>
-                        <PlanningMainColumn
-                            renderHeader={renderPlanHeader}
-                            matchedOrgUnitIds={
-                                rulePreview?.matchedOrgUnitIds ??
-                                NO_MATCHED_ORG_UNITS
-                            }
-                            matchedIdsByMetric={rulePreview?.matchedIdsByMetric}
-                            previewRule={rulePreview?.rule}
-                            ruleFormActions={rulePreview?.actions}
-                            scenarioRules={scenarioRules || []}
-                            isBudgetLoaded={
-                                Boolean(orgUnits) && !isLoadingBudget
-                            }
-                        />
-                    </MainColumn>
-                </SidebarLayout>
+                        matchedIdsByMetric={rulePreview?.matchedIdsByMetric}
+                        previewRule={rulePreview?.rule}
+                        ruleFormActions={rulePreview?.actions}
+                        scenarioRules={scenarioRules || []}
+                        isBudgetLoaded={Boolean(orgUnits) && !isLoadingBudget}
+                    />
+                </SidePanelLayout>
             </PageContainer>
             {tour.element}
         </PlanningProvider>

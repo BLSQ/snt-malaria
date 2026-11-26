@@ -7,7 +7,7 @@ import React, {
     useState,
 } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import LayersIcon from '@mui/icons-material/Layers';
+import Box from '@mui/material/Box/Box';
 import Card from '@mui/material/Card/Card';
 import Stack from '@mui/material/Stack/Stack';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
@@ -19,18 +19,16 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { CardStyled } from '../../components/CardStyled';
+import { IconBoxed } from '../../components/IconBoxed';
 import { SidePanel } from '../../components/sidePanel/SidePanel';
+import { useSidePanelActions } from '../../components/sidePanel/SidePanelContext';
+import { SidePanelDockButton } from '../../components/sidePanel/SidePanelDockButton';
+import { SidePanelLayout } from '../../components/sidePanel/SidePanelLayout';
+import { SidePanelProvider } from '../../components/sidePanel/SidePanelProvider';
+import { useSidePanelHold } from '../../components/sidePanel/useSidePanelHold';
 import {
-    SidePanelContext,
-    SidePanelContextValue,
-} from '../../components/sidePanel/SidePanelContext';
-import { SidePanelIconToggle } from '../../components/sidePanel/SidePanelIconToggle';
-import { useSidePanelState } from '../../components/sidePanel/useSidePanelState';
-import {
-    MainColumn,
     PageContainer,
     PaperFullHeight,
-    SidebarLayout,
 } from '../../components/styledComponents';
 import { SETTINGS_WRITE } from '../../constants/permissions';
 import { baseUrls } from '../../constants/urls';
@@ -46,6 +44,7 @@ import {
 } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
+import { MESSAGES as COMPOSITE_MESSAGES } from '../compositeLayerEditor/messages';
 import {
     CompositeSidebarTab,
     CompositeSidebarTabs,
@@ -58,15 +57,11 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
 import { DataLayerComparisonContainer } from './dataLayerComparison/dataLayerComparisonContainer';
 import { DataLayerList } from './dataLayerList/DataLayerList';
-import {
-    DataLayerListActions,
-    DataLayerListHeader,
-} from './dataLayerList/DataLayerListHeader';
+import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { DataLayerWizardMain } from './dataLayerWizard/DataLayerWizardMain';
 import { DataLayerWizardPanel } from './dataLayerWizard/DataLayerWizardPanel';
 import { DiscardWizardModal } from './dataLayerWizard/DiscardWizardModal';
-import { WIZARD_STEPS } from './dataLayerWizard/useDataLayerWizard';
 import { useDataLayerWizardController } from './dataLayerWizard/useDataLayerWizardController';
 import { useWizardMapPreview } from './dataLayerWizard/useWizardMapPreview';
 import { WizardLegendPreview } from './dataLayerWizard/WizardLegendPreview';
@@ -85,13 +80,16 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
     },
+    headerEnd: {
+        ml: 'auto',
+    },
 } satisfies SxStyles;
 
 type DataLayersParams = {
     displayOrgUnitId?: number;
 };
 
-export const DataLayers: FC = () => {
+const DataLayersPage: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
@@ -211,10 +209,7 @@ export const DataLayers: FC = () => {
         [compositeLayerByMetricType],
     );
 
-    // Collapsible data layers sidebar. Locked (can't collapse) while creating/editing a layer,
-    // wired in further down once `wizard` exists - see `sidePanel` below.
-    const sidePanelState = useSidePanelState(true);
-    const { open: openSidePanel } = sidePanelState;
+    const { reveal: revealSidePanel } = useSidePanelActions();
 
     // Only meaningful while the composite editor is open, and only when there is an AI key.
     const [sidebarTab, setSidebarTab] =
@@ -231,11 +226,10 @@ export const DataLayers: FC = () => {
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
-        openSidePanel();
         setSidebarTab('library');
         setNodeSearchTerm('');
         resetAiChat();
-    }, [resetAiChat, openSidePanel]);
+    }, [resetAiChat]);
 
     // After saving, close the editor and show the resulting composite layer on the map.
     const onCompositeSaved = useCallback(
@@ -262,24 +256,6 @@ export const DataLayers: FC = () => {
     });
     const wizardPreview = useWizardMapPreview(wizard);
 
-    // Locks the sidebar open while creating/editing a layer, so its form can't be hidden
-    // mid-flow - except on the Data/Graph step, where collapsing it gives the main view room.
-    // Can't be built into `sidePanelState` above since `wizard` doesn't exist yet at that point
-    // (it needs `openSidePanel`, which needs `sidePanelState` first).
-    const isSidePanelLocked =
-        wizard.isOpen && wizard.activeStep !== WIZARD_STEPS.DATA;
-    const sidePanel: SidePanelContextValue = useMemo(
-        () => ({
-            ...sidePanelState,
-            locked: isSidePanelLocked,
-            toggle: isSidePanelLocked
-                ? sidePanelState.open
-                : sidePanelState.toggle,
-            close: isSidePanelLocked ? () => {} : sidePanelState.close,
-        }),
-        [sidePanelState, isSidePanelLocked],
-    );
-
     const onEditMetricType = useCallback(
         (metricType: MetricType) =>
             wizard.openForEdit(
@@ -296,10 +272,10 @@ export const DataLayers: FC = () => {
 
     const onWizardGraphSaved = useCallback(
         (metricType?: MetricType) => {
-            openSidePanel();
+            revealSidePanel();
             wizard.onCompositeGraphSaved(metricType);
         },
-        [wizard, openSidePanel],
+        [wizard, revealSidePanel],
     );
 
     // Keeps the edited composite selected in the list while the editor is open.
@@ -326,13 +302,18 @@ export const DataLayers: FC = () => {
                 <>
                     <Stack direction="row" alignItems="center" spacing={1}>
                         {isCompositeEditorOpen && (
-                            <SidePanelIconToggle icon={AccountTreeIcon} />
+                            <IconBoxed Icon={AccountTreeIcon} />
                         )}
                         <CompositeSidebarTabs
                             tab={sidebarTab}
                             onChangeTab={setSidebarTab}
                             showTabs={hasAiApiKey}
                         />
+                        {isCompositeEditorOpen && (
+                            <Box sx={styles.headerEnd}>
+                                <SidePanelDockButton />
+                            </Box>
+                        )}
                     </Stack>
                     {!isAiChatTab && (
                         <NodeLibrarySearch
@@ -448,16 +429,19 @@ export const DataLayers: FC = () => {
         return layerListCard;
     };
 
-    const sidePanelIcon = isCompositeEditorOpen ? AccountTreeIcon : LayersIcon;
-    const sidePanelActions =
-        isCompositeEditorActive || wizard.isOpen ? undefined : (
-            <DataLayerListActions
-                onCreate={() => {
-                    openSidePanel();
-                    wizard.open();
-                }}
-            />
-        );
+    useSidePanelHold(
+        `${wizard.isOpen}:${wizard.activeStep}:${isCompositeEditorOpen}`,
+    );
+
+    const sidePanelTitle = (() => {
+        if (isCompositeEditorOpen) {
+            return formatMessage(COMPOSITE_MESSAGES.nodeLibraryTabLabel);
+        }
+        if (wizard.isOpen) {
+            return formatMessage(wizard.titleMessage);
+        }
+        return formatMessage(MESSAGES.dataLayersTitle);
+    })();
 
     const mapColumn = (
         <Stack direction="row" gap={1} sx={{ height: '100%' }}>
@@ -527,48 +511,46 @@ export const DataLayers: FC = () => {
     };
 
     return (
-        <SidePanelContext.Provider value={sidePanel}>
-            <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
-                {isLoadingMetricLayers && <LoadingSpinner />}
-                <TopBar
-                    title={formatMessage(MESSAGES.dataLayersTitle)}
-                    disableShadow
-                    sx={{ zIndex: 401 }}
-                />
-                <PageContainer>
-                    <SidebarLayout>
-                        <SidePanel
-                            icon={sidePanelIcon}
-                            actions={sidePanelActions}
-                        >
-                            <PaperFullHeight>
-                                {renderSidebarColumn()}
-                            </PaperFullHeight>
+        <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
+            {isLoadingMetricLayers && <LoadingSpinner />}
+            <TopBar
+                title={formatMessage(MESSAGES.dataLayersTitle)}
+                disableShadow
+                sx={{ zIndex: 401 }}
+            />
+            <PageContainer>
+                <SidePanelLayout
+                    panel={
+                        <SidePanel title={sidePanelTitle}>
+                            {renderSidebarColumn()}
                         </SidePanel>
-                        <MainColumn>
-                            <PaperFullHeight>
-                                {renderMainColumn()}
-                            </PaperFullHeight>
-                        </MainColumn>
-                    </SidebarLayout>
-                    <DiscardWizardModal
-                        open={wizard.discardOpen}
-                        titleMessage={wizard.titleMessage}
-                        message={wizard.discardMessage}
-                        onConfirm={wizard.confirmDiscard}
-                        onCancel={wizard.cancelDiscard}
-                    />
-                    <DiscardWizardModal
-                        id="data-layer-wizard-back-graph"
-                        open={wizard.backConfirmOpen}
-                        titleMessage={wizard.titleMessage}
-                        message={MESSAGES.wizardBackGraphConfirm}
-                        onConfirm={wizard.confirmBack}
-                        onCancel={wizard.cancelBack}
-                    />
-                </PageContainer>
-                {onboarding.element}
-            </DataLayerComparisonProvider>
-        </SidePanelContext.Provider>
+                    }
+                >
+                    <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
+                </SidePanelLayout>
+                <DiscardWizardModal
+                    open={wizard.discardOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={wizard.discardMessage}
+                    onConfirm={wizard.confirmDiscard}
+                    onCancel={wizard.cancelDiscard}
+                />
+                <DiscardWizardModal
+                    id="data-layer-wizard-back-graph"
+                    open={wizard.backConfirmOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={MESSAGES.wizardBackGraphConfirm}
+                    onConfirm={wizard.confirmBack}
+                    onCancel={wizard.cancelBack}
+                />
+            </PageContainer>
+            {onboarding.element}
+        </DataLayerComparisonProvider>
     );
 };
+
+export const DataLayers: FC = () => (
+    <SidePanelProvider storageKey="snt_malaria.dataLayers.sidePanelMode">
+        <DataLayersPage />
+    </SidePanelProvider>
+);

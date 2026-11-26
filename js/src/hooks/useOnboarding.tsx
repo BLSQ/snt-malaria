@@ -14,6 +14,7 @@ import {
     SpotlightShape,
 } from '../components/OnboardingSpotlight';
 import { MESSAGES } from '../domains/messages';
+import { safeRead, safeWrite } from '../utils/safeStorage';
 
 /**
  * Onboarding tours with optional documentation links: pass `documentation`
@@ -86,23 +87,6 @@ type UseOnboardingResult = {
 
 const STORAGE_KEY_PREFIX = 'snt_malaria.onboarding.';
 const DONE = 'done';
-
-const safeRead = (key: string): string | null => {
-    try {
-        if (typeof window === 'undefined') return null;
-        return window.localStorage.getItem(key);
-    } catch {
-        return null;
-    }
-};
-
-const safeWrite = (key: string, value: string) => {
-    try {
-        window.localStorage.setItem(key, value);
-    } catch {
-        // ignore unavailable storage; in-memory state still drives the session
-    }
-};
 
 const readStep = (key: string, total: number): number => {
     const stored = safeRead(key);
