@@ -130,7 +130,7 @@ class ScenarioRuleMatchingCriteriaJsonValidationTests(SNTMalariaTestCase):
                 {"==": [{"var": 2}, unexpected_object]}  # right operand should be a string, number, or boolean
             ]
         }
-        with self.assertRaisesMessage(ValidationError, f"{str(unexpected_object)} is not valid"):
+        with self.assertRaisesMessage(ValidationError, f"{unexpected_object!s} is not valid"):
             jsonschema.validate(object_operand, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
 
         null_operand = {"and": [{"==": [{"var": 2}, None]}]}

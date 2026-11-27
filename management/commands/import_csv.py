@@ -199,7 +199,7 @@ class Command(BaseCommand):
             df[col] = 0
 
         # Keep only columns in columns_map and extra_columns (plus org_unit_id)
-        keep_cols = ["org_unit_id"] + list(columns_map.values()) + extra_columns
+        keep_cols = ["org_unit_id", *list(columns_map.values()), extra_columns]
         df = df[[col for col in keep_cols if col in df.columns]]
 
         df.info(buf=buf)

@@ -48,13 +48,13 @@ class SwissTPHImpactProvider(ImpactProvider):
 
     The following keys in the config JSON control provider behaviour:
 
-    - ``admin_field`` – the SwissTPHImpactData column used for org-unit
+    - ``admin_field`` - the SwissTPHImpactData column used for org-unit
       matching (default ``"admin_1"``).
-    - ``eir_ci_mean``, ``eir_ci_lower``, ``eir_ci_upper`` – the values
+    - ``eir_ci_mean``, ``eir_ci_lower``, ``eir_ci_upper`` - the values
       stored in the ``eir_ci`` column that correspond to the mean, lower,
       and upper confidence-interval bands (defaults ``"EIR_mean"``,
       ``"EIR_lci"``, ``"EIR_uci"``).
-    - ``use_treated_cases`` – when true, case metrics count treated episodes
+    - ``use_treated_cases`` - when true, case metrics count treated episodes
       (``tUncomp``/``tSevere``) instead of all episodes (``nUncomp``/``nSevere``)
       (default ``False``).
     """
