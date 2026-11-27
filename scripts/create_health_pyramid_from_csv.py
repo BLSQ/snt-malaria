@@ -1,6 +1,8 @@
 import csv
 import os
 
+from collections import defaultdict
+
 import requests
 
 
@@ -115,11 +117,6 @@ for level, ou_type in ou_types.items():
 
 
 # PARENT_LEVEL_3_ID,PARENT_LEVEL_3_NAME
-
-
-import csv
-
-from collections import defaultdict
 
 
 # Function to create a nested dictionary

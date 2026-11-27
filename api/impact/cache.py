@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-
 """View-level cache for serialized impact API responses.
 
 Entries are keyed by (scenario_id, scenario.updated_at, latest
@@ -20,6 +17,8 @@ e.g. when their impact mapping changes.
 The TTL is read from ImpactProviderConfig.cache_ttl_seconds.
 Setting it to 0 disables caching entirely.
 """
+
+from __future__ import annotations
 
 import hashlib
 
