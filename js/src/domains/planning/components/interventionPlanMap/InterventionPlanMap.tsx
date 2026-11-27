@@ -24,6 +24,7 @@ import {
 } from './buildEffectiveAssignments';
 import { getInterventionMapPresentation } from './getInterventionMapPresentation';
 import { InterventionsTooltipBody } from './InterventionsTooltipBody';
+import { markMapPanelEvent } from './mapPanelInteraction';
 import { MetricLayerTooltipBody } from './MetricLayerTooltipBody';
 import { RuleSelectionTooltipBody } from './RuleSelectionTooltipBody';
 import { useRuleMapActions } from './useRuleMapActions';
@@ -203,7 +204,13 @@ export const InterventionPlanMap: FC<Props> = ({
     );
 
     return (
-        <Box height="100%" width="100%" sx={styles.mainBox}>
+        <Box
+            height="100%"
+            width="100%"
+            sx={styles.mainBox}
+            onPointerDownCapture={markMapPanelEvent}
+            onFocusCapture={markMapPanelEvent}
+        >
             {orgUnits && (
                 <SNTMap
                     id="intervention_plan_map"

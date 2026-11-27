@@ -13,6 +13,7 @@ import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { formatBigNumber } from '../../../libs/cost-utils';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
+import { isMapPanelEvent } from '../../interventionPlanMap/mapPanelInteraction';
 import {
     CriterionOperatorSelect,
     EQUAL_OPERATOR,
@@ -91,13 +92,16 @@ export const MatchingCriterionForm: FC<Props> = ({
         metricType !== undefined &&
         mapMetricTypeId === metricType.id;
 
-    const handleToggleOnMap = useCallback(() => {
-        if (isShownOnMap) {
-            setMapMetricTypeId(undefined);
-        } else if (metricType) {
+    const handleShowOnMap = useCallback(() => {
+        if (metricType) {
             showMetricOnMap(metricType.id);
         }
-    }, [isShownOnMap, metricType, setMapMetricTypeId, showMetricOnMap]);
+    }, [metricType, showMetricOnMap]);
+
+    const handleHideFromMap = useCallback(
+        () => setMapMetricTypeId(undefined),
+        [setMapMetricTypeId],
+    );
 
     const handleRemove = useCallback(() => {
         if (metricType && mapMetricTypeId === metricType.id) {
@@ -117,12 +121,15 @@ export const MatchingCriterionForm: FC<Props> = ({
             title={metricType?.name ?? ''}
             caption={scaleLabel}
             onRemove={handleRemove}
-            onClick={handleToggleOnMap}
-            clickHint={formatMessage(
+            onClick={handleShowOnMap}
+            selectOnFocus
+            onDeselect={handleHideFromMap}
+            keepSelectedOn={isMapPanelEvent}
+            clickHint={
                 isShownOnMap
-                    ? MESSAGES.criterionHideOnMapHint
-                    : MESSAGES.criterionShowOnMapHint,
-            )}
+                    ? undefined
+                    : formatMessage(MESSAGES.criterionShowOnMapHint)
+            }
             isSelected={isShownOnMap}
             isFlashing={isFlashing}
         >

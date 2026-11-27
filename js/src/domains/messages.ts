@@ -2005,17 +2005,13 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Coverage values set in scenario rules for this item will be reset.',
     },
-    showCombinedMap: {
-        id: 'iaso.snt_malaria.scenarioRule.showCombinedMap',
-        defaultMessage: 'Show combined map',
+    combinedMapHint: {
+        id: 'iaso.snt_malaria.scenarioRule.combinedMapHint',
+        defaultMessage: 'Click outside to combine',
     },
     criterionShowOnMapHint: {
         id: 'iaso.snt_malaria.scenarioRule.criterionShowOnMapHint',
         defaultMessage: 'Click to show on map',
-    },
-    criterionHideOnMapHint: {
-        id: 'iaso.snt_malaria.scenarioRule.criterionHideOnMapHint',
-        defaultMessage: 'Click to hide from map',
     },
     interventionOverridesHint: {
         id: 'iaso.snt_malaria.scenarioRule.interventionOverridesHint',
