@@ -82,7 +82,7 @@ class Command(BaseCommand):
 
             # Create account_user with name concatenated from main_user and account
             account_user = User.objects.create(
-                username=f"{main_user.username}_account_{str(account.id)}",
+                username=f"{main_user.username}_account_{account.id!s}",
                 first_name=main_user.first_name,
                 last_name=main_user.last_name,
                 email=main_user.email,

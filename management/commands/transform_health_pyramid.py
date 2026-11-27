@@ -186,7 +186,7 @@ class Command(BaseCommand):
         """
         # Find level columns using the actual column naming pattern
         # Always include level 0 (country) if it exists
-        all_levels = [0] + levels if 0 not in levels else levels
+        all_levels = [0, *levels] if 0 not in levels else levels
         level_columns = []
         for level in all_levels:
             # Add both ID and NAME columns for each level

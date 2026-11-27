@@ -70,7 +70,7 @@ class MetricsImporter:
             return metrics_count + popmetrics_count
 
         except Exception as e:
-            raise CommandError(f"Failed to import metrics: {str(e)}")
+            raise CommandError(f"Failed to import metrics: {e!s}")
 
     def _validate_csv_files(self, metadata_file, dataset_file):
         # Validate metadata file
@@ -302,7 +302,7 @@ class MetricsImporter:
                 return value_count
 
         except Exception as e:
-            self.stdout_write(f"ERROR: Error during import, rolling back transaction: {str(e)}")
+            self.stdout_write(f"ERROR: Error during import, rolling back transaction: {e!s}")
             raise
 
     def _configure_legends(self, metric_types):

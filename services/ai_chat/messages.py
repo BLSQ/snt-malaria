@@ -28,7 +28,7 @@ def append_turn(
     if attachments:
         # So a later turn's resent history still references the same uploaded file.
         user_entry["attachments"] = attachments
-    return list(conversation_history) + [user_entry, {"role": "assistant", "content": response_text}]
+    return [*list(conversation_history), user_entry, {"role": "assistant", "content": response_text}]
 
 
 def extract_json_text(response_text: str) -> str:

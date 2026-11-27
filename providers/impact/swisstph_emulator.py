@@ -56,13 +56,13 @@ class SwissTPHEmulatorImpactProvider(ImpactProvider):
 
     The following keys in the config JSON control provider behaviour:
 
-    - ``bundle`` – emulator bundle to load (default ``"v7_av"``); it must
+    - ``bundle`` - emulator bundle to load (default ``"v7_av"``); it must
       provide clinical, uncomplicated and severe incidence, prevalence and
       population.
-    - ``eir_ci_mean``, ``eir_ci_lower``, ``eir_ci_upper`` – EIR levels used
+    - ``eir_ci_mean``, ``eir_ci_lower``, ``eir_ci_upper`` - EIR levels used
       as the mean, lower and upper confidence-interval bands (defaults
       ``"EIR_mean"``, ``"EIR_lci"``, ``"EIR_uci"``).
-    - ``coverage`` – coverage (0-1) per emulator intervention when deployed,
+    - ``coverage`` - coverage (0-1) per emulator intervention when deployed,
       e.g. ``{"SMC": 0.9}``; unlisted interventions default to 0.8.
     """
 
