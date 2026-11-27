@@ -2,9 +2,9 @@ import React, { FC, ReactNode, useCallback } from 'react';
 import JoinInnerOutlinedIcon from '@mui/icons-material/JoinInnerOutlined';
 import Alert from '@mui/material/Alert/Alert';
 import Box from '@mui/material/Box/Box';
-import Button from '@mui/material/Button/Button';
 import Stack from '@mui/material/Stack/Stack';
 import TextField from '@mui/material/TextField/TextField';
+import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
 
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
@@ -41,12 +41,15 @@ const styles = {
             overflowWrap: 'anywhere',
         },
     },
-    showCombinedMapButton: {
+    combinedMapHint: {
         flex: '0 0 auto',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.5,
+        color: 'text.secondary',
         whiteSpace: 'nowrap',
-        px: 0.75,
-        py: 0.25,
     },
+    combinedMapHintIcon: { fontSize: 16 },
     coverage: {
         flex: '0 0 auto',
         px: 2,
@@ -85,17 +88,8 @@ export const ScenarioRuleForm: FC<Props> = ({
     isScopeFlashing,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const {
-        metricTypeCategories,
-        interventionCategories,
-        mapMetricTypeId,
-        setMapMetricTypeId,
-    } = usePlanningContext();
-
-    const handleShowCombinedMap = useCallback(
-        () => setMapMetricTypeId(undefined),
-        [setMapMetricTypeId],
-    );
+    const { metricTypeCategories, interventionCategories, mapMetricTypeId } =
+        usePlanningContext();
 
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
@@ -187,15 +181,15 @@ export const ScenarioRuleForm: FC<Props> = ({
                         footerAction={
                             mapMetricTypeId !== undefined &&
                             values.matching_criteria.length > 0 && (
-                                <Button
-                                    variant="text"
-                                    size="small"
-                                    startIcon={<JoinInnerOutlinedIcon />}
-                                    onClick={handleShowCombinedMap}
-                                    sx={styles.showCombinedMapButton}
+                                <Typography
+                                    variant="caption"
+                                    sx={styles.combinedMapHint}
                                 >
-                                    {formatMessage(MESSAGES.showCombinedMap)}
-                                </Button>
+                                    <JoinInnerOutlinedIcon
+                                        sx={styles.combinedMapHintIcon}
+                                    />
+                                    {formatMessage(MESSAGES.combinedMapHint)}
+                                </Typography>
                             )
                         }
                     />

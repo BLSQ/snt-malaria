@@ -11,6 +11,7 @@ import {
     HoverSwapTile,
     hoverSwapTileTrigger,
 } from '../../../../../components/HoverSwapTile';
+import { useDismissOnOutsideInteraction } from '../../../../../hooks/useDismissOnOutsideInteraction';
 import { MESSAGES } from '../../../../messages';
 import { flashingStyles, flashTransition } from './styles';
 
@@ -107,6 +108,9 @@ type Props = {
     caption?: string;
     onRemove: () => void;
     onClick?: () => void;
+    selectOnFocus?: boolean;
+    onDeselect?: () => void;
+    keepSelectedOn?: (event: Event) => boolean;
     clickHint?: string;
     isSelected?: boolean;
     isFlashing?: boolean;
@@ -119,6 +123,9 @@ export const RuleItemCard: FC<Props> = ({
     caption,
     onRemove,
     onClick,
+    selectOnFocus = false,
+    onDeselect,
+    keepSelectedOn,
     clickHint,
     isSelected = false,
     isFlashing = false,
@@ -139,6 +146,10 @@ export const RuleItemCard: FC<Props> = ({
         [],
     );
     const handleMouseLeave = useCallback(() => setIsHintOpen(false), []);
+    const insideInteractionHandlers = useDismissOnOutsideInteraction(
+        isSelected ? onDeselect : undefined,
+        keepSelectedOn,
+    );
     const handleClick = useCallback(
         (event: MouseEvent<HTMLElement>) => {
             if (isCardBodyEvent(event)) {
@@ -175,6 +186,8 @@ export const RuleItemCard: FC<Props> = ({
                     isFlashing && styles.flashingCard,
                 ]}
                 onClick={handleClick}
+                onFocus={selectOnFocus ? onClick : undefined}
+                {...insideInteractionHandlers}
                 onMouseOver={handleMouseOver}
                 onMouseLeave={handleMouseLeave}
             >
