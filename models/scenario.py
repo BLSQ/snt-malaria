@@ -138,6 +138,20 @@ class ScenarioRuleQuerySet(models.QuerySet):
             return super().bulk_update(objs, fields, batch_size)
 
 
+def _match_numeric_label_as_number(condition: dict) -> dict:
+    """Lets an "equal to" text condition such as "3" also match metric values stored as the number 3."""
+    if "==" not in condition:
+        return condition
+    field, label = condition["=="]
+    if not isinstance(label, str):
+        return condition
+    try:
+        number = float(label)
+    except ValueError:
+        return condition
+    return {"or": [condition, {"==": [field, number]}]}
+
+
 class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
     name = models.CharField(max_length=255, blank=True)
@@ -227,6 +241,7 @@ class ScenarioRule(models.Model):
                 year_q |= Q(metric_type_id=mt_id, year__isnull=True)
         if conditions:
             metric_values = metric_values.filter(year_q)
+            matching_criteria = {"and": [_match_numeric_label_as_number(c) for c in conditions]}
 
         q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
         matched_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)

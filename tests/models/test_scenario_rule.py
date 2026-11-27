@@ -657,6 +657,26 @@ class ResolveMatchedOrgUnitsCategoricalLabelTestCase(SNTMalariaTestCase):
         result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
         self.assertCountEqual(result, [self.org_unit_1.id])
 
+    def test_resolve_matched_org_units_matches_numeric_label_against_value_stored_as_number(self):
+        metric_type = MetricType.objects.create(account=self.account, name="Season length", code="SEASON")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_1, value=3)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_2, value=4)
+
+        criteria = {"and": [{"==": [{"var": metric_type.id}, "3"]}]}
+
+        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        self.assertCountEqual(result, [self.org_unit_1.id])
+
+    def test_resolve_matched_org_units_text_label_does_not_match_numbers(self):
+        metric_type = MetricType.objects.create(account=self.account, name="Risk", code="RISK_TEXT")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_1, value=None, string_value="High")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_2, value=3)
+
+        criteria = {"and": [{"==": [{"var": metric_type.id}, "High"]}]}
+
+        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        self.assertCountEqual(result, [self.org_unit_1.id])
+
     def test_resolve_matched_org_units_numeric_threshold_matches_value(self):
         metric_type = MetricType.objects.create(account=self.account, name="Incidence", code="INC")
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_1, value=1)
